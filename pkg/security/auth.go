@@ -266,6 +266,7 @@ func UserAuthCertHook(
 	insecureMode bool,
 	tlsState *tls.ConnectionState,
 	tenantID roachpb.TenantID,
+	tenantName roachpb.TenantName,
 	certManager *CertificateManager,
 	roleSubject *ldap.DN,
 	subjectRequired bool,
@@ -327,7 +328,7 @@ func UserAuthCertHook(
 			}
 		}
 
-		if ValidateUserScope(certUserScope, systemIdentity.Normalized(), tenantID, roleSubject, certSubject) {
+		if ValidateUserScope(certUserScope, systemIdentity.Normalized(), tenantID, tenantName, roleSubject, certSubject) {
 			if certManager != nil {
 				certManager.MaybeUpsertClientExpiration(
 					ctx,
@@ -447,6 +448,7 @@ func ValidateUserScope(
 	certUserScope []CertificateUserScope,
 	user string,
 	tenantID roachpb.TenantID,
+	tenantName roachpb.TenantName,
 	roleSubject *ldap.DN,
 	certSubject *ldap.DN,
 ) bool {
@@ -458,7 +460,7 @@ func ValidateUserScope(
 		if scope.Username == user {
 			// If username matches, allow authentication to succeed if
 			// the tenantID is a match or if the certificate scope is global.
-			if scope.TenantID == tenantID || scope.Global {
+			if scope.Global || scope.TenantID == tenantID || scope.TenantName == tenantName {
 				return true
 			}
 		}

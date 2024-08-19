@@ -89,7 +89,7 @@ func makeTestConfig(st *cluster.Settings, tr *tracing.Tracer) Config {
 	return Config{
 		BaseConfig: makeTestBaseConfig(st, tr),
 		KVConfig:   makeTestKVConfig(),
-		SQLConfig:  makeTestSQLConfig(st, roachpb.SystemTenantID),
+		SQLConfig:  makeTestSQLConfig(st, roachpb.SystemTenantID, "system"),
 	}
 }
 
@@ -128,8 +128,10 @@ func makeTestKVConfig() KVConfig {
 	return kvCfg
 }
 
-func makeTestSQLConfig(st *cluster.Settings, tenID roachpb.TenantID) SQLConfig {
-	return MakeSQLConfig(tenID, base.DefaultTestTempStorageConfig(st))
+func makeTestSQLConfig(
+	st *cluster.Settings, tenID roachpb.TenantID, tenName roachpb.TenantName,
+) SQLConfig {
+	return MakeSQLConfig(tenID, tenName, base.DefaultTestTempStorageConfig(st))
 }
 
 func initTraceDir(dir string) error {
@@ -1631,7 +1633,7 @@ func (ts *testServer) StartTenant(
 	}
 
 	st.ExternalIODir = params.ExternalIODir
-	sqlCfg := makeTestSQLConfig(st, params.TenantID)
+	sqlCfg := makeTestSQLConfig(st, params.TenantID, params.TenantName)
 	sqlCfg.TenantLoopbackAddr = ts.AdvRPCAddr()
 	if params.MemoryPoolSize != 0 {
 		sqlCfg.MemoryPoolSize = params.MemoryPoolSize

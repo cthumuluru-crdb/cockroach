@@ -1156,6 +1156,7 @@ func newSQLServer(ctx context.Context, cfg sqlServerArgs) (*SQLServer, error) {
 
 	// Initialize the pgwire server which handles connections
 	// established via the pgPreServer.
+	// (chandrat) PSQL server is created here.
 	pgServer := pgwire.MakeServer(
 		cfg.AmbientCtx,
 		cfg.Config,
