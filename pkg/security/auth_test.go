@@ -467,6 +467,7 @@ func TestAuthenticationHook(t *testing.T) {
 				tc.insecure,
 				makeFakeTLSState(t, tc.tlsSpec),
 				tc.tenantID,
+				"",  /* tenantName */
 				nil, /* certManager */
 				roleSubject,
 				tc.subjectRequired,

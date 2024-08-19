@@ -74,7 +74,8 @@ func (s *topLevelServer) newTenantServer(
 		return nil, err
 	}
 
-	baseCfg, sqlCfg, err := s.makeSharedProcessTenantConfig(ctx, tenantID, portStartHint, tenantStopper, testArgs.Settings)
+	baseCfg, sqlCfg, err := s.makeSharedProcessTenantConfig(ctx, tenantID, tenantNameContainer.Get(), portStartHint,
+		tenantStopper, testArgs.Settings)
 	if err != nil {
 		return nil, err
 	}
@@ -151,6 +152,7 @@ func newTenantServerInternal(
 func (s *topLevelServer) makeSharedProcessTenantConfig(
 	ctx context.Context,
 	tenantID roachpb.TenantID,
+	tenantName roachpb.TenantName,
 	portStartHint int,
 	stopper *stop.Stopper,
 	testSettings *cluster.Settings,
@@ -169,7 +171,8 @@ func (s *topLevelServer) makeSharedProcessTenantConfig(
 		st.SV.TestingCopyForVirtualCluster(&testSettings.SV)
 	}
 
-	baseCfg, sqlCfg, err := makeSharedProcessTenantServerConfig(ctx, tenantID, portStartHint, parentCfg, localServerInfo, st, stopper, s.recorder)
+	baseCfg, sqlCfg, err := makeSharedProcessTenantServerConfig(ctx, tenantID, tenantName, portStartHint, parentCfg,
+		localServerInfo, st, stopper, s.recorder)
 	if err != nil {
 		return BaseConfig{}, SQLConfig{}, err
 	}
@@ -181,6 +184,7 @@ func (s *topLevelServer) makeSharedProcessTenantConfig(
 func makeSharedProcessTenantServerConfig(
 	ctx context.Context,
 	tenantID roachpb.TenantID,
+	tenantName roachpb.TenantName,
 	portStartHint int,
 	kvServerCfg Config,
 	kvServerInfo LocalKVServerInfo,
@@ -330,7 +334,7 @@ func makeSharedProcessTenantServerConfig(
 		}
 	}
 
-	sqlCfg = MakeSQLConfig(tenantID, tempStorageCfg)
+	sqlCfg = MakeSQLConfig(tenantID, tenantName, tempStorageCfg)
 	baseCfg.Settings.ExternalIODir = kvServerCfg.BaseConfig.Settings.ExternalIODir
 	baseCfg.ExternalIODirConfig = kvServerCfg.BaseConfig.ExternalIODirConfig
 

@@ -351,6 +351,8 @@ func newTenantSpecificMetrics(
 // MakeServer creates a Server.
 //
 // Start() needs to be called on the Server so it begins processing.
+// (chandrat) This is where the server is created that serves PSQL
+// connections.
 func MakeServer(
 	ambientCtx log.AmbientContext,
 	cfg *base.Config,
