@@ -947,6 +947,7 @@ func (demoCtx *Context) testServerArgsForTransientCluster(
 	// Unit tests can be run with multiple processes side-by-side with
 	// `make stress`. This is bound to not work with fixed ports.
 	// So by default we use :0 to auto-allocate ports.
+	// args.Addr = "127.0.0.1:0"
 	args.Addr = "127.0.0.1:0"
 	if sqlPort := demoCtx.sqlPort(serverIdx, forSystemTenant); sqlPort != 0 {
 		rpcPort := demoCtx.rpcPort(serverIdx, false)
@@ -965,7 +966,7 @@ func (demoCtx *Context) testServerArgsForTransientCluster(
 		}
 	}
 	if httpPort := demoCtx.httpPort(serverIdx, forSystemTenant); httpPort != 0 {
-		args.HTTPAddr = fmt.Sprintf("127.0.0.1:%d", httpPort)
+		args.HTTPAddr = fmt.Sprintf("0.0.0.0:%d", httpPort)
 	}
 
 	if len(demoCtx.Localities) > serverIdx {
