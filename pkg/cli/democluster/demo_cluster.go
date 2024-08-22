@@ -965,7 +965,7 @@ func (demoCtx *Context) testServerArgsForTransientCluster(
 		}
 	}
 	if httpPort := demoCtx.httpPort(serverIdx, forSystemTenant); httpPort != 0 {
-		args.HTTPAddr = fmt.Sprintf("127.0.0.1:%d", httpPort)
+		args.HTTPAddr = fmt.Sprintf("0.0.0.0:%d", httpPort)
 	}
 
 	if len(demoCtx.Localities) > serverIdx {

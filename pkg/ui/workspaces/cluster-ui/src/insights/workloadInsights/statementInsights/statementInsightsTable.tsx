@@ -206,6 +206,13 @@ export function makeStatementInsightsColumns(): ColumnDescriptor<StmtInsightEven
       sort: (item: StmtInsightEvent) => item.transactionExecutionID,
       showByDefault: false,
     },
+    // {
+    //   name: "comments",
+    //   title: insightsTableTitles.comments(InsightExecEnum.STATEMENT),
+    //   cell: (item: StmtInsightEvent) => item.comments,
+    //   sort: (item: StmtInsightEvent) => item.comments,
+    //   showByDefault: true,
+    // },
   ];
 }
 

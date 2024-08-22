@@ -384,7 +384,7 @@ func (c *conn) handleSimpleQuery(
 			},
 		)
 	}
-	stmts, err := c.parser.ParseWithInt(query, unqualifiedIntSize)
+	stmts, err := c.parser.ParseWithIntRetainComments(query, unqualifiedIntSize)
 	if err != nil {
 		log.SqlExec.Infof(ctx, "could not parse simple query: %s", query)
 		return c.stmtBuf.Push(ctx, sql.SendError{Err: err})

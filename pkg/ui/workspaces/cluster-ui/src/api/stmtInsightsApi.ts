@@ -13,6 +13,7 @@ import moment from "moment-timezone";
 import {
   ContentionDetails,
   InsightExecEnum,
+  SQLComment,
   StatementStatus,
   StmtInsightEvent,
 } from "src/insights/types";
@@ -70,6 +71,7 @@ export type StmtInsightsResponseRow = {
   cpu_sql_nanos: number;
   error_code: string;
   last_error_redactable: string;
+	comments: SQLComment[];
   status: StatementStatus;
 };
 
@@ -102,6 +104,7 @@ plan_gist,
 cpu_sql_nanos,
 error_code,
 last_error_redactable,
+comments,
 status
 `;
 
@@ -246,6 +249,7 @@ export function formatStmtInsights(
       errorCode: row.error_code,
       errorMsg: row.last_error_redactable,
       status: row.status,
+      comments: row.comments,
     } as StmtInsightEvent;
   });
 }

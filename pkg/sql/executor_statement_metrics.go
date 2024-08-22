@@ -12,6 +12,7 @@ package sql
 
 import (
 	"context"
+	"strings"
 
 	"github.com/cockroachdb/cockroach/pkg/sql/appstatspb"
 	"github.com/cockroachdb/cockroach/pkg/sql/contentionpb"
@@ -160,16 +161,28 @@ func (ex *connExecutor) recordStatementSummary(
 		}
 	}
 
+	buildSqlCommenterTagsStr := func(sqlCommenterTags map[string]string) string {
+		b := strings.Builder{}
+		for k, v := range sqlCommenterTags {
+			b.WriteString(k)
+			b.WriteString("=")
+			b.WriteString(v)
+			b.WriteString(";")
+		}
+		return b.String()
+	}
+
 	fullScan := flags.IsSet(planFlagContainsFullIndexScan) || flags.IsSet(planFlagContainsFullTableScan)
 	recordedStmtStatsKey := appstatspb.StatementStatisticsKey{
-		Query:        stmt.StmtNoConstants,
-		QuerySummary: stmt.StmtSummary,
-		DistSQL:      flags.IsDistributed(),
-		Vec:          flags.IsSet(planFlagVectorized),
-		ImplicitTxn:  flags.IsSet(planFlagImplicitTxn),
-		FullScan:     fullScan,
-		Database:     planner.SessionData().Database,
-		PlanHash:     planner.instrumentation.planGist.Hash(),
+		Query:            stmt.StmtNoConstants,
+		SqlCommenterTags: buildSqlCommenterTagsStr(stmt.SQLCommenterTags),
+		QuerySummary:     stmt.StmtSummary,
+		DistSQL:          flags.IsDistributed(),
+		Vec:              flags.IsSet(planFlagVectorized),
+		ImplicitTxn:      flags.IsSet(planFlagImplicitTxn),
+		FullScan:         fullScan,
+		Database:         planner.SessionData().Database,
+		PlanHash:         planner.instrumentation.planGist.Hash(),
 	}
 
 	idxRecommendations := idxrecommendations.FormatIdxRecommendations(planner.instrumentation.indexRecs)
@@ -215,6 +228,7 @@ func (ex *connExecutor) recordStatementSummary(
 		ExecStats:            queryLevelStats,
 		Indexes:              planner.instrumentation.indexesUsed,
 		Database:             planner.SessionData().Database,
+		SQLCommenterTags:     stmt.SQLCommenterTags,
 	}
 
 	stmtFingerprintID, err :=

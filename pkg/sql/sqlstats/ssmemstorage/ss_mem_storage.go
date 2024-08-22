@@ -46,9 +46,10 @@ type stmtKey struct {
 
 // sampledPlanKey is used by the Optimizer to determine if we should build a full EXPLAIN plan.
 type sampledPlanKey struct {
-	stmtNoConstants string
-	implicitTxn     bool
-	database        string
+	stmtNoConstants  string
+	sqlCommenterTags string
+	implicitTxn      bool
+	database         string
 }
 
 func (p sampledPlanKey) size() int64 {
@@ -452,6 +453,7 @@ func (s *stmtStats) mergeStatsLocked(statistics *appstatspb.CollectedStatementSt
 // for the given stmt.
 func (s *Container) getStatsForStmt(
 	stmtNoConstants string,
+	sqlCommenterTags string,
 	implicitTxn bool,
 	database string,
 	planHash uint64,
@@ -468,9 +470,10 @@ func (s *Container) getStatsForStmt(
 	// that we use separate buckets for the different situations.
 	key = stmtKey{
 		sampledPlanKey: sampledPlanKey{
-			stmtNoConstants: stmtNoConstants,
-			implicitTxn:     implicitTxn,
-			database:        database,
+			stmtNoConstants:  stmtNoConstants,
+			sqlCommenterTags: sqlCommenterTags,
+			implicitTxn:      implicitTxn,
+			database:         database,
 		},
 		planHash:                 planHash,
 		transactionFingerprintID: transactionFingerprintID,
@@ -955,6 +958,6 @@ type transactionCounts struct {
 
 func constructStatementFingerprintIDFromStmtKey(key stmtKey) appstatspb.StmtFingerprintID {
 	return appstatspb.ConstructStatementFingerprintID(
-		key.stmtNoConstants, key.implicitTxn, key.database,
+		key.stmtNoConstants, key.sqlCommenterTags, key.implicitTxn, key.database,
 	)
 }

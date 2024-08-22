@@ -77,6 +77,13 @@ func (p *Parser) ParseWithInt(sql string, nakedIntType *types.T) (statements.Sta
 	return p.parseWithDepth(1, sql, nakedIntType, discardComments)
 }
 
+// ParseWithIntRetainComments
+func (p *Parser) ParseWithIntRetainComments(
+	sql string, nakedIntType *types.T,
+) (statements.Statements, error) {
+	return p.parseWithDepth(1, sql, nakedIntType, retainComments)
+}
+
 func (p *Parser) parseOneWithInt(
 	sql string, nakedIntType *types.T, comments commentsMode,
 ) (statements.Statement[tree.Statement], error) {

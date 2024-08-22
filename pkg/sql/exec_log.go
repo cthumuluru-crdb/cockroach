@@ -355,6 +355,7 @@ func (p *planner) maybeLogStatementInternal(
 			}
 			stmtFingerprintID = appstatspb.ConstructStatementFingerprintID(
 				repQuery,
+				"", // TODO(chandrat) handle logging later.
 				implicitTxn,
 				p.CurrentDatabase(),
 			)

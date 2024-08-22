@@ -29,13 +29,17 @@ func (s StmtFingerprintID) String() string {
 // implicit txn. At the time of writing, these are the axis' we use to bucket
 // queries for stats collection (see stmtKey).
 var ConstructStatementFingerprintID = func(
-	stmtNoConstants string, implicitTxn bool, database string,
+	stmtNoConstants string, sqlCommenterTags string, implicitTxn bool, database string,
 ) StmtFingerprintID {
 	fnv := util.MakeFNV64()
 	for _, c := range stmtNoConstants {
 		fnv.Add(uint64(c))
 	}
 	for _, c := range database {
+		fnv.Add(uint64(c))
+	}
+	// TODO(chandrat) tags in "k1=v1;k2=v2" formatted string
+	for _, c := range sqlCommenterTags {
 		fnv.Add(uint64(c))
 	}
 	if implicitTxn {

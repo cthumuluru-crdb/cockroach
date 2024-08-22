@@ -3423,6 +3423,7 @@ func (ex *connExecutor) execWithProfiling(
 		} else {
 			stmtNoConstants = formatStatementHideConstants(ast)
 		}
+		// TODO(chandrat) Add SQL commenter labels here too?
 		labels := pprof.Labels(
 			"appname", ex.sessionData().ApplicationName,
 			"addr", remoteAddr,

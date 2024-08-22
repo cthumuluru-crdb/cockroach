@@ -256,6 +256,18 @@ func (s *StatsCollector) ObserveStatement(
 		errorMsg = redact.Sprint(value.StatementError)
 	}
 
+	buildSQLCommenterTags := func(m map[string]string) []*insights.SqlCommenterTag {
+		tags := make([]*insights.SqlCommenterTag, 0, len(m))
+		for k, v := range m {
+			tags = append(tags, &insights.SqlCommenterTag{
+				Name:  k,
+				Value: v,
+			})
+		}
+
+		return tags
+	}
+
 	insight := insights.Statement{
 		ID:                   value.StatementID,
 		FingerprintID:        stmtFingerprintID,
@@ -278,6 +290,7 @@ func (s *StatsCollector) ObserveStatement(
 		CPUSQLNanos:          cpuSQLNanos,
 		ErrorCode:            errorCode,
 		ErrorMsg:             errorMsg,
+		SqlCommenterTags:     buildSQLCommenterTags(value.SQLCommenterTags),
 	}
 	if s.insightsWriter != nil {
 		s.insightsWriter.ObserveStatement(value.SessionID, &insight)
