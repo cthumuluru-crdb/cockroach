@@ -376,7 +376,7 @@ func testTenantLogs(ctx context.Context, t *testing.T, helper serverccl.TenantTe
 	})
 	require.NoError(t, err)
 	require.NotEmpty(t, logsFileResp.Entries)
-	systemTenantIDStr := fmt.Sprintf("%d", roachpb.SystemTenantID.InternalValue)
+	systemTenantIDStr := fmt.Sprintf("%d", roachpb.PrefixedSystemTenantID.InternalValue)
 	for _, resp := range []*serverpb.LogEntriesResponse{logsResp, logsFileResp} {
 		for _, entry := range resp.Entries {
 			// Logs belonging to the system tenant ID should never show up in a response

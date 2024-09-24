@@ -110,11 +110,11 @@ func TestDecodeSystemTargets(t *testing.T) {
 		),
 		// System tenant targeting its keyspace.
 		spanconfig.TestingMakeTenantKeyspaceTargetOrFatal(
-			t, roachpb.SystemTenantID, roachpb.SystemTenantID,
+			t, roachpb.PrefixedSystemTenantID, roachpb.PrefixedSystemTenantID,
 		),
 		// System tenant targeting a secondary tenant's keyspace.
 		spanconfig.TestingMakeTenantKeyspaceTargetOrFatal(
-			t, roachpb.SystemTenantID, roachpb.MustMakeTenantID(10),
+			t, roachpb.PrefixedSystemTenantID, roachpb.MustMakeTenantID(10),
 		),
 		// System tenant targeting the entire keyspace.
 		spanconfig.MakeEntireKeyspaceTarget(),
@@ -190,7 +190,7 @@ func BenchmarkSpanConfigDecoder(b *testing.B) {
 	tdb.Exec(b, fmt.Sprintf(`UPSERT INTO %s (start_key, end_key, config) VALUES ($1, $2, $3)`,
 		dummyTableName), roachpb.Key("a"), roachpb.Key("b"), buf)
 
-	k := keys.SystemSQLCodec.IndexPrefix(dummyTableID, keys.SpanConfigurationsTablePrimaryKeyIndexID)
+	k := keys.PrefixedSystemSQLCodec.IndexPrefix(dummyTableID, keys.SpanConfigurationsTablePrimaryKeyIndexID)
 	rows, err := s.DB().Scan(ctx, k, k.PrefixEnd(), 0 /* maxRows */)
 	require.NoError(b, err)
 	last := rows[len(rows)-1]

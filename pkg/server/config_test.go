@@ -332,13 +332,13 @@ func TestIdProviderServerIdentityString(t *testing.T) {
 	}{
 		{
 			"system tenant shows nodeID",
-			fields{tenantID: roachpb.SystemTenantID, serverID: nodeID},
+			fields{tenantID: roachpb.PrefixedSystemTenantID, serverID: nodeID},
 			args{key: serverident.IdentifyKVNodeID},
 			"123",
 		},
 		{
 			"system tenant shows tenID",
-			fields{tenantID: roachpb.SystemTenantID, serverID: nodeID},
+			fields{tenantID: roachpb.PrefixedSystemTenantID, serverID: nodeID},
 			args{key: serverident.IdentifyTenantID},
 			"1",
 		},

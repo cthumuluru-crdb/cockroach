@@ -435,7 +435,7 @@ USE t;
 							// that the job did not succeed even though it was canceled.
 							testutils.SucceedsSoon(t, func() error {
 								tableDesc := desctestutils.TestingGetPublicTableDescriptor(
-									kvDB, keys.SystemSQLCodec, "t", "test",
+									kvDB, keys.PrefixedSystemSQLCodec, "t", "test",
 								)
 								if len(tableDesc.AllMutations()) != 0 {
 									return errors.Errorf(
@@ -491,13 +491,13 @@ USE t;
 								return nil
 							})
 
-							tableDesc := desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.SystemSQLCodec, "t", "test")
+							tableDesc := desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.PrefixedSystemSQLCodec, "t", "test")
 							if _, err := sqltestutils.AddImmediateGCZoneConfig(db, tableDesc.GetID()); err != nil {
 								t.Fatal(err)
 							}
 							// Ensure that the writes from the partial new indexes are cleaned up.
 							testutils.SucceedsSoon(t, func() error {
-								return sqltestutils.CheckTableKeyCount(ctx, kvDB, keys.SystemSQLCodec, 1, maxValue)
+								return sqltestutils.CheckTableKeyCount(ctx, kvDB, keys.PrefixedSystemSQLCodec, 1, maxValue)
 							})
 						})
 					}
@@ -923,7 +923,7 @@ func TestIndexDescriptorUpdateForImplicitColumns(t *testing.T) {
 
 	fetchIndexes := func(tableName string) []catalog.Index {
 		kvDB := c.Servers[0].DB()
-		desc := desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.SystemSQLCodec, "test", tableName)
+		desc := desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.PrefixedSystemSQLCodec, "test", tableName)
 		return desc.NonDropIndexes()
 	}
 

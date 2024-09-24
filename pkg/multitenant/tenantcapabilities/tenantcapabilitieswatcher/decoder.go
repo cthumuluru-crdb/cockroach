@@ -54,7 +54,7 @@ func (d *decoder) decode(
 	// First we decode the tenantID from the key.
 	types := []*types.T{d.columns[0].GetType()}
 	tenantIDRow := make([]rowenc.EncDatum, 1)
-	if _, err := rowenc.DecodeIndexKey(keys.SystemSQLCodec, tenantIDRow, nil /* colDirs */, kv.Key); err != nil {
+	if _, err := rowenc.DecodeIndexKey(keys.PrefixedSystemSQLCodec, tenantIDRow, nil /* colDirs */, kv.Key); err != nil {
 		return tenantcapabilities.Entry{}, err
 	}
 	if err := tenantIDRow[0].EnsureDecoded(types[0], &d.alloc); err != nil {

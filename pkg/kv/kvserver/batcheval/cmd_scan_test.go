@@ -238,7 +238,7 @@ func makeRowKey(t *testing.T, id int, columnFamily uint32) roachpb.Key {
 	colMap.Set(0, 0)
 
 	var err error
-	key := keys.SystemSQLCodec.IndexPrefix(1, 1)
+	key := keys.PrefixedSystemSQLCodec.IndexPrefix(1, 1)
 	key, err = rowenc.EncodeColumns(
 		[]descpb.ColumnID{0}, nil /* directions */, colMap,
 		[]tree.Datum{tree.NewDInt(tree.DInt(id))}, key)

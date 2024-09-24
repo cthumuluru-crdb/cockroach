@@ -508,7 +508,7 @@ func TestZoneChecker(t *testing.T) {
 		splits[i].key = ranges[i].split
 	}
 	keyScanner := keysutils.MakePrettyScannerForNamedTables(
-		roachpb.SystemTenantID, map[string]int{"t1": t1ID} /* tableNameToID */, nil, /* idxNameToID */
+		roachpb.PrefixedSystemTenantID, map[string]int{"t1": t1ID} /* tableNameToID */, nil, /* idxNameToID */
 	)
 	rngs, err := processSplits(keyScanner, splits, nil /* stores */)
 	require.NoError(t, err)
@@ -519,7 +519,7 @@ func TestZoneChecker(t *testing.T) {
 		newZone := !sameZone
 		require.Equal(t, tc.newZone, newZone, "failed at: %d (%s)", i, tc.split)
 		if newZone {
-			objectID, _ := config.DecodeKeyIntoZoneIDAndSuffix(keys.SystemSQLCodec, rngs[i].StartKey)
+			objectID, _ := config.DecodeKeyIntoZoneIDAndSuffix(keys.PrefixedSystemSQLCodec, rngs[i].StartKey)
 			zc.setZone(objectID, tc.newZoneKey, tc.newRootZoneCfg)
 		}
 	}

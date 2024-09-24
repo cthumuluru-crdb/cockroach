@@ -43,7 +43,7 @@ func TestFlowTokenAdjustment(t *testing.T) {
 		controller  *Controller
 		adjustments []adjustment
 		stream      = kvflowcontrol.Stream{
-			TenantID: roachpb.SystemTenantID,
+			TenantID: roachpb.PrefixedSystemTenantID,
 			StoreID:  roachpb.StoreID(1),
 		}
 	)

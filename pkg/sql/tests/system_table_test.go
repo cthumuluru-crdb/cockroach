@@ -52,7 +52,7 @@ func TestInitialKeys(t *testing.T) {
 		var codec keys.SQLCodec
 		var nonDescKeys int
 		if systemTenant {
-			codec = keys.SystemSQLCodec
+			codec = keys.PrefixedSystemSQLCodec
 			nonDescKeys = 17
 		} else {
 			codec = keys.MakeSQLCodec(roachpb.MustMakeTenantID(5))
@@ -124,7 +124,7 @@ func TestInitialKeysAndSplits(t *testing.T) {
 
 			var codec keys.SQLCodec
 			if tenant == "system" {
-				codec = keys.SystemSQLCodec
+				codec = keys.PrefixedSystemSQLCodec
 			} else {
 				id, err := strconv.ParseUint(tenant, 10, 64)
 				if err != nil {
@@ -206,7 +206,7 @@ func TestSystemTableLiterals(t *testing.T) {
 			desc = mut.ImmutableCopy().(catalog.TableDescriptor)
 		}
 		leaseManager := s.LeaseManager().(*lease.Manager)
-		collection := descs.MakeTestCollection(ctx, keys.SystemSQLCodec, leaseManager)
+		collection := descs.MakeTestCollection(ctx, keys.PrefixedSystemSQLCodec, leaseManager)
 
 		gen, err := sql.CreateTestTableDescriptor(
 			context.Background(),

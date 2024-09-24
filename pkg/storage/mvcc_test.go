@@ -4521,7 +4521,7 @@ func TestFindValidSplitKeys(t *testing.T) {
 				testAddColFam(testTablePrefix(userID, "c"), 1),
 				testAddColFam(testTablePrefix(userID, "d"), 1),
 			},
-			rangeStart: keys.SystemSQLCodec.TablePrefix(userID),
+			rangeStart: keys.PrefixedSystemSQLCodec.TablePrefix(userID),
 			expSplit:   testTablePrefix(userID, "c"),
 			expError:   false,
 		},
@@ -4537,7 +4537,7 @@ func TestFindValidSplitKeys(t *testing.T) {
 				testAddColFam(testTablePrefix(userID, "b"), 1),
 				testAddColFam(testTablePrefix(userID, "c"), 1),
 			},
-			rangeStart: keys.SystemSQLCodec.TablePrefix(TestingUserDescID(0)),
+			rangeStart: keys.PrefixedSystemSQLCodec.TablePrefix(TestingUserDescID(0)),
 			expSplit:   testTablePrefix(userID, "b"),
 			expError:   false,
 		},
@@ -4705,7 +4705,7 @@ func TestFindBalancedSplitKeys(t *testing.T) {
 // testAddPrefix manually creates rows corresponding to the schema e.g.
 // CREATE TABLE t (id1 STRING, id2 STRING, ... PRIMARY KEY (id1, id2, ...))
 func testAddPrefix(prefix roachpb.Key, id uint32, rowVals ...string) roachpb.Key {
-	tableKey := append(prefix, keys.SystemSQLCodec.TablePrefix(id)...)
+	tableKey := append(prefix, keys.PrefixedSystemSQLCodec.TablePrefix(id)...)
 	rowKey := roachpb.Key(encoding.EncodeVarintAscending(tableKey, 1))
 	for _, rowVal := range rowVals {
 		rowKey = encoding.EncodeStringAscending(rowKey, rowVal)
@@ -5483,7 +5483,7 @@ func TestMVCCGarbageCollectRanges(t *testing.T) {
 	ctx := context.Background()
 
 	mkKey := func(k string) roachpb.Key {
-		return append(keys.SystemSQLCodec.TablePrefix(42), k...)
+		return append(keys.PrefixedSystemSQLCodec.TablePrefix(42), k...)
 	}
 	rangeStart := mkKey("")
 	rangeEnd := rangeStart.PrefixEnd()
@@ -6011,7 +6011,7 @@ func TestMVCCGarbageCollectRangesFailures(t *testing.T) {
 	defer log.Scope(t).Close(t)
 
 	mkKey := func(k string) roachpb.Key {
-		return append(keys.SystemSQLCodec.TablePrefix(42), k...)
+		return append(keys.PrefixedSystemSQLCodec.TablePrefix(42), k...)
 	}
 	rangeStart := mkKey("")
 	rangeEnd := rangeStart.PrefixEnd()
@@ -6121,7 +6121,7 @@ func TestMVCCGarbageCollectClearRange(t *testing.T) {
 	ctx := context.Background()
 
 	mkKey := func(k string) roachpb.Key {
-		return append(keys.SystemSQLCodec.TablePrefix(42), k...)
+		return append(keys.PrefixedSystemSQLCodec.TablePrefix(42), k...)
 	}
 	rangeStart := mkKey("")
 	rangeEnd := rangeStart.PrefixEnd()
@@ -6192,7 +6192,7 @@ func TestMVCCGarbageCollectClearRangeInlinedValue(t *testing.T) {
 	ctx := context.Background()
 
 	mkKey := func(k string) roachpb.Key {
-		return append(keys.SystemSQLCodec.TablePrefix(42), k...)
+		return append(keys.PrefixedSystemSQLCodec.TablePrefix(42), k...)
 	}
 
 	// Note we use keys of different lengths so that stats accounting errors
@@ -6245,7 +6245,7 @@ func TestMVCCGarbageCollectClearPointsInRange(t *testing.T) {
 	ctx := context.Background()
 
 	mkKey := func(k string) roachpb.Key {
-		return append(keys.SystemSQLCodec.TablePrefix(42), k...)
+		return append(keys.PrefixedSystemSQLCodec.TablePrefix(42), k...)
 	}
 	rangeStart := mkKey("")
 	rangeEnd := rangeStart.PrefixEnd()
@@ -6315,7 +6315,7 @@ func TestMVCCGarbageCollectClearRangeFailure(t *testing.T) {
 	ctx := context.Background()
 
 	mkKey := func(k string) roachpb.Key {
-		return append(keys.SystemSQLCodec.TablePrefix(42), k...)
+		return append(keys.PrefixedSystemSQLCodec.TablePrefix(42), k...)
 	}
 
 	// Note we use keys of different lengths so that stats accounting errors

@@ -68,9 +68,9 @@ func TestDataDriven(t *testing.T) {
 		externalConnTestCluster := ectestutils.NewHandle(t, tc)
 		defer externalConnTestCluster.Cleanup()
 
-		externalConnTestCluster.InitializeTenant(ctx, roachpb.SystemTenantID)
+		externalConnTestCluster.InitializeTenant(ctx, roachpb.PrefixedSystemTenantID)
 		datadriven.RunTest(t, path, func(t *testing.T, d *datadriven.TestData) string {
-			tenantID := roachpb.SystemTenantID
+			tenantID := roachpb.PrefixedSystemTenantID
 			if d.HasArg("tenant") {
 				var id uint64
 				d.ScanArgs(t, "tenant", &id)

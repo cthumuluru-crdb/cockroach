@@ -45,7 +45,7 @@ CREATE INDEX bc ON test.t(b, c);
 	}
 
 	// Retrieve the numeric descriptors.
-	tableDesc := desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.SystemSQLCodec, "test", "t")
+	tableDesc := desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.PrefixedSystemSQLCodec, "test", "t")
 	tID := tableDesc.GetID()
 	var aID, bID, cID descpb.ColumnID
 	for _, c := range tableDesc.PublicColumns() {
@@ -62,7 +62,7 @@ CREATE INDEX bc ON test.t(b, c);
 	secID := tableDesc.PublicNonPrimaryIndexes()[0].GetID()
 
 	// Retrieve the numeric descriptors.
-	tableDesc = desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.SystemSQLCodec, "test", "hidden")
+	tableDesc = desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.PrefixedSystemSQLCodec, "test", "hidden")
 	tIDHidden := tableDesc.GetID()
 	var rowIDHidden descpb.ColumnID
 	for _, c := range tableDesc.PublicColumns() {

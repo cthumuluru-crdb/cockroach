@@ -189,7 +189,7 @@ func (u *UpdateChecker) buildUpdatesURL(ctx context.Context) *url.URL {
 	clusterInfo := ClusterInfo{
 		StorageClusterID: u.StorageClusterID(),
 		LogicalClusterID: u.LogicalClusterID(),
-		TenantID:         roachpb.SystemTenantID,
+		TenantID:         roachpb.PrefixedSystemTenantID,
 		IsInsecure:       u.Config.Insecure,
 		IsInternal:       sql.ClusterIsInternal(&u.Settings.SV),
 	}

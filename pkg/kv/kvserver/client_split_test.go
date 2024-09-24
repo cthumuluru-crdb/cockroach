@@ -289,7 +289,7 @@ func TestStoreRangeSplitInsideRow(t *testing.T) {
 	// Manually create some the column keys corresponding to the table:
 	//
 	//   CREATE TABLE t (id STRING PRIMARY KEY, col1 INT, col2 INT)
-	tableKey := roachpb.RKey(keys.SystemSQLCodec.TablePrefix(bootstrap.TestingUserDescID(0)))
+	tableKey := roachpb.RKey(keys.PrefixedSystemSQLCodec.TablePrefix(bootstrap.TestingUserDescID(0)))
 	rowKey := roachpb.Key(encoding.EncodeVarintAscending(append([]byte(nil), tableKey...), 1))
 	rowKey = encoding.EncodeStringAscending(encoding.EncodeVarintAscending(rowKey, 1), "a")
 	col1Key, err := keys.EnsureSafeSplitKey(keys.MakeFamilyKey(append([]byte(nil), rowKey...), 1))
@@ -793,7 +793,7 @@ func TestStoreRangeSplitMergeStats(t *testing.T) {
 	require.NoError(t, err)
 
 	// Split the range after the last table data key.
-	keyPrefix := keys.SystemSQLCodec.TablePrefix(bootstrap.TestingUserDescID(0))
+	keyPrefix := keys.PrefixedSystemSQLCodec.TablePrefix(bootstrap.TestingUserDescID(0))
 	args := adminSplitArgs(keyPrefix)
 	_, pErr := kv.SendWrapped(ctx, store.TestSender(), args)
 	require.NoError(t, pErr.GoError())
@@ -1331,7 +1331,7 @@ func TestStoreEmptyRangeSnapshotSize(t *testing.T) {
 
 	// Split the range after the last table data key to get a range that contains
 	// no user data.
-	splitKey := keys.SystemSQLCodec.TablePrefix(bootstrap.TestingUserDescID(0))
+	splitKey := keys.PrefixedSystemSQLCodec.TablePrefix(bootstrap.TestingUserDescID(0))
 	splitArgs := adminSplitArgs(splitKey)
 	if _, err := kv.SendWrapped(ctx, tc.Servers[0].DistSenderI().(kv.Sender), splitArgs); err != nil {
 		t.Fatal(err)
@@ -1407,7 +1407,7 @@ func TestStoreRangeSplitStatsWithMerges(t *testing.T) {
 	start := s.Clock().Now()
 
 	// Split the range after the last table data key.
-	keyPrefix := keys.SystemSQLCodec.TablePrefix(bootstrap.TestingUserDescID(0))
+	keyPrefix := keys.PrefixedSystemSQLCodec.TablePrefix(bootstrap.TestingUserDescID(0))
 	args := adminSplitArgs(keyPrefix)
 	_, pErr := kv.SendWrapped(ctx, store.TestSender(), args)
 	require.NoError(t, pErr.GoError())
@@ -1524,7 +1524,7 @@ func TestStoreZoneUpdateAndRangeSplit(t *testing.T) {
 	tdb.Exec(t, "ALTER TABLE t CONFIGURE ZONE USING range_max_bytes = $1, range_min_bytes = $2",
 		maxBytes, minBytes)
 
-	tableBoundary := keys.SystemSQLCodec.TablePrefix(descID)
+	tableBoundary := keys.PrefixedSystemSQLCodec.TablePrefix(descID)
 	{
 		var repl *kvserver.Replica
 
@@ -1548,7 +1548,7 @@ func TestStoreZoneUpdateAndRangeSplit(t *testing.T) {
 
 	// Verify that the range is in fact split.
 	testutils.SucceedsSoon(t, func() error {
-		repl := store.LookupReplica(roachpb.RKey(keys.SystemSQLCodec.TablePrefix(descID + 1)))
+		repl := store.LookupReplica(roachpb.RKey(keys.PrefixedSystemSQLCodec.TablePrefix(descID + 1)))
 		rngDesc := repl.Desc()
 		rngStart, rngEnd := rngDesc.StartKey, rngDesc.EndKey
 		if rngStart.Equal(tableBoundary) || !rngEnd.Equal(roachpb.RKeyMax) {
@@ -1603,7 +1603,7 @@ func TestStoreRangeSplitWithMaxBytesUpdate(t *testing.T) {
 
 	// Verify that the range is split and the new range has the correct max bytes.
 	testutils.SucceedsSoon(t, func() error {
-		newRng := store.LookupReplica(roachpb.RKey(keys.SystemSQLCodec.TablePrefix(descID)))
+		newRng := store.LookupReplica(roachpb.RKey(keys.PrefixedSystemSQLCodec.TablePrefix(descID)))
 		if newRng == nil {
 			return errors.Errorf("expected new range created by split")
 		}
@@ -1653,7 +1653,7 @@ func TestStoreRangeSplitBackpressureWrites(t *testing.T) {
 		}
 		t.Run(name, func(t *testing.T) {
 			var activateSplitFilter int32
-			splitKey := roachpb.RKey(bootstrap.TestingUserTableDataMin(keys.SystemSQLCodec))
+			splitKey := roachpb.RKey(bootstrap.TestingUserTableDataMin(keys.PrefixedSystemSQLCodec))
 			splitPending, blockSplits := make(chan struct{}), make(chan struct{})
 
 			// Set maxBytes to something small so we can exceed the maximum split
@@ -2881,13 +2881,13 @@ func TestStoreTxnWaitQueueEnabledOnSplit(t *testing.T) {
 	store, err := s.GetStores().(*kvserver.Stores).GetStore(s.GetFirstStoreID())
 	require.NoError(t, err)
 
-	key := bootstrap.TestingUserTableDataMin(keys.SystemSQLCodec)
+	key := bootstrap.TestingUserTableDataMin(keys.PrefixedSystemSQLCodec)
 	args := adminSplitArgs(key)
 	if _, pErr := kv.SendWrapped(ctx, store.TestSender(), args); pErr != nil {
 		t.Fatalf("%q: split unexpected error: %s", key, pErr)
 	}
 
-	rhsRepl := store.LookupReplica(roachpb.RKey(bootstrap.TestingUserTableDataMin(keys.SystemSQLCodec)))
+	rhsRepl := store.LookupReplica(roachpb.RKey(bootstrap.TestingUserTableDataMin(keys.PrefixedSystemSQLCodec)))
 	if !rhsRepl.GetConcurrencyManager().TestingTxnWaitQueue().IsEnabled() {
 		t.Errorf("expected RHS replica's push txn queue to be enabled post-split")
 	}
@@ -3057,7 +3057,7 @@ func TestUnsplittableRange(t *testing.T) {
 	require.NoError(t, err)
 
 	// Add a single large row to /Table/14.
-	tableKey := roachpb.RKey(keys.SystemSQLCodec.TablePrefix(uint32(systemschema.UITable.GetID())))
+	tableKey := roachpb.RKey(keys.PrefixedSystemSQLCodec.TablePrefix(uint32(systemschema.UITable.GetID())))
 	row1Key := roachpb.Key(encoding.EncodeVarintAscending(append([]byte(nil), tableKey...), 1))
 	col1Key := keys.MakeFamilyKey(append([]byte(nil), row1Key...), 0)
 	valueLen := 0.9 * maxBytes
@@ -3416,12 +3416,12 @@ func TestRangeLookupAfterMeta2Split(t *testing.T) {
 	// the user range [/Table/48-/Max) is stored on the right meta2 range, so the lookup
 	// will require a scan that continues into the next meta2 range.
 	tableID := bootstrap.TestingUserDescID(1) // 51
-	splitReq := adminSplitArgs(keys.SystemSQLCodec.TablePrefix(tableID - 3 /* 48 */))
+	splitReq := adminSplitArgs(keys.PrefixedSystemSQLCodec.TablePrefix(tableID - 3 /* 48 */))
 	if _, pErr := kv.SendWrapped(ctx, s.DB().NonTransactionalSender(), splitReq); pErr != nil {
 		t.Fatal(pErr)
 	}
 
-	metaKey := keys.RangeMetaKey(roachpb.RKey(keys.SystemSQLCodec.TablePrefix(tableID))).AsRawKey()
+	metaKey := keys.RangeMetaKey(roachpb.RKey(keys.PrefixedSystemSQLCodec.TablePrefix(tableID))).AsRawKey()
 	splitReq = adminSplitArgs(metaKey)
 	if _, pErr := kv.SendWrapped(ctx, s.DB().NonTransactionalSender(), splitReq); pErr != nil {
 		t.Fatal(pErr)
@@ -3435,8 +3435,8 @@ func TestRangeLookupAfterMeta2Split(t *testing.T) {
 		// Scan from [/Table/49-/Table/50) both forwards and backwards.
 		// Either way, the resulting RangeLookup scan will be forced to
 		// perform a continuation lookup.
-		scanStart := keys.SystemSQLCodec.TablePrefix(tableID - 2) // 49
-		scanEnd := scanStart.PrefixEnd()                          // 50
+		scanStart := keys.PrefixedSystemSQLCodec.TablePrefix(tableID - 2) // 49
+		scanEnd := scanStart.PrefixEnd()                                  // 50
 		header := kvpb.RequestHeader{
 			Key:    scanStart,
 			EndKey: scanEnd,
@@ -4067,7 +4067,7 @@ func TestStoreRangeSplitAndMergeWithGlobalReads(t *testing.T) {
 	}
 
 	descID := bootstrap.TestingUserDescID(0)
-	descKey := keys.SystemSQLCodec.TablePrefix(descID)
+	descKey := keys.PrefixedSystemSQLCodec.TablePrefix(descID)
 	splitKey := append(descKey, []byte("split")...)
 
 	// Set global reads for the test ranges.
@@ -4343,7 +4343,7 @@ func TestLBSplitUnsafeKeys(t *testing.T) {
 
 			// Split off the table range for the test, otherwise the range may
 			// contain multiple tables with existing values.
-			splitArgs := adminSplitArgs(keys.SystemSQLCodec.TablePrefix(tableID))
+			splitArgs := adminSplitArgs(keys.PrefixedSystemSQLCodec.TablePrefix(tableID))
 			_, pErr := kv.SendWrapped(ctx, store.TestSender(), splitArgs)
 			require.Nil(t, pErr)
 

@@ -452,7 +452,7 @@ func s2k(s string) roachpb.Key {
 		tbl, _ = strconv.Atoi(p[0])
 		k = []byte(p[1])
 	}
-	return append(keys.SystemSQLCodec.IndexPrefix(uint32(tbl), 2), k...)
+	return append(keys.PrefixedSystemSQLCodec.IndexPrefix(uint32(tbl), 2), k...)
 }
 
 func s2kWithColFamily(s string, colfamily uint64) roachpb.Key {

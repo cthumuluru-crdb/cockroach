@@ -130,7 +130,7 @@ INSERT INTO t.test VALUES ('a', 'b'), ('c', 'd');
 		tableID, 0, instance, execCfg.InternalDB, leaseMgr, jobRegistry, &execCfg, cluster.MakeTestingClusterSettings())
 
 	// Read table descriptor for version.
-	tableDesc := desctestutils.TestingGetMutableExistingTableDescriptor(kvDB, keys.SystemSQLCodec, "t", "test")
+	tableDesc := desctestutils.TestingGetMutableExistingTableDescriptor(kvDB, keys.PrefixedSystemSQLCodec, "t", "test")
 	expectedVersion := tableDesc.Version
 	ctx := context.Background()
 
@@ -140,7 +140,7 @@ INSERT INTO t.test VALUES ('a', 'b'), ('c', 'd');
 		t.Fatal(err)
 	}
 
-	tableDesc = desctestutils.TestingGetMutableExistingTableDescriptor(kvDB, keys.SystemSQLCodec, "t", "test")
+	tableDesc = desctestutils.TestingGetMutableExistingTableDescriptor(kvDB, keys.PrefixedSystemSQLCodec, "t", "test")
 	newVersion := tableDesc.Version
 	if newVersion != expectedVersion {
 		t.Fatalf("bad version; e = %d, v = %d", expectedVersion, newVersion)
@@ -173,7 +173,7 @@ INSERT INTO t.test VALUES ('a', 'b'), ('c', 'd');
 		expectedVersion++
 		if err := kvDB.Put(
 			ctx,
-			catalogkeys.MakeDescMetadataKey(keys.SystemSQLCodec, tableDesc.GetID()),
+			catalogkeys.MakeDescMetadataKey(keys.PrefixedSystemSQLCodec, tableDesc.GetID()),
 			tableDesc.DescriptorProto(),
 		); err != nil {
 			t.Fatal(err)
@@ -190,7 +190,7 @@ INSERT INTO t.test VALUES ('a', 'b'), ('c', 'd');
 			}
 
 			tableDesc = desctestutils.TestingGetMutableExistingTableDescriptor(
-				kvDB, keys.SystemSQLCodec, "t", "test")
+				kvDB, keys.PrefixedSystemSQLCodec, "t", "test")
 			newVersion = tableDesc.Version
 			if newVersion != expectedVersion {
 				t.Fatalf("bad version; e = %d, v = %d", expectedVersion, newVersion)
@@ -203,7 +203,7 @@ INSERT INTO t.test VALUES ('a', 'b'), ('c', 'd');
 	}
 	// RunStateMachineBeforeBackfill() doesn't complete the schema change.
 	tableDesc = desctestutils.TestingGetMutableExistingTableDescriptor(
-		kvDB, keys.SystemSQLCodec, "t", "test")
+		kvDB, keys.PrefixedSystemSQLCodec, "t", "test")
 	if len(tableDesc.Mutations) == 0 {
 		t.Fatalf("table expected to have an outstanding schema change: %v", tableDesc)
 	}
@@ -235,7 +235,7 @@ INSERT INTO t.test VALUES ('a', 'b'), ('c', 'd');
 
 	// Read table descriptor for version.
 	tableDesc := desctestutils.TestingGetMutableExistingTableDescriptor(
-		kvDB, keys.SystemSQLCodec, "t", "test")
+		kvDB, keys.PrefixedSystemSQLCodec, "t", "test")
 
 	// A long running schema change operation runs through
 	// a state machine that increments the version by 6.
@@ -257,7 +257,7 @@ CREATE INDEX foo ON t.test (v)
 	// Wait until index is created.
 	for r := retry.Start(retryOpts); r.Next(); {
 		tableDesc = desctestutils.TestingGetMutableExistingTableDescriptor(
-			kvDB, keys.SystemSQLCodec, "t", "test")
+			kvDB, keys.PrefixedSystemSQLCodec, "t", "test")
 		if len(tableDesc.PublicNonPrimaryIndexes()) == 1 {
 			break
 		}
@@ -270,7 +270,7 @@ CREATE INDEX foo ON t.test (v)
 
 	// Ensure that the version has been incremented.
 	tableDesc = desctestutils.TestingGetMutableExistingTableDescriptor(
-		kvDB, keys.SystemSQLCodec, "t", "test")
+		kvDB, keys.PrefixedSystemSQLCodec, "t", "test")
 	newVersion := tableDesc.Version
 	if newVersion != expectedVersion {
 		t.Fatalf("bad version; e = %d, v = %d", expectedVersion, newVersion)
@@ -284,7 +284,7 @@ CREATE INDEX foo ON t.test (v)
 	for r := retry.Start(retryOpts); r.Next(); {
 		// Ensure that the version gets incremented.
 		tableDesc = desctestutils.TestingGetMutableExistingTableDescriptor(
-			kvDB, keys.SystemSQLCodec, "t", "test")
+			kvDB, keys.PrefixedSystemSQLCodec, "t", "test")
 		name := tableDesc.PublicNonPrimaryIndexes()[0].GetName()
 		if name != "ufo" {
 			t.Fatalf("bad index name %s", name)
@@ -304,7 +304,7 @@ CREATE INDEX foo ON t.test (v)
 	// Wait until indexes are created.
 	for r := retry.Start(retryOpts); r.Next(); {
 		tableDesc = desctestutils.TestingGetMutableExistingTableDescriptor(
-			kvDB, keys.SystemSQLCodec, "t", "test")
+			kvDB, keys.PrefixedSystemSQLCodec, "t", "test")
 		if len(tableDesc.PublicNonPrimaryIndexes()) == count+1 {
 			break
 		}
@@ -626,7 +626,7 @@ CREATE UNIQUE INDEX vidx ON t.test (v);
 `); err != nil {
 		t.Fatal(err)
 	}
-	tableDesc := desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.SystemSQLCodec, "t", "test")
+	tableDesc := desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.PrefixedSystemSQLCodec, "t", "test")
 	// Disable strict GC TTL enforcement so that we can use AddImmediateGCZoneConfig.
 	defer sqltestutils.DisableGCTTLStrictEnforcement(t, sqlDB)()
 	// Add a zone config for the table so that garbage collection happens rapidly.
@@ -826,7 +826,7 @@ CREATE UNIQUE INDEX vidx ON t.test (v);
 	}
 
 	// Split the table into multiple ranges.
-	tableDesc := desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.SystemSQLCodec, "t", "test")
+	tableDesc := desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.PrefixedSystemSQLCodec, "t", "test")
 	var sps []serverutils.SplitPoint
 	for i := 1; i <= numNodes-1; i++ {
 		sps = append(sps, serverutils.SplitPoint{TargetNodeIdx: i, Vals: []interface{}{maxValue / numNodes * i}})
@@ -867,7 +867,7 @@ CREATE UNIQUE INDEX vidx ON t.test (v);
 	wg.Wait()
 
 	// Ensure that the table data hasn't been deleted.
-	tablePrefix := keys.SystemSQLCodec.TablePrefix(uint32(tableDesc.GetID()))
+	tablePrefix := keys.PrefixedSystemSQLCodec.TablePrefix(uint32(tableDesc.GetID()))
 	tableEnd := tablePrefix.PrefixEnd()
 	if kvs, err := kvDB.Scan(ctx, tablePrefix, tableEnd, 0); err != nil {
 		t.Fatal(err)
@@ -876,7 +876,7 @@ CREATE UNIQUE INDEX vidx ON t.test (v);
 	}
 	// Check that the table descriptor exists so we know the data will
 	// eventually be deleted.
-	tbDescKey := catalogkeys.MakeDescMetadataKey(keys.SystemSQLCodec, tableDesc.GetID())
+	tbDescKey := catalogkeys.MakeDescMetadataKey(keys.PrefixedSystemSQLCodec, tableDesc.GetID())
 	if gr, err := kvDB.Get(ctx, tbDescKey); err != nil {
 		t.Fatal(err)
 	} else if !gr.Exists() {
@@ -1302,7 +1302,7 @@ CREATE TABLE t.test (
 	}
 
 	// Read table descriptor.
-	tableDesc := desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.SystemSQLCodec, "t", "test")
+	tableDesc := desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.PrefixedSystemSQLCodec, "t", "test")
 	if len(tableDesc.EnforcedCheckConstraints()) != 3 {
 		t.Fatalf("Expected 3 checks but got %d ", len(tableDesc.EnforcedCheckConstraints()))
 	}
@@ -1312,7 +1312,7 @@ CREATE TABLE t.test (
 	}
 
 	// Re-read table descriptor.
-	tableDesc = desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.SystemSQLCodec, "t", "test")
+	tableDesc = desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.PrefixedSystemSQLCodec, "t", "test")
 	// Only check_ab should remain
 	if len(tableDesc.EnforcedCheckConstraints()) != 1 {
 		checkExprs := make([]string, 0)
@@ -1794,7 +1794,7 @@ CREATE TABLE t.test (k INT PRIMARY KEY, v INT);
 
 	// Check that constraints are cleaned up on the latest version of the
 	// descriptor.
-	tableDesc = desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.SystemSQLCodec, "t", "test")
+	tableDesc = desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.PrefixedSystemSQLCodec, "t", "test")
 	if checks := tableDesc.CheckConstraints(); len(checks) > 0 {
 		t.Fatalf("found checks %+v", checks)
 	}
@@ -1824,7 +1824,7 @@ CREATE TABLE t.test (
 `); err != nil {
 		t.Fatal(err)
 	}
-	tableDesc := desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.SystemSQLCodec, "t", "test")
+	tableDesc := desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.PrefixedSystemSQLCodec, "t", "test")
 	if tableDesc.GetFamilies()[0].DefaultColumnID != 0 {
 		t.Fatalf("default column id not set properly: %s", tableDesc)
 	}
@@ -1845,7 +1845,7 @@ CREATE TABLE t.test (
 	// values. This is done to make the table appear like it were
 	// written in the past when cockroachdb used to write sentinel
 	// values for each table row.
-	startKey := keys.SystemSQLCodec.TablePrefix(uint32(tableDesc.GetID()))
+	startKey := keys.PrefixedSystemSQLCodec.TablePrefix(uint32(tableDesc.GetID()))
 	kvs, err := kvDB.Scan(
 		ctx,
 		startKey,
@@ -1866,7 +1866,7 @@ CREATE TABLE t.test (
 	if _, err := sqlDB.Exec(`ALTER TABLE t.test ADD COLUMN v INT FAMILY F1`); err != nil {
 		t.Fatal(err)
 	}
-	tableDesc = desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.SystemSQLCodec, "t", "test")
+	tableDesc = desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.PrefixedSystemSQLCodec, "t", "test")
 	if tableDesc.GetFamilies()[0].DefaultColumnID != 2 {
 		t.Fatalf("default column id not set properly: %s", tableDesc)
 	}
@@ -2075,7 +2075,7 @@ ALTER TABLE t.test DROP column v`)
 	<-waitUntilRevert
 
 	// The index is not regenerated.
-	tableDesc := desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.SystemSQLCodec, "t", "test")
+	tableDesc := desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.PrefixedSystemSQLCodec, "t", "test")
 	if len(tableDesc.PublicNonPrimaryIndexes()) > 0 {
 		t.Fatalf("indexes %+v", tableDesc.PublicNonPrimaryIndexes())
 	}
@@ -2148,7 +2148,7 @@ func TestOldRevertedDropIndexesAreIgnored(t *testing.T) {
 	params.Knobs = base.TestingKnobs{
 		SQLSchemaChanger: &sql.SchemaChangerTestingKnobs{
 			RunBeforeResume: func(jobspb.JobID) error {
-				mut := desctestutils.TestingGetMutableExistingTableDescriptor(kvDB, keys.SystemSQLCodec, "test", "t")
+				mut := desctestutils.TestingGetMutableExistingTableDescriptor(kvDB, keys.PrefixedSystemSQLCodec, "test", "t")
 				for _, m := range mut.AllMutations() {
 					if m.Adding() && m.AsIndex() != nil {
 						// Make this schema change addition look like a rollback from a failed DROP
@@ -2157,7 +2157,7 @@ func TestOldRevertedDropIndexesAreIgnored(t *testing.T) {
 				}
 				require.NoError(t, kvDB.Put(
 					context.Background(),
-					catalogkeys.MakeDescMetadataKey(keys.SystemSQLCodec, mut.GetID()),
+					catalogkeys.MakeDescMetadataKey(keys.PrefixedSystemSQLCodec, mut.GetID()),
 					mut.DescriptorProto(),
 				))
 				return nil
@@ -2520,7 +2520,7 @@ func TestPrimaryKeyChangeWithOperations(t *testing.T) {
 	sqlRunner.Exec(t, `CREATE TABLE t.test (k INT NOT NULL, v INT);`)
 	// GC the old indexes to be dropped after the PK change immediately.
 	defer sqltestutils.DisableGCTTLStrictEnforcement(t, sqlDB)()
-	tableDesc := desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.SystemSQLCodec, "t", "test")
+	tableDesc := desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.PrefixedSystemSQLCodec, "t", "test")
 	if _, err := sqltestutils.AddImmediateGCZoneConfig(sqlDB, tableDesc.GetID()); err != nil {
 		t.Fatal(err)
 	}
@@ -3099,7 +3099,7 @@ ALTER TABLE t.test ALTER PRIMARY KEY USING COLUMNS (k)`)
 	<-hasAttemptedCancel
 
 	sqlRun := sqlutils.MakeSQLRunner(sqlDB)
-	tableDesc := desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.SystemSQLCodec, "t", "test")
+	tableDesc := desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.PrefixedSystemSQLCodec, "t", "test")
 	testutils.SucceedsSoon(t, func() error {
 		return jobutils.VerifySystemJob(t, sqlRun, 1, jobspb.TypeSchemaChange, jobs.StatusSucceeded, jobs.Record{
 			Description:   "CLEANUP JOB for 'ALTER TABLE t.public.test ALTER PRIMARY KEY USING COLUMNS (k)'",
@@ -3341,7 +3341,7 @@ ALTER TABLE t.test ADD z INT8 AS (k + id) STORED;`); err != nil {
 
 	// Wait until both mutations are queued up.
 	testutils.SucceedsSoon(t, func() error {
-		tableDesc := desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.SystemSQLCodec, "t", "test")
+		tableDesc := desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.PrefixedSystemSQLCodec, "t", "test")
 		if l := len(tableDesc.AllMutations()); l != 3 {
 			return errors.Errorf("number of mutations = %d", l)
 		}
@@ -3438,7 +3438,7 @@ ALTER TABLE t.test ADD z INT8 AS (k + id) STORED;`); err != nil {
 		t.Fatalf("got: %s\nexpected: %s", create, expect)
 	}
 
-	tableDesc := desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.SystemSQLCodec, "t", "test")
+	tableDesc := desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.PrefixedSystemSQLCodec, "t", "test")
 	if l := len(tableDesc.AllMutations()); l != 3 {
 		t.Fatalf("number of mutations = %d", l)
 	}
@@ -3555,7 +3555,7 @@ func TestBackfillCompletesOnChunkBoundary(t *testing.T) {
 	}
 
 	// Split the table into multiple ranges.
-	tableDesc := desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.SystemSQLCodec, "t", "test")
+	tableDesc := desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.PrefixedSystemSQLCodec, "t", "test")
 	var sps []serverutils.SplitPoint
 	for i := 1; i <= numNodes-1; i++ {
 		sps = append(sps, serverutils.SplitPoint{TargetNodeIdx: i, Vals: []interface{}{maxValue / numNodes * i}})
@@ -3722,7 +3722,7 @@ CREATE TABLE d.t (
 		t.Fatal(err)
 	}
 	tableDesc := desctestutils.TestingGetMutableExistingTableDescriptor(
-		kvDB, keys.SystemSQLCodec, "d", "t")
+		kvDB, keys.PrefixedSystemSQLCodec, "d", "t")
 	// Verify that this descriptor uses the new STORING encoding. Overwrite it
 	// with one that uses the old encoding.
 	for _, index := range tableDesc.PublicNonPrimaryIndexes() {
@@ -3739,7 +3739,7 @@ CREATE TABLE d.t (
 	}
 	if err := kvDB.Put(
 		context.Background(),
-		catalogkeys.MakeDescMetadataKey(keys.SystemSQLCodec, tableDesc.GetID()),
+		catalogkeys.MakeDescMetadataKey(keys.PrefixedSystemSQLCodec, tableDesc.GetID()),
 		tableDesc.DescriptorProto(),
 	); err != nil {
 		t.Fatal(err)
@@ -3856,7 +3856,7 @@ CREATE TABLE t.test (k INT PRIMARY KEY, v INT);
 	}
 
 	// Split the table into multiple ranges.
-	tableDesc := desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.SystemSQLCodec, "t", "test")
+	tableDesc := desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.PrefixedSystemSQLCodec, "t", "test")
 	var sps []serverutils.SplitPoint
 	for i := 1; i <= numNodes-1; i++ {
 		sps = append(sps, serverutils.SplitPoint{TargetNodeIdx: i, Vals: []interface{}{maxValue / numNodes * i}})
@@ -3935,7 +3935,7 @@ CREATE TABLE t.test (k INT PRIMARY KEY, v INT, pi DECIMAL DEFAULT (DECIMAL '3.14
 		t.Fatal(err)
 	}
 
-	tableDesc := desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.SystemSQLCodec, "t", "test")
+	tableDesc := desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.PrefixedSystemSQLCodec, "t", "test")
 
 	// Add a zone config.
 	cfg := zonepb.DefaultZoneConfig()
@@ -3961,7 +3961,7 @@ CREATE TABLE t.test (k INT PRIMARY KEY, v INT, pi DECIMAL DEFAULT (DECIMAL '3.14
 	require.NoError(t, row.Scan(&count))
 	require.Equal(t, 0, count)
 
-	tableDesc = desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.SystemSQLCodec, "t", "test")
+	tableDesc = desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.PrefixedSystemSQLCodec, "t", "test")
 	if tableDesc.Adding() {
 		t.Fatalf("bad state = %s", tableDesc.GetState())
 	}
@@ -3970,7 +3970,7 @@ CREATE TABLE t.test (k INT PRIMARY KEY, v INT, pi DECIMAL DEFAULT (DECIMAL '3.14
 	}
 
 	// Ensure that the table data hasn't been deleted.
-	tablePrefix := keys.SystemSQLCodec.TablePrefix(uint32(tableDesc.GetID()))
+	tablePrefix := keys.PrefixedSystemSQLCodec.TablePrefix(uint32(tableDesc.GetID()))
 	tableEnd := tablePrefix.PrefixEnd()
 	if kvs, err := kvDB.Scan(ctx, tablePrefix, tableEnd, 0); err != nil {
 		t.Fatal(err)
@@ -4030,7 +4030,7 @@ func TestTruncateCompletion(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	tableDesc := desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.SystemSQLCodec, "t", "test")
+	tableDesc := desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.PrefixedSystemSQLCodec, "t", "test")
 
 	// Add a zone config.
 	var cfg zonepb.ZoneConfig
@@ -4072,7 +4072,7 @@ func TestTruncateCompletion(t *testing.T) {
 	}
 
 	// Get the table descriptor after the truncation.
-	newTableDesc := desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.SystemSQLCodec, "t", "test")
+	newTableDesc := desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.PrefixedSystemSQLCodec, "t", "test")
 	if newTableDesc.Adding() {
 		t.Fatalf("bad state = %s", newTableDesc.GetState())
 	}
@@ -4081,7 +4081,7 @@ func TestTruncateCompletion(t *testing.T) {
 	}
 
 	// Ensure that the table data has been deleted.
-	tablePrefix := keys.SystemSQLCodec.IndexPrefix(uint32(tableDesc.GetID()), uint32(tableDesc.GetPrimaryIndexID()))
+	tablePrefix := keys.PrefixedSystemSQLCodec.IndexPrefix(uint32(tableDesc.GetID()), uint32(tableDesc.GetPrimaryIndexID()))
 	tableEnd := tablePrefix.PrefixEnd()
 	testutils.SucceedsSoon(t, func() error {
 		if kvs, err := kvDB.Scan(ctx, tablePrefix, tableEnd, 0); err != nil {
@@ -4092,8 +4092,8 @@ func TestTruncateCompletion(t *testing.T) {
 		return nil
 	})
 
-	fkTableDesc := desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.SystemSQLCodec, "t", "pi")
-	tablePrefix = keys.SystemSQLCodec.TablePrefix(uint32(fkTableDesc.GetID()))
+	fkTableDesc := desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.PrefixedSystemSQLCodec, "t", "pi")
+	tablePrefix = keys.PrefixedSystemSQLCodec.TablePrefix(uint32(fkTableDesc.GetID()))
 	tableEnd = tablePrefix.PrefixEnd()
 	if kvs, err := kvDB.Scan(ctx, tablePrefix, tableEnd, 0); err != nil {
 		t.Fatal(err)
@@ -4417,7 +4417,7 @@ ALTER TABLE t.test ADD COLUMN c INT AS (v + 4) STORED, ADD COLUMN d INT DEFAULT 
 	}
 
 	// The descriptor version hasn't changed.
-	tableDesc := desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.SystemSQLCodec, "t", "test")
+	tableDesc := desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.PrefixedSystemSQLCodec, "t", "test")
 	if tableDesc.GetVersion() != 1 {
 		t.Fatalf("invalid version = %d", tableDesc.GetVersion())
 	}
@@ -4593,7 +4593,7 @@ func TestCancelSchemaChange(t *testing.T) {
 	})
 
 	// Check that constraints are cleaned up.
-	tableDesc = desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.SystemSQLCodec, "t", "test")
+	tableDesc = desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.PrefixedSystemSQLCodec, "t", "test")
 	if checks := tableDesc.CheckConstraints(); len(checks) != 1 {
 		t.Fatalf("expected 1 check, found %+v", checks)
 	}
@@ -4888,7 +4888,7 @@ func TestIndexBackfillValidation(t *testing.T) {
 				count := atomic.AddInt64(&backfillCount, 1)
 				if count == 2 {
 					// drop an index value before validation.
-					key := keys.SystemSQLCodec.IndexPrefix(uint32(tableDesc.GetID()), uint32(tableDesc.GetNextIndexID()))
+					key := keys.PrefixedSystemSQLCodec.IndexPrefix(uint32(tableDesc.GetID()), uint32(tableDesc.GetNextIndexID()))
 					kv, err := db.Scan(context.Background(), key, key.PrefixEnd(), 1)
 					if err != nil {
 						t.Error(err)
@@ -4913,7 +4913,7 @@ CREATE TABLE t.test (k INT PRIMARY KEY, v INT);
 		t.Fatal(err)
 	}
 
-	tableDesc = desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.SystemSQLCodec, "t", "test")
+	tableDesc = desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.PrefixedSystemSQLCodec, "t", "test")
 
 	// Bulk insert enough rows to exceed the chunk size.
 	inserts := make([]string, maxValue+1)
@@ -4931,7 +4931,7 @@ CREATE TABLE t.test (k INT PRIMARY KEY, v INT);
 		t.Fatal(err)
 	}
 
-	tableDesc = desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.SystemSQLCodec, "t", "test")
+	tableDesc = desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.PrefixedSystemSQLCodec, "t", "test")
 	if len(tableDesc.PublicNonPrimaryIndexes()) > 0 || len(tableDesc.AllMutations()) > 0 {
 		t.Fatalf("descriptor broken %d, %d", len(tableDesc.PublicNonPrimaryIndexes()), len(tableDesc.AllMutations()))
 	}
@@ -4956,7 +4956,7 @@ func TestInvertedIndexBackfillValidation(t *testing.T) {
 				count := atomic.AddInt64(&backfillCount, 1)
 				if count == 2 {
 					// drop an index value before validation.
-					key := keys.SystemSQLCodec.IndexPrefix(uint32(tableDesc.GetID()), uint32(tableDesc.GetNextIndexID()))
+					key := keys.PrefixedSystemSQLCodec.IndexPrefix(uint32(tableDesc.GetID()), uint32(tableDesc.GetNextIndexID()))
 					kv, err := db.Scan(context.Background(), key, key.PrefixEnd(), 1)
 					if err != nil {
 						t.Error(err)
@@ -4981,7 +4981,7 @@ CREATE TABLE t.test (k INT PRIMARY KEY, v JSON);
 		t.Fatal(err)
 	}
 
-	tableDesc = desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.SystemSQLCodec, "t", "test")
+	tableDesc = desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.PrefixedSystemSQLCodec, "t", "test")
 
 	r := rand.New(rand.NewSource(timeutil.Now().UnixNano()))
 	// Insert enough rows to exceed the chunk size.
@@ -5002,7 +5002,7 @@ CREATE TABLE t.test (k INT PRIMARY KEY, v JSON);
 		t.Fatal(err)
 	}
 
-	tableDesc = desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.SystemSQLCodec, "t", "test")
+	tableDesc = desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.PrefixedSystemSQLCodec, "t", "test")
 	if len(tableDesc.PublicNonPrimaryIndexes()) > 0 || len(tableDesc.AllMutations()) > 0 {
 		t.Fatalf("descriptor broken %d, %d", len(tableDesc.PublicNonPrimaryIndexes()), len(tableDesc.AllMutations()))
 	}
@@ -5538,7 +5538,7 @@ CREATE TABLE t.test (k INT PRIMARY KEY, v INT);
 `); err != nil {
 		t.Fatal(err)
 	}
-	tableDesc := desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.SystemSQLCodec, "t", "test")
+	tableDesc := desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.PrefixedSystemSQLCodec, "t", "test")
 
 	if err := sqltestutils.BulkInsertIntoTable(sqlDB, maxValue); err != nil {
 		t.Fatal(err)
@@ -5642,7 +5642,7 @@ INSERT INTO t.test (k, v) VALUES (1, 99), (2, 100);
 		t.Fatal(err)
 	}
 
-	tableDesc := desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.SystemSQLCodec, "t", "test")
+	tableDesc := desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.PrefixedSystemSQLCodec, "t", "test")
 
 	sqlRun := sqlutils.MakeSQLRunner(sqlDB)
 	runBeforeConstraintValidation = func() error {
@@ -6100,14 +6100,14 @@ CREATE INDEX i ON t.test (a) WHERE b > 2
 		t.Fatal(err)
 	}
 
-	tableDesc := desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.SystemSQLCodec, "t", "test")
+	tableDesc := desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.PrefixedSystemSQLCodec, "t", "test")
 	index, err := catalog.MustFindIndexByName(tableDesc, "i")
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
 	}
 
 	// Collect all the keys in the partial index.
-	span := tableDesc.IndexSpan(keys.SystemSQLCodec, index.GetID())
+	span := tableDesc.IndexSpan(keys.PrefixedSystemSQLCodec, index.GetID())
 	keys, err := kvDB.Scan(ctx, span.Key, span.EndKey, 0)
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
@@ -7132,7 +7132,7 @@ ALTER TABLE t.test SET (ttl_expire_after = '10 hours');
 			// Ensure the schedule is still there.
 			desc := desctestutils.TestingGetPublicTableDescriptor(
 				kvDB,
-				keys.SystemSQLCodec,
+				keys.PrefixedSystemSQLCodec,
 				"t",
 				"test",
 			)
@@ -7544,13 +7544,13 @@ CREATE TABLE t.test (pk INT PRIMARY KEY, v INT);
 			},
 			verify: func(t *testing.T, sqlDB *gosql.DB, kvDB *kv.DB) {
 				rowCount := 10
-				tableDesc := desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.SystemSQLCodec, "t", "test")
+				tableDesc := desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.PrefixedSystemSQLCodec, "t", "test")
 				defer sqltestutils.DisableGCTTLStrictEnforcement(t, sqlDB)()
 				if _, err := sqltestutils.AddImmediateGCZoneConfig(sqlDB, tableDesc.GetID()); err != nil {
 					t.Fatal(err)
 				}
 				testutils.SucceedsSoon(t, func() error {
-					return sqltestutils.CheckTableKeyCountExact(ctx, kvDB, keys.SystemSQLCodec, 2*rowCount)
+					return sqltestutils.CheckTableKeyCountExact(ctx, kvDB, keys.PrefixedSystemSQLCodec, 2*rowCount)
 				})
 				indexes := tableDesc.ActiveIndexes()
 				require.Equal(t, 2, len(indexes))

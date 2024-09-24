@@ -752,7 +752,7 @@ func TestRangeController(t *testing.T) {
 
 					state.ssTokenCounter.Eval(kvflowcontrol.Stream{
 						StoreID:  roachpb.StoreID(store),
-						TenantID: roachpb.SystemTenantID,
+						TenantID: roachpb.PrefixedSystemTenantID,
 					}).adjust(ctx,
 						admissionpb.WorkClassFromPri(pri),
 						kvflowcontrol.Tokens(tokens))

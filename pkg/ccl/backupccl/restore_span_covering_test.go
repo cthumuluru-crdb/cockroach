@@ -71,7 +71,7 @@ func MockBackupChain(
 		backups[i].IntroducedSpans = make(roachpb.Spans, 0)
 		for j := range backups[i].Spans {
 			tableID := genTableID(j)
-			backups[i].Spans[j] = makeTableSpan(keys.SystemSQLCodec, tableID)
+			backups[i].Spans[j] = makeTableSpan(keys.PrefixedSystemSQLCodec, tableID)
 		}
 		backups[i].EndTime = ts.Add(time.Minute.Nanoseconds()*int64(i), 0)
 		if i > 0 {
@@ -82,7 +82,7 @@ func MockBackupChain(
 				// span[spanIdxToDrop], present in the first i backups, and add a new
 				// one.
 				newTableID := genTableID(spanIdxToDrop) + 1
-				backups[i].Spans[spanIdxToDrop] = makeTableSpan(keys.SystemSQLCodec, newTableID)
+				backups[i].Spans[spanIdxToDrop] = makeTableSpan(keys.PrefixedSystemSQLCodec, newTableID)
 				backups[i].IntroducedSpans = append(backups[i].IntroducedSpans, backups[i].Spans[spanIdxToDrop])
 			}
 

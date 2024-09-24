@@ -218,7 +218,7 @@ func (w *Watcher) Start(ctx context.Context) error {
 }
 
 func (w *Watcher) startRangeFeed(ctx context.Context) error {
-	tenantsTableStart := keys.SystemSQLCodec.IndexPrefix(
+	tenantsTableStart := keys.PrefixedSystemSQLCodec.IndexPrefix(
 		w.tenantsTableID, keys.TenantsTablePrimaryKeyIndexID,
 	)
 	tenantsTableSpan := roachpb.Span{

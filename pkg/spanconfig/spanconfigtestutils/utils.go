@@ -189,7 +189,7 @@ func ParseKey(t testing.TB, key string) (roachpb.Key, roachpb.TenantID) {
 	require.True(t, keyRe.MatchString(key))
 
 	matches := keyRe.FindStringSubmatch(key)
-	tenantID := roachpb.SystemTenantID
+	tenantID := roachpb.PrefixedSystemTenantID
 	if matches[1] != "" {
 		tenantID = parseTenant(t, key)
 	}

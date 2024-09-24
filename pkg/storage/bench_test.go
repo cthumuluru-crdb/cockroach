@@ -1983,7 +1983,7 @@ var benchRowPrefix roachpb.Key
 
 func init() {
 	benchRowColMap.Set(0, 0)
-	benchRowPrefix = keys.SystemSQLCodec.IndexPrefix(1, 1)
+	benchRowPrefix = keys.PrefixedSystemSQLCodec.IndexPrefix(1, 1)
 }
 
 // makeBenchRowKey makes a key for a SQL row for use in benchmarks,

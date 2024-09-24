@@ -64,7 +64,7 @@ func TestBackupResolveOptionsForJobDescription(t *testing.T) {
 func BenchmarkSpansForAllTableIndexes(b *testing.B) {
 	defer leaktest.AfterTest(b)()
 	execCfg := &sql.ExecutorConfig{
-		Codec: keys.SystemSQLCodec,
+		Codec: keys.PrefixedSystemSQLCodec,
 	}
 	const descCount = 15000
 

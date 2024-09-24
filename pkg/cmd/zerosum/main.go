@@ -218,7 +218,7 @@ func (z *zeroSum) monkey(tableID uint32, d time.Duration) {
 	for {
 		time.Sleep(time.Duration(rand.Float64() * float64(d)))
 
-		key := keys.SystemSQLCodec.TablePrefix(tableID)
+		key := keys.PrefixedSystemSQLCodec.TablePrefix(tableID)
 		key = encoding.EncodeVarintAscending(key, int64(zipf.Uint64()))
 
 		switch r.Intn(2) {

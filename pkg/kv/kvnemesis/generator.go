@@ -541,8 +541,8 @@ var GeneratorDataTableID = bootstrap.TestingMinUserDescID()
 // by this Generator.
 func GeneratorDataSpan() roachpb.Span {
 	return roachpb.Span{
-		Key:    keys.SystemSQLCodec.TablePrefix(GeneratorDataTableID),
-		EndKey: keys.SystemSQLCodec.TablePrefix(GeneratorDataTableID + 1),
+		Key:    keys.PrefixedSystemSQLCodec.TablePrefix(GeneratorDataTableID),
+		EndKey: keys.PrefixedSystemSQLCodec.TablePrefix(GeneratorDataTableID + 1),
 	}
 }
 

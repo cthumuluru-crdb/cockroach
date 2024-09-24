@@ -311,7 +311,7 @@ func TestMakeBackupCodec(t *testing.T) {
 			manifests: []backuppb.BackupManifest{
 				{Spans: []roachpb.Span{{Key: roachpb.Key("/Table/123")}}},
 			},
-			expectedCodec: keys.SystemSQLCodec,
+			expectedCodec: keys.PrefixedSystemSQLCodec,
 		},
 		{
 			name: "full-backup-tenant",
@@ -328,7 +328,7 @@ func TestMakeBackupCodec(t *testing.T) {
 					Tenants: []mtinfopb.TenantInfoWithUsage{{SQLInfo: mtinfopb.SQLInfo{ID: 10}}},
 				},
 			},
-			expectedCodec: keys.SystemSQLCodec,
+			expectedCodec: keys.PrefixedSystemSQLCodec,
 		},
 		{
 			name: "empty-full-backup",
@@ -336,7 +336,7 @@ func TestMakeBackupCodec(t *testing.T) {
 				{Spans: []roachpb.Span{}},
 				{Spans: []roachpb.Span{{Key: roachpb.Key("/Table/123")}}},
 			},
-			expectedCodec: keys.SystemSQLCodec,
+			expectedCodec: keys.PrefixedSystemSQLCodec,
 		},
 		{
 			name: "empty-full-backup-tenant",
@@ -358,7 +358,7 @@ func TestMakeBackupCodec(t *testing.T) {
 					Tenants: []mtinfopb.TenantInfoWithUsage{{SQLInfo: mtinfopb.SQLInfo{ID: 10}}},
 				},
 			},
-			expectedCodec: keys.SystemSQLCodec,
+			expectedCodec: keys.PrefixedSystemSQLCodec,
 		},
 		{
 			name: "all-empty",
@@ -367,7 +367,7 @@ func TestMakeBackupCodec(t *testing.T) {
 				{Spans: []roachpb.Span{{}}},
 				{Spans: []roachpb.Span{{}}},
 			},
-			expectedCodec: keys.SystemSQLCodec,
+			expectedCodec: keys.PrefixedSystemSQLCodec,
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {

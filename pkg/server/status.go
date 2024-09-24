@@ -1363,7 +1363,7 @@ func (s *statusServer) LogFile(
 	// to view logs that pertain to their own tenant. Set the filter
 	// accordingly.
 	tenantIDFilter := ""
-	if s.rpcCtx.TenantID != roachpb.SystemTenantID {
+	if s.rpcCtx.TenantID != roachpb.PrefixedSystemTenantID {
 		tenantIDFilter = s.rpcCtx.TenantID.String()
 	}
 	for {
@@ -1497,7 +1497,7 @@ func (s *statusServer) Logs(
 	// to view logs that pertain to their own tenant. Set the filter
 	// accordingly.
 	tenantIDFilter := ""
-	if s.rpcCtx.TenantID != roachpb.SystemTenantID {
+	if s.rpcCtx.TenantID != roachpb.PrefixedSystemTenantID {
 		tenantIDFilter = s.rpcCtx.TenantID.String()
 	}
 	for _, e := range entries {

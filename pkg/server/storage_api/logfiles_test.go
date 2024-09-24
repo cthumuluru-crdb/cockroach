@@ -293,7 +293,7 @@ func TestStatusLocalLogsTenantFilter(t *testing.T) {
 	}{
 		{
 			name:     "logs for system tenant does not apply filter",
-			tenantID: roachpb.SystemTenantID,
+			tenantID: roachpb.PrefixedSystemTenantID,
 		},
 		{
 			name:     "logs for app tenant applies tenant ID filter",
@@ -324,18 +324,18 @@ func TestStatusLocalLogsTenantFilter(t *testing.T) {
 					continue
 				}
 
-				if testCase.tenantID != roachpb.SystemTenantID {
+				if testCase.tenantID != roachpb.PrefixedSystemTenantID {
 					require.Equal(t, logEntry.TenantID, testCase.tenantID.String())
 				} else {
 					// Logs use the literal system tenant ID when tagging.
-					if logEntry.TenantID == fmt.Sprintf("%d", roachpb.SystemTenantID.InternalValue) {
+					if logEntry.TenantID == fmt.Sprintf("%d", roachpb.PrefixedSystemTenantID.InternalValue) {
 						sysTenantFound = true
 					} else if logEntry.TenantID == appTenantID.String() {
 						appTenantFound = true
 					}
 				}
 			}
-			if testCase.tenantID == roachpb.SystemTenantID {
+			if testCase.tenantID == roachpb.PrefixedSystemTenantID {
 				require.True(t, sysTenantFound)
 				require.True(t, appTenantFound)
 			}

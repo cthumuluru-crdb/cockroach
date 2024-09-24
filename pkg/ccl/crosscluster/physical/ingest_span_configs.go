@@ -96,7 +96,7 @@ func makeSpanConfigIngestor(
 		OldID: sourceTenantID,
 		NewID: details.DestinationTenantID,
 	}
-	rekeyer, err := backupccl.MakeKeyRewriterFromRekeys(keys.SystemSQLCodec,
+	rekeyer, err := backupccl.MakeKeyRewriterFromRekeys(keys.PrefixedSystemSQLCodec,
 		nil /* tableRekeys */, []execinfrapb.TenantRekey{rekeyCfg},
 		true /* restoreTenantFromStream */)
 	if err != nil {

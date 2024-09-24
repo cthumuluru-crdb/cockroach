@@ -31,7 +31,7 @@ func MakePrettyScannerForNamedTables(
 	tenantID roachpb.TenantID, tableNameToID map[string]int, idxNameToID map[string]int,
 ) keysutil.PrettyScanner {
 	var tableParser, tenantParser keys.KeyParserFunc
-	if tenantID == roachpb.SystemTenantID {
+	if tenantID == roachpb.PrefixedSystemTenantID {
 		tableParser = func(input string) (string, roachpb.Key) {
 			return parseTableKeysAsAscendingInts(input, tableNameToID, idxNameToID)
 		}
@@ -78,7 +78,7 @@ func parseTableKeysAsAscendingInts(
 	// We assume that the tenant prefix (if there was any) was already removed
 	// and included into the output by the caller, so we use the system codec
 	// here.
-	output := keys.SystemSQLCodec.TablePrefix(uint32(tableID))
+	output := keys.PrefixedSystemSQLCodec.TablePrefix(uint32(tableID))
 	if remainder == "" {
 		return "", output
 	}

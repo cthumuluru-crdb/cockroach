@@ -397,7 +397,7 @@ type ContextOptions struct {
 func DefaultContextOptions() ContextOptions {
 	return ContextOptions{
 		SSLCertsDir:             certnames.EmbeddedCertsDir,
-		TenantID:                roachpb.SystemTenantID,
+		TenantID:                roachpb.PrefixedSystemTenantID,
 		User:                    username.NodeUserName(),
 		HistogramWindowInterval: base.DefaultHistogramWindowInterval(),
 		RPCHeartbeatInterval:    base.PingInterval,

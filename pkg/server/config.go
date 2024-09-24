@@ -608,7 +608,7 @@ func SetOpenFileLimitForOneStore() (uint64, error) {
 // MakeConfig returns a Config for the system tenant with default values.
 func MakeConfig(ctx context.Context, st *cluster.Settings) Config {
 	storeSpec, tempStorageCfg := makeStorageCfg(ctx, st)
-	sqlCfg := MakeSQLConfig(roachpb.SystemTenantID, tempStorageCfg)
+	sqlCfg := MakeSQLConfig(roachpb.PrefixedSystemTenantID, tempStorageCfg)
 	tr := tracing.NewTracerWithOpt(ctx, tracing.WithClusterSettings(&st.SV))
 	baseCfg := MakeBaseConfig(st, tr, storeSpec)
 	kvCfg := MakeKVConfig()
@@ -920,7 +920,7 @@ func (cfg *Config) InitNode(ctx context.Context) error {
 		cfg.GossipBootstrapAddresses = addresses
 	}
 
-	cfg.BaseConfig.idProvider.SetTenantID(roachpb.SystemTenantID)
+	cfg.BaseConfig.idProvider.SetTenantID(roachpb.PrefixedSystemTenantID)
 	cfg.BaseConfig.idProvider.SetTenantName(catconstants.SystemTenantName)
 
 	return nil

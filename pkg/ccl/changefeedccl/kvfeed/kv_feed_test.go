@@ -45,7 +45,7 @@ import (
 func TestKVFeed(t *testing.T) {
 	defer leaktest.AfterTest(t)()
 
-	codec := keys.SystemSQLCodec
+	codec := keys.PrefixedSystemSQLCodec
 
 	// We want to inject fake table events and data into the buffer
 	// and use that to assert that there are proper calls to the kvScanner and

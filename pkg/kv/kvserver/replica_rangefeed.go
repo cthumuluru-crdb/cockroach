@@ -471,7 +471,7 @@ func (r *Replica) registerWithRangefeedRaftMuLocked(
 	// easy access to it here. Consider plumbing this down from the client
 	// instead. See: https://github.com/cockroachdb/cockroach/issues/110883
 	isSystemSpan := span.EndKey.Compare(
-		roachpb.RKey(keys.SystemSQLCodec.TablePrefix(keys.MaxReservedDescID+1))) <= 0
+		roachpb.RKey(keys.PrefixedSystemSQLCodec.TablePrefix(keys.MaxReservedDescID+1))) <= 0
 
 	// Create a new rangefeed.
 	feedBudget := r.store.GetStoreConfig().RangefeedBudgetFactory.CreateBudget(isSystemSpan)

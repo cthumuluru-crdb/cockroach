@@ -175,7 +175,7 @@ func TestValidateUpdateArgs(t *testing.T) {
 			// Read only targets are not valid delete args.
 			toDelete: []spanconfig.Target{
 				spanconfig.MakeTargetFromSystemTarget(
-					spanconfig.MakeAllTenantKeyspaceTargetsSet(roachpb.SystemTenantID),
+					spanconfig.MakeAllTenantKeyspaceTargetsSet(roachpb.PrefixedSystemTenantID),
 				),
 			},
 			expErr: "cannot use read only system target .* as an update argument",
@@ -184,7 +184,7 @@ func TestValidateUpdateArgs(t *testing.T) {
 			// Read only targets are not valid upsert args.
 			toUpsert: []spanconfig.Record{
 				makeRecord(spanconfig.MakeTargetFromSystemTarget(
-					spanconfig.MakeAllTenantKeyspaceTargetsSet(roachpb.SystemTenantID),
+					spanconfig.MakeAllTenantKeyspaceTargetsSet(roachpb.PrefixedSystemTenantID),
 				), roachpb.SpanConfig{}),
 			},
 			expErr: "cannot use read only system target .* as an update argument",

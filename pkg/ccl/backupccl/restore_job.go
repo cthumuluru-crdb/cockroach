@@ -1544,7 +1544,7 @@ func createImportingDescriptors(
 		// a tenant backup by the system tenant, which the old rekey processor would
 		// mishandle since it assumed the system tenant always restored tenant keys
 		// to tenant prefixes, i.e. as tenant restore.
-		if backupTenantID != roachpb.SystemTenantID && p.ExecCfg().Codec.ForSystemTenant() {
+		if backupTenantID != roachpb.PrefixedSystemTenantID && p.ExecCfg().Codec.ForSystemTenant() {
 			// This empty table rekey acts as a poison-pill, which will be ignored by
 			// a current processor but reliably cause an older processor, which would
 			// otherwise mishandle tenant-made backup keys, to fail as it will be
@@ -1565,7 +1565,7 @@ func createImportingDescriptors(
 	// would never otherwise be valid. It will discard this rekey but it signals
 	// to it that we're rekeying a system-made backup.
 	var tenantRekeys []execinfrapb.TenantRekey
-	if backupTenantID == roachpb.SystemTenantID {
+	if backupTenantID == roachpb.PrefixedSystemTenantID {
 		tenantRekeys = append(tenantRekeys, isBackupFromSystemTenantRekey)
 	}
 
@@ -1657,7 +1657,7 @@ func protectRestoreTargets(
 		// During restores of tenants, protect whole tenant key spans.
 		tenantIDs := make([]roachpb.TenantID, 0, len(tenantRekeys))
 		for _, tenant := range tenantRekeys {
-			if tenant.OldID == roachpb.SystemTenantID {
+			if tenant.OldID == roachpb.PrefixedSystemTenantID {
 				// The system tenant rekey acts as metadata for restore processors during
 				// restores of tenants. The host tenant's keyspace does not need protection.
 				// https://github.com/cockroachdb/cockroach/pull/73647

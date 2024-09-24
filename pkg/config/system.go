@@ -133,7 +133,7 @@ func (s *SystemConfig) getSystemTenantDesc(key roachpb.Key) *roachpb.Value {
 		return getVal
 	}
 
-	id, err := keys.SystemSQLCodec.DecodeDescMetadataID(key)
+	id, err := keys.PrefixedSystemSQLCodec.DecodeDescMetadataID(key)
 	if err != nil {
 		// No ID found for key. No roachpb.Value corresponds to this key.
 		panic(err)
@@ -216,9 +216,9 @@ func (s *SystemConfig) GetLargestObjectID(
 	// Search for the descriptor table entries within the SystemConfig. lowIndex
 	// (in s.Values) is the first and highIndex one past the last KV pair in the
 	// descriptor table.
-	lowBound := keys.SystemSQLCodec.TablePrefix(keys.DescriptorTableID)
+	lowBound := keys.PrefixedSystemSQLCodec.TablePrefix(keys.DescriptorTableID)
 	lowIndex := s.getIndexBound(lowBound)
-	highBound := keys.SystemSQLCodec.TablePrefix(keys.DescriptorTableID + 1)
+	highBound := keys.PrefixedSystemSQLCodec.TablePrefix(keys.DescriptorTableID + 1)
 	highIndex := s.getIndexBound(highBound)
 	if lowIndex == highIndex {
 		return 0, fmt.Errorf("descriptor table not found in system config of %d values", len(s.Values))
@@ -236,7 +236,7 @@ func (s *SystemConfig) GetLargestObjectID(
 	// No maximum specified; maximum ID is the last entry in the descriptor
 	// table or the largest pseudo ID, whichever is larger.
 	if maxReservedDescID == 0 {
-		id, err := keys.SystemSQLCodec.DecodeDescMetadataID(s.Values[highIndex-1].Key)
+		id, err := keys.PrefixedSystemSQLCodec.DecodeDescMetadataID(s.Values[highIndex-1].Key)
 		if err != nil {
 			return 0, err
 		}
@@ -257,7 +257,7 @@ func (s *SystemConfig) GetLargestObjectID(
 			return false
 		}
 		var id uint32
-		id, err = keys.SystemSQLCodec.DecodeDescMetadataID(searchSlice[i].Key)
+		id, err = keys.PrefixedSystemSQLCodec.DecodeDescMetadataID(searchSlice[i].Key)
 		return uint32(maxReservedDescID) < id
 	})
 	if err != nil {
@@ -267,7 +267,7 @@ func (s *SystemConfig) GetLargestObjectID(
 	// If we found an index within the list, maxIdx might point to a descriptor
 	// with exactly maxID.
 	if maxIdx < len(searchSlice) {
-		id, err := keys.SystemSQLCodec.DecodeDescMetadataID(searchSlice[maxIdx].Key)
+		id, err := keys.PrefixedSystemSQLCodec.DecodeDescMetadataID(searchSlice[maxIdx].Key)
 		if err != nil {
 			return 0, err
 		}
@@ -281,7 +281,7 @@ func (s *SystemConfig) GetLargestObjectID(
 	}
 
 	// Return ID of the immediately preceding descriptor.
-	id, err := keys.SystemSQLCodec.DecodeDescMetadataID(searchSlice[maxIdx-1].Key)
+	id, err := keys.PrefixedSystemSQLCodec.DecodeDescMetadataID(searchSlice[maxIdx-1].Key)
 	if err != nil {
 		return 0, err
 	}
@@ -298,7 +298,7 @@ func (s *SystemConfig) GetLargestObjectID(
 func TestingGetSystemTenantZoneConfigForKey(
 	s *SystemConfig, key roachpb.RKey,
 ) (ObjectID, *zonepb.ZoneConfig, error) {
-	return s.getZoneConfigForKey(keys.SystemSQLCodec, key)
+	return s.getZoneConfigForKey(keys.PrefixedSystemSQLCodec, key)
 }
 
 // getZoneConfigForKey looks up the zone config for the object (table
@@ -339,7 +339,7 @@ func (s *SystemConfig) getZoneConfigForKey(
 func (s *SystemConfig) GetSpanConfigForKey(
 	ctx context.Context, key roachpb.RKey,
 ) (roachpb.SpanConfig, roachpb.Span, error) {
-	id, zone, err := s.getZoneConfigForKey(keys.SystemSQLCodec, key)
+	id, zone, err := s.getZoneConfigForKey(keys.PrefixedSystemSQLCodec, key)
 	if err != nil {
 		return roachpb.SpanConfig{}, roachpb.Span{}, err
 	}
@@ -354,7 +354,7 @@ func (s *SystemConfig) GetSpanConfigForKey(
 		// applicable to user tables.
 		spanConfig.GCPolicy.IgnoreStrictEnforcement = true
 	}
-	prefix := keys.SystemSQLCodec.TablePrefix(uint32(id))
+	prefix := keys.PrefixedSystemSQLCodec.TablePrefix(uint32(id))
 	return spanConfig, roachpb.Span{Key: prefix, EndKey: prefix.PrefixEnd()}, nil
 }
 
@@ -544,7 +544,7 @@ func (s *SystemConfig) systemTenantTableBoundarySplitKey(
 		return nil
 	}
 
-	startID, _, ok := DecodeObjectID(keys.SystemSQLCodec, startKey)
+	startID, _, ok := DecodeObjectID(keys.PrefixedSystemSQLCodec, startKey)
 
 	if !ok || startID <= keys.SystemDatabaseID {
 		startID = keys.SystemDatabaseID
@@ -560,7 +560,7 @@ func (s *SystemConfig) systemTenantTableBoundarySplitKey(
 	findSplitKey := func(startID, endID ObjectID) roachpb.RKey {
 		// endID could be smaller than startID if we don't have user tables.
 		for id := startID; id <= endID; id++ {
-			tableKey := roachpb.RKey(keys.SystemSQLCodec.TablePrefix(uint32(id)))
+			tableKey := roachpb.RKey(keys.PrefixedSystemSQLCodec.TablePrefix(uint32(id)))
 			// This logic is analogous to the well-commented static split logic above.
 			if startKey.Less(tableKey) && s.shouldSplitOnSystemTenantObject(id) {
 				if tableKey.Less(endKey) {
@@ -569,7 +569,7 @@ func (s *SystemConfig) systemTenantTableBoundarySplitKey(
 				return nil
 			}
 
-			zoneVal := s.GetValue(MakeZoneKey(keys.SystemSQLCodec, descpb.ID(id)))
+			zoneVal := s.GetValue(MakeZoneKey(keys.PrefixedSystemSQLCodec, descpb.ID(id)))
 			if zoneVal == nil {
 				continue
 			}
@@ -680,7 +680,7 @@ func (s *SystemConfig) tenantBoundarySplitKey(
 
 	// Search for the tenants table entries in the SystemConfig within the
 	// desired tenant ID range.
-	lowBound := keys.SystemSQLCodec.TenantMetadataKey(lowTenID)
+	lowBound := keys.PrefixedSystemSQLCodec.TenantMetadataKey(lowTenID)
 	lowIndex := s.getIndexBound(lowBound)
 	if lowIndex == len(s.Values) {
 		// No keys within range found.
@@ -690,7 +690,7 @@ func (s *SystemConfig) tenantBoundarySplitKey(
 	// Choose the first key in this range. Extract its tenant ID and check
 	// whether its within the desired tenant ID range.
 	splitKey := s.Values[lowIndex].Key
-	splitTenID, err := keys.SystemSQLCodec.DecodeTenantMetadataID(splitKey)
+	splitTenID, err := keys.PrefixedSystemSQLCodec.DecodeTenantMetadataID(splitKey)
 	if err != nil {
 		log.Errorf(ctx, "unable to decode tenant ID from system config: %s", err)
 		return nil
@@ -738,7 +738,7 @@ func (s *SystemConfig) shouldSplitOnSystemTenantObject(id ObjectID) bool {
 		// actual descriptors.
 		shouldSplit = true
 	} else {
-		desc := s.getSystemTenantDesc(keys.SystemSQLCodec.DescMetadataKey(uint32(id)))
+		desc := s.getSystemTenantDesc(keys.PrefixedSystemSQLCodec.DescMetadataKey(uint32(id)))
 		shouldSplit = desc != nil && ShouldSplitAtDesc(desc)
 	}
 	// Populate the cache.

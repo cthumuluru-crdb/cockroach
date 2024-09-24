@@ -87,8 +87,8 @@ func TestFirstUpgrade(t *testing.T) {
 
 	// Corrupt the table descriptor in an unrecoverable manner. We are not able to automatically repair this
 	// descriptor.
-	tbl := desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.SystemSQLCodec, "test", "foo")
-	descKey := catalogkeys.MakeDescMetadataKey(keys.SystemSQLCodec, tbl.GetID())
+	tbl := desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.PrefixedSystemSQLCodec, "test", "foo")
+	descKey := catalogkeys.MakeDescMetadataKey(keys.PrefixedSystemSQLCodec, tbl.GetID())
 	require.NoError(t, kvDB.Txn(ctx, func(ctx context.Context, txn *kv.Txn) error {
 		mut := tabledesc.NewBuilder(tbl.TableDesc()).BuildExistingMutableTable()
 		mut.NextIndexID = 1
@@ -213,15 +213,15 @@ func TestFirstUpgradeRepair(t *testing.T) {
 		"CREATE FUNCTION bar.bar(a INT) RETURNS INT AS 'SELECT a*a' LANGUAGE SQL",
 	)
 
-	dbDesc := desctestutils.TestingGetDatabaseDescriptor(kvDB, keys.SystemSQLCodec, "test")
-	tblDesc := desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.SystemSQLCodec, "test", "bar")
-	schemaDesc := desctestutils.TestingGetSchemaDescriptor(kvDB, keys.SystemSQLCodec, dbDesc.GetID(), "bar")
-	typDesc := desctestutils.TestingGetTypeDescriptor(kvDB, keys.SystemSQLCodec, "test", "bar", "bar")
-	fnDesc := desctestutils.TestingGetFunctionDescriptor(kvDB, keys.SystemSQLCodec, "test", "bar", "bar")
+	dbDesc := desctestutils.TestingGetDatabaseDescriptor(kvDB, keys.PrefixedSystemSQLCodec, "test")
+	tblDesc := desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.PrefixedSystemSQLCodec, "test", "bar")
+	schemaDesc := desctestutils.TestingGetSchemaDescriptor(kvDB, keys.PrefixedSystemSQLCodec, dbDesc.GetID(), "bar")
+	typDesc := desctestutils.TestingGetTypeDescriptor(kvDB, keys.PrefixedSystemSQLCodec, "test", "bar", "bar")
+	fnDesc := desctestutils.TestingGetFunctionDescriptor(kvDB, keys.PrefixedSystemSQLCodec, "test", "bar", "bar")
 	nonCorruptDescs := []catalog.Descriptor{dbDesc, tblDesc, schemaDesc, typDesc, fnDesc}
 
 	// Corrupt FK back references in the test table descriptor, foo.
-	codec := keys.SystemSQLCodec
+	codec := keys.PrefixedSystemSQLCodec
 	fooTbl := desctestutils.TestingGetPublicTableDescriptor(kvDB, codec, "test", "foo")
 	fooFn := desctestutils.TestingGetFunctionDescriptor(kvDB, codec, "test", "public", "f")
 	corruptDescs := []catalog.Descriptor{fooTbl, fooFn}
@@ -249,7 +249,7 @@ func TestFirstUpgradeRepair(t *testing.T) {
 	}))
 
 	readDescFromStorage := func(descID descpb.ID) catalog.Descriptor {
-		descKey := catalogkeys.MakeDescMetadataKey(keys.SystemSQLCodec, descID)
+		descKey := catalogkeys.MakeDescMetadataKey(keys.PrefixedSystemSQLCodec, descID)
 		var b catalog.DescriptorBuilder
 		require.NoError(t, kvDB.Txn(ctx, func(ctx context.Context, txn *kv.Txn) error {
 			v, err := txn.Get(ctx, descKey)

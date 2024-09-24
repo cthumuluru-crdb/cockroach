@@ -332,7 +332,7 @@ func (c *zoneResolver) setZone(objectID config.ObjectID, key ZoneKey, rootZone *
 func (c *zoneResolver) updateZone(
 	ctx context.Context, rd *roachpb.RangeDescriptor, cfg *config.SystemConfig,
 ) (ZoneKey, error) {
-	objectID, _ := config.DecodeKeyIntoZoneIDAndSuffix(keys.SystemSQLCodec, rd.StartKey)
+	objectID, _ := config.DecodeKeyIntoZoneIDAndSuffix(keys.PrefixedSystemSQLCodec, rd.StartKey)
 	first := true
 	var zoneKey ZoneKey
 	var rootZone *zonepb.ZoneConfig
@@ -376,7 +376,7 @@ func (c *zoneResolver) checkSameZone(ctx context.Context, rng *roachpb.RangeDesc
 		return false
 	}
 
-	objectID, keySuffix := config.DecodeKeyIntoZoneIDAndSuffix(keys.SystemSQLCodec, rng.StartKey)
+	objectID, keySuffix := config.DecodeKeyIntoZoneIDAndSuffix(keys.PrefixedSystemSQLCodec, rng.StartKey)
 	if objectID != c.curObjectID {
 		return false
 	}
@@ -407,7 +407,7 @@ func visitZones(
 	opt visitOpt,
 	visitor func(context.Context, *zonepb.ZoneConfig, ZoneKey) bool,
 ) (bool, error) {
-	id, keySuffix := config.DecodeKeyIntoZoneIDAndSuffix(keys.SystemSQLCodec, rng.StartKey)
+	id, keySuffix := config.DecodeKeyIntoZoneIDAndSuffix(keys.PrefixedSystemSQLCodec, rng.StartKey)
 	zone, err := getZoneByID(id, cfg)
 	if err != nil {
 		return false, err
@@ -448,7 +448,7 @@ func visitAncestors(
 	visitor func(context.Context, *zonepb.ZoneConfig, ZoneKey) bool,
 ) (bool, error) {
 	// This is a bug: see https://github.com/cockroachdb/cockroach/issues/48123.
-	var FIXMEIDONTKNOWWHICHCODECTOUSE = keys.MakeSQLCodec(roachpb.SystemTenantID)
+	var FIXMEIDONTKNOWWHICHCODECTOUSE = keys.MakeSQLCodec(roachpb.PrefixedSystemTenantID)
 
 	// Check to see if it's a table. If so, inherit from the database.
 	// For all other cases, inherit from the default.
@@ -501,7 +501,7 @@ func visitDefaultZone(
 
 // getZoneByID returns a zone given its id. Inheritance does not apply.
 func getZoneByID(id config.ObjectID, cfg *config.SystemConfig) (*zonepb.ZoneConfig, error) {
-	zoneVal := cfg.GetValue(config.MakeZoneKey(keys.SystemSQLCodec, descpb.ID(id)))
+	zoneVal := cfg.GetValue(config.MakeZoneKey(keys.PrefixedSystemSQLCodec, descpb.ID(id)))
 	if zoneVal == nil {
 		return nil, nil
 	}

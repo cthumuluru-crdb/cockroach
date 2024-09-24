@@ -6366,7 +6366,7 @@ func TestChangefeedHandlesRollingRestart(t *testing.T) {
 	)
 
 	tableDesc := desctestutils.TestingGetPublicTableDescriptor(
-		tc.Server(0).DB(), keys.SystemSQLCodec, "test", "foo")
+		tc.Server(0).DB(), keys.PrefixedSystemSQLCodec, "test", "foo")
 	tc.SplitTable(t, tableDesc, []serverutils.SplitPoint{
 		{TargetNodeIdx: 1, Vals: []interface{}{100}},
 		{TargetNodeIdx: 2, Vals: []interface{}{200}},

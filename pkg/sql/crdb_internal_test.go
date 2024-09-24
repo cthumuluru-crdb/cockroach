@@ -94,8 +94,8 @@ func TestGetAllNamesInternal(t *testing.T) {
 
 	err := kvDB.Txn(ctx, func(ctx context.Context, txn *kv.Txn) error {
 		batch := txn.NewBatch()
-		batch.Put(catalogkeys.EncodeNameKey(keys.SystemSQLCodec, &descpb.NameInfo{ParentID: 999, ParentSchemaID: 444, Name: "bob"}), 9999)
-		batch.Put(catalogkeys.EncodeNameKey(keys.SystemSQLCodec, &descpb.NameInfo{ParentID: 1000, ParentSchemaID: 29, Name: "alice"}), 10000)
+		batch.Put(catalogkeys.EncodeNameKey(keys.PrefixedSystemSQLCodec, &descpb.NameInfo{ParentID: 999, ParentSchemaID: 444, Name: "bob"}), 9999)
+		batch.Put(catalogkeys.EncodeNameKey(keys.PrefixedSystemSQLCodec, &descpb.NameInfo{ParentID: 1000, ParentSchemaID: 29, Name: "alice"}), 10000)
 		return txn.CommitInBatch(ctx, batch)
 	})
 	require.NoError(t, err)
@@ -232,7 +232,7 @@ CREATE TABLE t.test (k INT);
 	// old-style bit column. We're going to edit the table descriptor
 	// manually, without going through SQL.
 	tableDesc := desctestutils.TestingGetMutableExistingTableDescriptor(
-		kvDB, keys.SystemSQLCodec, "t", "test")
+		kvDB, keys.PrefixedSystemSQLCodec, "t", "test")
 	for i := range tableDesc.Columns {
 		if tableDesc.Columns[i].Name == "k" {
 			tableDesc.Columns[i].Type.InternalType.VisibleType = 4 // Pre-2.1 BIT.
@@ -269,7 +269,7 @@ CREATE TABLE t.test (k INT);
 
 	// Write the modified descriptor.
 	if err := kvDB.Txn(context.Background(), func(ctx context.Context, txn *kv.Txn) error {
-		return txn.Put(ctx, catalogkeys.MakeDescMetadataKey(keys.SystemSQLCodec, tableDesc.ID), tableDesc.DescriptorProto())
+		return txn.Put(ctx, catalogkeys.MakeDescMetadataKey(keys.PrefixedSystemSQLCodec, tableDesc.ID), tableDesc.DescriptorProto())
 	}); err != nil {
 		t.Fatal(err)
 	}
@@ -326,7 +326,7 @@ SELECT column_name, character_maximum_length, numeric_precision, numeric_precisi
 	}
 
 	// And verify that this has re-set the fields.
-	tableDesc = desctestutils.TestingGetMutableExistingTableDescriptor(kvDB, keys.SystemSQLCodec, "t", "test")
+	tableDesc = desctestutils.TestingGetMutableExistingTableDescriptor(kvDB, keys.PrefixedSystemSQLCodec, "t", "test")
 	found := false
 	for i := range tableDesc.Columns {
 		col := &tableDesc.Columns[i]
@@ -1708,8 +1708,8 @@ func TestVirtualPTSTableDeprecated(t *testing.T) {
 			Mode:      ptpb.PROTECT_AFTER,
 			DeprecatedSpans: []roachpb.Span{
 				{
-					Key:    keys.SystemSQLCodec.TablePrefix(42),
-					EndKey: keys.SystemSQLCodec.TablePrefix(42).PrefixEnd(),
+					Key:    keys.PrefixedSystemSQLCodec.TablePrefix(42),
+					EndKey: keys.PrefixedSystemSQLCodec.TablePrefix(42).PrefixEnd(),
 				},
 			},
 			MetaType: "foo",

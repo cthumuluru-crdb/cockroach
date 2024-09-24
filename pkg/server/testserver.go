@@ -89,7 +89,7 @@ func makeTestConfig(st *cluster.Settings, tr *tracing.Tracer) Config {
 	return Config{
 		BaseConfig: makeTestBaseConfig(st, tr),
 		KVConfig:   makeTestKVConfig(),
-		SQLConfig:  makeTestSQLConfig(st, roachpb.SystemTenantID),
+		SQLConfig:  makeTestSQLConfig(st, roachpb.PrefixedSystemTenantID),
 	}
 }
 
@@ -2506,7 +2506,7 @@ func TestingMakeLoggingContexts(
 ) (sysContext, appContext context.Context) {
 	ctxSysTenant := context.Background()
 	ctxSysTenant = context.WithValue(ctxSysTenant, serverident.ServerIdentificationContextKey{}, &idProvider{
-		tenantID:   roachpb.SystemTenantID,
+		tenantID:   roachpb.PrefixedSystemTenantID,
 		clusterID:  &base.ClusterIDContainer{},
 		serverID:   &base.NodeIDContainer{},
 		tenantName: roachpb.NewTenantNameContainer("system"),

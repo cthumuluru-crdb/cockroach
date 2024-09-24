@@ -41,8 +41,8 @@ func TestGetProtectionTimestamps(t *testing.T) {
 
 	tableSpan := func(tableID uint32) roachpb.Span {
 		return roachpb.Span{
-			Key:    keys.SystemSQLCodec.TablePrefix(tableID),
-			EndKey: keys.SystemSQLCodec.TablePrefix(tableID).PrefixEnd(),
+			Key:    keys.PrefixedSystemSQLCodec.TablePrefix(tableID),
+			EndKey: keys.PrefixedSystemSQLCodec.TablePrefix(tableID).PrefixEnd(),
 		}
 	}
 

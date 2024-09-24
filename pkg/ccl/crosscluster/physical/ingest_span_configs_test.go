@@ -395,7 +395,7 @@ func createDummySpanConfigIngestor(
 	destTenantStartKey := keys.MakeTenantPrefix(destTenantID)
 	destTenantSpan := roachpb.Span{Key: destTenantStartKey, EndKey: destTenantStartKey.PrefixEnd()}
 
-	rekeyer, err := backupccl.MakeKeyRewriterFromRekeys(keys.SystemSQLCodec,
+	rekeyer, err := backupccl.MakeKeyRewriterFromRekeys(keys.PrefixedSystemSQLCodec,
 		nil /* tableRekeys */, []execinfrapb.TenantRekey{rekeyCfg},
 		true /* restoreTenantFromStream */)
 	require.NoError(t, err)

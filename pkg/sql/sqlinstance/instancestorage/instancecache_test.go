@@ -103,7 +103,7 @@ func TestRangeFeed(t *testing.T) {
 	})
 
 	t.Run("auth_error", func(t *testing.T) {
-		storage := newStorage(t, keys.SystemSQLCodec)
+		storage := newStorage(t, keys.PrefixedSystemSQLCodec)
 		_, err := storage.newInstanceCache(ctx)
 		require.True(t, grpcutil.IsAuthError(err), "expected %+v to be an auth error", err)
 	})

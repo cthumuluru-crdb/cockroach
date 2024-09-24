@@ -68,7 +68,7 @@ func TestSystemConfigWatcher(t *testing.T) {
 		runTest(t, tenant, tenantDB, func(t *testing.T) []roachpb.KeyValue {
 			return kvtenant.GossipSubscriptionSystemConfigMask.Apply(
 				config.SystemConfigEntries{
-					Values: getSystemDescriptorAndZonesSpans(ctx, t, keys.SystemSQLCodec, kvDB),
+					Values: getSystemDescriptorAndZonesSpans(ctx, t, keys.PrefixedSystemSQLCodec, kvDB),
 				},
 			).Values
 		})

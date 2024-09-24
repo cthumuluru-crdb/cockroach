@@ -110,7 +110,7 @@ func TestRunGenerativeSplitAndScatterContextCancel(t *testing.T) {
 		},
 	}
 
-	kr, err := MakeKeyRewriterFromRekeys(keys.SystemSQLCodec, tableRekeys, nil, false)
+	kr, err := MakeKeyRewriterFromRekeys(keys.PrefixedSystemSQLCodec, tableRekeys, nil, false)
 	require.NoError(t, err)
 
 	chunkSplitScatterers := []splitAndScatterer{makeSplitAndScatterer(flowCtx.Cfg.DB.KV(), kr)}

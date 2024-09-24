@@ -50,7 +50,7 @@ func TestSupportedReleases(t *testing.T) {
 			DefaultZoneConfig:       zonepb.DefaultZoneConfigRef(),
 			DefaultSystemZoneConfig: zonepb.DefaultZoneConfigRef(),
 			OverrideKey:             k,
-			Codec:                   keys.SystemSQLCodec,
+			Codec:                   keys.PrefixedSystemSQLCodec,
 		}
 		_, _, err := opts.GenerateInitialValues()
 		require.NoErrorf(t, err, "error generating initial values for system codec in version %s", k)
@@ -133,7 +133,7 @@ func roundTripInitialValuesStringRepresentation(t *testing.T, tenantID uint64) {
 }
 
 func makeMetadataSchema(tenantID uint64) MetadataSchema {
-	codec := keys.SystemSQLCodec
+	codec := keys.PrefixedSystemSQLCodec
 	if tenantID > 0 {
 		codec = keys.MakeSQLCodec(roachpb.MustMakeTenantID(tenantID))
 	}

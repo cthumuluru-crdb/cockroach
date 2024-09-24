@@ -143,7 +143,7 @@ func parseRandomStreamConfig(streamURL *url.URL) (randomStreamConfig, error) {
 		numPartitions:       1, // TODO(casper): increases this
 		dupProbability:      0.3,
 		sstProbability:      0.2,
-		tenantID:            roachpb.SystemTenantID,
+		tenantID:            roachpb.PrefixedSystemTenantID,
 	}
 
 	var err error

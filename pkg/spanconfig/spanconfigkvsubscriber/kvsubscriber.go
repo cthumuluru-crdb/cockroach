@@ -197,7 +197,7 @@ func New(
 	if knobs == nil {
 		knobs = &spanconfig.TestingKnobs{}
 	}
-	spanConfigTableStart := keys.SystemSQLCodec.IndexPrefix(
+	spanConfigTableStart := keys.PrefixedSystemSQLCodec.IndexPrefix(
 		spanConfigurationsTableID,
 		keys.SpanConfigurationsTablePrimaryKeyIndexID,
 	)

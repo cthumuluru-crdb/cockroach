@@ -89,7 +89,7 @@ func TestGenerateCertLifetime(t *testing.T) {
 	// Create a Client certificate expiring in 4 days. Should get reduced to the CA lifetime.
 	clientDuration := time.Hour * 96
 	_, err = security.GenerateClientCert(caCert, testKey, testKey.Public(), clientDuration, username.TestUserName(),
-		[]roachpb.TenantID{roachpb.SystemTenantID}, nil)
+		[]roachpb.TenantID{roachpb.PrefixedSystemTenantID}, nil)
 	if !testutils.IsError(err, "CA lifetime is .*, shorter than the requested .*") {
 		t.Fatal(err)
 	}
@@ -97,7 +97,7 @@ func TestGenerateCertLifetime(t *testing.T) {
 	// Try again, but expiring before the CA cert.
 	clientDuration = time.Hour * 24
 	clientBytes, err := security.GenerateClientCert(caCert, testKey, testKey.Public(), clientDuration,
-		username.TestUserName(), []roachpb.TenantID{roachpb.SystemTenantID}, nil)
+		username.TestUserName(), []roachpb.TenantID{roachpb.PrefixedSystemTenantID}, nil)
 	if err != nil {
 		t.Fatal(err)
 	}

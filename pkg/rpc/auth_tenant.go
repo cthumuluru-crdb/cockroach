@@ -451,7 +451,7 @@ func validateSpanConfigTarget(
 			return authErrorf("malformed source tenant field")
 		}
 
-		if tenID == roachpb.SystemTenantID {
+		if tenID == roachpb.PrefixedSystemTenantID {
 			// Nothing to validate, the system tenant is allowed to set system span
 			// configurations over secondary tenants, itself, and the entire cluster.
 			return nil

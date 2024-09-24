@@ -836,7 +836,7 @@ func makeSystemServerWithOptions(
 				DB:           systemDB,
 				Server:       systemServer,
 				TestingKnobs: *systemServer.SystemLayer().TestingKnobs(),
-				Codec:        keys.SystemSQLCodec,
+				Codec:        keys.PrefixedSystemSQLCodec,
 			},
 			SystemServer: systemServer,
 			SystemDB:     systemDB,

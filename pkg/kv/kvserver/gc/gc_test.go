@@ -855,7 +855,7 @@ type clearRangeTestData struct {
 func TestGCUseClearRange(t *testing.T) {
 	defer leaktest.AfterTest(t)()
 
-	first := keys.SystemSQLCodec.TablePrefix(42)
+	first := keys.PrefixedSystemSQLCodec.TablePrefix(42)
 	// mkKey creates a key in a table from a string value. If key ends with a +
 	// then Next() key is returned.
 	mkKey := func(key string) roachpb.Key {
@@ -1085,7 +1085,7 @@ type gcVerifier func(t *testing.T, gcer *fakeGCer)
 
 func runTest(t *testing.T, data testRunData, verify gcVerifier) {
 	ctx := context.Background()
-	tablePrefix := keys.SystemSQLCodec.TablePrefix(42)
+	tablePrefix := keys.PrefixedSystemSQLCodec.TablePrefix(42)
 	desc := roachpb.RangeDescriptor{
 		StartKey: roachpb.RKey(tablePrefix),
 		EndKey:   roachpb.RKey(tablePrefix.PrefixEnd()),
@@ -1739,7 +1739,7 @@ func TestRangeKeyBatching(t *testing.T) {
 
 	mkKey := func(key string) roachpb.Key {
 		var k roachpb.Key
-		k = append(k, keys.SystemSQLCodec.TablePrefix(42)...)
+		k = append(k, keys.PrefixedSystemSQLCodec.TablePrefix(42)...)
 		k = append(k, key...)
 		return k
 	}
@@ -1918,7 +1918,7 @@ func TestGcKeyBatcher(t *testing.T) {
 	keyOfSize := func(seq int, size int) roachpb.Key {
 		t.Helper()
 		var k roachpb.Key
-		k = append(k, keys.SystemSQLCodec.IndexPrefix(42, 1)...)
+		k = append(k, keys.PrefixedSystemSQLCodec.IndexPrefix(42, 1)...)
 		kt := encoding.EncodeStringAscending(k, fmt.Sprintf("%06d", seq))
 		baseKeySize := storage.MVCCKey{Key: kt, Timestamp: hlc.Timestamp{WallTime: 1}}.EncodedSize()
 		if padding := size - baseKeySize; padding < 0 {

@@ -564,8 +564,8 @@ func largeTableTarget(targetBytesSize int64) *ptpb.Target {
 
 func tableSpan(tableID uint32) roachpb.Span {
 	return roachpb.Span{
-		Key:    keys.SystemSQLCodec.TablePrefix(tableID),
-		EndKey: keys.SystemSQLCodec.TablePrefix(tableID).PrefixEnd(),
+		Key:    keys.PrefixedSystemSQLCodec.TablePrefix(tableID),
+		EndKey: keys.PrefixedSystemSQLCodec.TablePrefix(tableID).PrefixEnd(),
 	}
 }
 

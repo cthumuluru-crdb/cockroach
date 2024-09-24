@@ -141,7 +141,7 @@ func (spy *logSpy) handleDebugLogSpy(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "while parsing options: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
-	if spy.tenantID != roachpb.SystemTenantID {
+	if spy.tenantID != roachpb.PrefixedSystemTenantID {
 		opts.tenantIDFilter = spy.tenantID.String()
 	}
 

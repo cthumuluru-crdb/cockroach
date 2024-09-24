@@ -1230,7 +1230,7 @@ func TestAlterChangefeedAddTargetsDuringSchemaChangeError(t *testing.T) {
 		// Note the tableSpan to avoid resolved events that leave no gaps
 		fooDesc := desctestutils.TestingGetPublicTableDescriptor(
 			s.SystemServer.DB(), s.Codec, "d", "foo")
-		tableSpan := fooDesc.PrimaryIndexSpan(keys.SystemSQLCodec)
+		tableSpan := fooDesc.PrimaryIndexSpan(keys.PrefixedSystemSQLCodec)
 
 		// FilterSpanWithMutation should ensure that once the backfill begins, the following resolved events
 		// that are for that backfill (are of the timestamp right after the backfill timestamp) resolve some

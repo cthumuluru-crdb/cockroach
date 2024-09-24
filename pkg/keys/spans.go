@@ -55,9 +55,9 @@ var (
 	SystemSpanConfigSpan = roachpb.Span{Key: SystemSpanConfigPrefix, EndKey: SystemSpanConfigKeyMax}
 
 	// SystemDescriptorTableSpan is the span for the system.descriptor table.
-	SystemDescriptorTableSpan = roachpb.Span{Key: SystemSQLCodec.TablePrefix(DescriptorTableID), EndKey: SystemSQLCodec.TablePrefix(DescriptorTableID + 1)}
+	SystemDescriptorTableSpan = roachpb.Span{Key: PrefixedSystemSQLCodec.TablePrefix(DescriptorTableID), EndKey: PrefixedSystemSQLCodec.TablePrefix(DescriptorTableID + 1)}
 	// SystemZonesTableSpan is the span for the system.zones table.
-	SystemZonesTableSpan = roachpb.Span{Key: SystemSQLCodec.TablePrefix(ZonesTableID), EndKey: SystemSQLCodec.TablePrefix(ZonesTableID + 1)}
+	SystemZonesTableSpan = roachpb.Span{Key: PrefixedSystemSQLCodec.TablePrefix(ZonesTableID), EndKey: PrefixedSystemSQLCodec.TablePrefix(ZonesTableID + 1)}
 
 	// NoSplitSpans describes the ranges that should never be split.
 	// Meta1Span: needed to find other ranges.

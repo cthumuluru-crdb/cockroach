@@ -256,7 +256,7 @@ func (tb *tableWriterBase) tryDoResponseAdmission(ctx context.Context) error {
 	if responseAdmissionQ != nil {
 		requestAdmissionHeader := tb.txn.AdmissionHeader()
 		responseAdmission := admission.WorkInfo{
-			TenantID:   roachpb.SystemTenantID,
+			TenantID:   roachpb.PrefixedSystemTenantID,
 			Priority:   admissionpb.WorkPriority(requestAdmissionHeader.Priority),
 			CreateTime: requestAdmissionHeader.CreateTime,
 		}

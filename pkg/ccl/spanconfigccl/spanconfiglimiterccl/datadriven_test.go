@@ -88,9 +88,9 @@ func TestDataDriven(t *testing.T) {
 		spanConfigTestCluster := spanconfigtestcluster.NewHandle(t, tc, scKnobs)
 		defer spanConfigTestCluster.Cleanup()
 
-		spanConfigTestCluster.InitializeTenant(ctx, roachpb.SystemTenantID)
+		spanConfigTestCluster.InitializeTenant(ctx, roachpb.PrefixedSystemTenantID)
 		datadriven.RunTest(t, path, func(t *testing.T, d *datadriven.TestData) string {
-			tenantID := roachpb.SystemTenantID
+			tenantID := roachpb.PrefixedSystemTenantID
 			if d.HasArg("tenant") {
 				var id uint64
 				d.ScanArgs(t, "tenant", &id)

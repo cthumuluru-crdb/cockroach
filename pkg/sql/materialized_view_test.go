@@ -54,7 +54,7 @@ CREATE MATERIALIZED VIEW t.v AS SELECT x FROM t.t;
 		t.Fatal(err)
 	}
 
-	descBeforeRefresh := desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.SystemSQLCodec, "t", "v")
+	descBeforeRefresh := desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.PrefixedSystemSQLCodec, "t", "v")
 
 	// Update the view and refresh it.
 	if _, err := sqlDB.Exec(`
@@ -85,7 +85,7 @@ REFRESH MATERIALIZED VIEW t.v;
 
 	// The data should be deleted.
 	testutils.SucceedsSoon(t, func() error {
-		indexPrefix := keys.SystemSQLCodec.IndexPrefix(uint32(descBeforeRefresh.GetID()), uint32(descBeforeRefresh.GetPrimaryIndexID()))
+		indexPrefix := keys.PrefixedSystemSQLCodec.IndexPrefix(uint32(descBeforeRefresh.GetID()), uint32(descBeforeRefresh.GetPrimaryIndexID()))
 		indexEnd := indexPrefix.PrefixEnd()
 		if kvs, err := kvDB.Scan(ctx, indexPrefix, indexEnd, 0); err != nil {
 			t.Fatal(err)
@@ -187,7 +187,7 @@ CREATE MATERIALIZED VIEW t.v AS SELECT x FROM t.t;
 		t.Fatal(err)
 	}
 
-	descBeforeRefresh := desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.SystemSQLCodec, "t", "v")
+	descBeforeRefresh := desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.PrefixedSystemSQLCodec, "t", "v")
 
 	// Add a zone config to delete all table data.
 	_, err := sqltestutils.AddImmediateGCZoneConfig(sqlDB, descBeforeRefresh.GetID())
@@ -201,7 +201,7 @@ CREATE MATERIALIZED VIEW t.v AS SELECT x FROM t.t;
 	}
 
 	testutils.SucceedsSoon(t, func() error {
-		tableStart := keys.SystemSQLCodec.TablePrefix(uint32(descBeforeRefresh.GetID()))
+		tableStart := keys.PrefixedSystemSQLCodec.TablePrefix(uint32(descBeforeRefresh.GetID()))
 		tableEnd := tableStart.PrefixEnd()
 		if kvs, err := kvDB.Scan(ctx, tableStart, tableEnd, 0); err != nil {
 			t.Fatal(err)
@@ -234,7 +234,7 @@ CREATE TABLE t.t (x INT);
 INSERT INTO t.t VALUES (1), (2);
 CREATE MATERIALIZED VIEW t.v AS SELECT x FROM t.t;
 `)
-	desc := desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.SystemSQLCodec, "t", "v")
+	desc := desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.PrefixedSystemSQLCodec, "t", "v")
 	// Add a zone config to delete all table data.
 	_, err := sqltestutils.AddImmediateGCZoneConfig(sqlRaw, desc.GetID())
 	require.NoError(t, err)
@@ -245,7 +245,7 @@ CREATE MATERIALIZED VIEW t.v AS SELECT x FROM t.t;
 
 	// All of the table data should be cleaned up.
 	testutils.SucceedsSoon(t, func() error {
-		tableStart := keys.SystemSQLCodec.TablePrefix(uint32(desc.GetID()))
+		tableStart := keys.PrefixedSystemSQLCodec.TablePrefix(uint32(desc.GetID()))
 		tableEnd := tableStart.PrefixEnd()
 		if kvs, err := kvDB.Scan(ctx, tableStart, tableEnd, 0); err != nil {
 			t.Fatal(err)

@@ -103,7 +103,7 @@ var testEvalCtx = &eval.Context{
 	),
 	StmtTimestamp: timeutil.Unix(100000000, 0),
 	Settings:      cluster.MakeTestingClusterSettings(),
-	Codec:         keys.SystemSQLCodec,
+	Codec:         keys.PrefixedSystemSQLCodec,
 }
 
 // Value generator represents a value of some data at specified row/col.

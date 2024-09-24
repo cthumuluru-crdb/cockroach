@@ -347,7 +347,7 @@ type lbsTestSettings struct {
 }
 
 func uint32ToKey(key uint32) roachpb.Key {
-	return keys.SystemSQLCodec.TablePrefix(key)
+	return keys.PrefixedSystemSQLCodec.TablePrefix(key)
 }
 
 func getOptimalKey(
@@ -393,7 +393,7 @@ func getKey(
 	keyExecutionTime = timeutil.Since(keyStart)
 	noKeyFound = keyRoachpbKey.Equal(keys.MinKey)
 
-	_, key, _ = keys.SystemSQLCodec.DecodeTablePrefix(keyRoachpbKey)
+	_, key, _ = keys.PrefixedSystemSQLCodec.DecodeTablePrefix(keyRoachpbKey)
 	return
 }
 

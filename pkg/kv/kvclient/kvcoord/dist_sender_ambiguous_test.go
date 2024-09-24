@@ -283,7 +283,7 @@ func TestTransactionUnexpectedlyCommitted(t *testing.T) {
 	}
 
 	// Key constants.
-	tablePrefix := bootstrap.TestingUserTableDataMin(keys.SystemSQLCodec)
+	tablePrefix := bootstrap.TestingUserTableDataMin(keys.PrefixedSystemSQLCodec)
 	tableSpan := roachpb.Span{Key: tablePrefix, EndKey: tablePrefix.PrefixEnd()}
 	keyA := roachpb.Key(encoding.EncodeBytesAscending(tablePrefix.Clone(), []byte("a")))
 	keyB := roachpb.Key(encoding.EncodeBytesAscending(tablePrefix.Clone(), []byte("b")))

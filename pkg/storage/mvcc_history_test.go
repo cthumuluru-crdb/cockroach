@@ -2794,7 +2794,7 @@ func (e *evalCtx) getTenantCodec() keys.SQLCodec {
 		e.scanArg("tenant-prefix", &tenantID)
 		return keys.MakeSQLCodec(roachpb.TenantID{InternalValue: uint64(tenantID)})
 	}
-	return keys.SystemSQLCodec
+	return keys.PrefixedSystemSQLCodec
 }
 
 func (e *evalCtx) newTxn(

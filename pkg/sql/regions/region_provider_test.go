@@ -49,7 +49,7 @@ func TestGetRegions(t *testing.T) {
 		return ret
 	}
 	newTestCollection := func(lm descs.LeaseManager) *descs.Collection {
-		c := descs.MakeTestCollection(context.Background(), keys.SystemSQLCodec, lm)
+		c := descs.MakeTestCollection(context.Background(), keys.PrefixedSystemSQLCodec, lm)
 		c.SetDescriptorSessionDataProvider(catsessiondata.DefaultDescriptorSessionDataProvider)
 		return &c
 	}
@@ -162,7 +162,7 @@ func TestGetRegions(t *testing.T) {
 		t.Run(testCase.name, func(t *testing.T) {
 			var codec keys.SQLCodec
 			if testCase.forSystemTenant {
-				codec = keys.SystemSQLCodec
+				codec = keys.PrefixedSystemSQLCodec
 			} else {
 				codec = keys.MakeSQLCodec(roachpb.MustMakeTenantID(10))
 			}

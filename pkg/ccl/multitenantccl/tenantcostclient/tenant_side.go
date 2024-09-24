@@ -135,7 +135,7 @@ func newTenantSideCostController(
 	timeSource timeutil.TimeSource,
 	testInstr TestInstrumentation,
 ) (*tenantSideCostController, error) {
-	if tenantID == roachpb.SystemTenantID {
+	if tenantID == roachpb.PrefixedSystemTenantID {
 		return nil, errors.AssertionFailedf("cost controller can't be used for system tenant")
 	}
 	c := &tenantSideCostController{

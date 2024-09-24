@@ -31,7 +31,7 @@ func TestMergeKVs(t *testing.T) {
 		ts    int64
 		value string
 	}
-	prefix := keys.SystemSQLCodec.TablePrefix(1)
+	prefix := keys.PrefixedSystemSQLCodec.TablePrefix(1)
 	prefix = prefix[:len(prefix):len(prefix)]
 	mkKey := func(r row) roachpb.Key {
 		return encoding.EncodeStringAscending(prefix, r.key)

@@ -1484,7 +1484,7 @@ func (w *workerCoordinator) performRequestAsync(
 			// Do admission control after we've finalized the memory accounting.
 			if br != nil && w.responseAdmissionQ != nil {
 				responseAdmission := admission.WorkInfo{
-					TenantID:   roachpb.SystemTenantID,
+					TenantID:   roachpb.PrefixedSystemTenantID,
 					Priority:   admissionpb.WorkPriority(w.requestAdmissionHeader.Priority),
 					CreateTime: w.requestAdmissionHeader.CreateTime,
 				}

@@ -706,7 +706,7 @@ func TestEnsureSafeSplitKey(t *testing.T) {
 
 func TestDecodeTenantPrefix(t *testing.T) {
 	tIDs := []roachpb.TenantID{
-		roachpb.SystemTenantID,
+		roachpb.PrefixedSystemTenantID,
 		roachpb.MustMakeTenantID(2),
 		roachpb.MustMakeTenantID(999),
 		roachpb.MustMakeTenantID(math.MaxUint64),
@@ -717,7 +717,7 @@ func TestDecodeTenantPrefix(t *testing.T) {
 			k := MakeTenantPrefix(tID)
 
 			// The system tenant has no tenant prefix.
-			if tID == roachpb.SystemTenantID {
+			if tID == roachpb.PrefixedSystemTenantID {
 				require.Len(t, k, 0)
 			}
 

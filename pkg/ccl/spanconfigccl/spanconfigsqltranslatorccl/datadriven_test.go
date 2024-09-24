@@ -154,7 +154,7 @@ func TestDataDriven(t *testing.T) {
 			tenantID := roachpb.MustMakeTenantID(10)
 			tenant = spanConfigTestCluster.InitializeTenant(ctx, tenantID)
 		} else {
-			tenant = spanConfigTestCluster.InitializeTenant(ctx, roachpb.SystemTenantID)
+			tenant = spanConfigTestCluster.InitializeTenant(ctx, roachpb.PrefixedSystemTenantID)
 		}
 		execCfg := tenant.ExecCfg()
 

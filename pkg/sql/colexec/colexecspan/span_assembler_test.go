@@ -83,7 +83,7 @@ func TestSpanAssembler(t *testing.T) {
 							sel := coldatatestutils.RandomSel(rng, coldata.BatchSize(), probOfOmittingRow)
 							for _, useSystemTenant := range []bool{true, false} {
 								tenantName := "SystemTenant"
-								codec := keys.SystemSQLCodec
+								codec := keys.PrefixedSystemSQLCodec
 								if !useSystemTenant {
 									tenantName = "SecondaryTenant"
 									codec = keys.MakeSQLCodec(roachpb.MustMakeTenantID(5))

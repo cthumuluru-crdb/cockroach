@@ -257,7 +257,7 @@ func generateRandomizedBytes(rand *rand.Rand) []byte {
 	randType := dataTypes[rand.Intn(len(dataTypes))]
 
 	key, err := keyside.Encode(
-		keys.SystemSQLCodec.TablePrefix(tableID),
+		keys.PrefixedSystemSQLCodec.TablePrefix(tableID),
 		randgen.RandDatumSimple(rand, randType),
 		encoding.Ascending,
 	)

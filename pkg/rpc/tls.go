@@ -119,7 +119,7 @@ func NewSecurityContext(
 func (ctx *SecurityContext) GetCertificateManager() (*security.CertificateManager, error) {
 	ctx.lazy.certificateManager.Do(func() {
 		var opts []security.Option
-		if !(ctx.useNodeAuth || ctx.tenID == roachpb.SystemTenantID) {
+		if !(ctx.useNodeAuth || ctx.tenID == roachpb.PrefixedSystemTenantID) {
 			opts = append(opts, security.ForTenant(ctx.tenID.ToUint64()))
 		}
 		ctx.lazy.certificateManager.cm, ctx.lazy.certificateManager.err =

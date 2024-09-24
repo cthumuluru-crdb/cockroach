@@ -156,7 +156,7 @@ func (s *spanConfigStore) computeSplitKey(
 			// so perhaps it's overblown. Perhaps we want general config attributes
 			// that opt a specific table/index out of being coalesced with adjacent
 			// ranges.
-			systemTableUpperBound := keys.SystemSQLCodec.TablePrefix(keys.MaxReservedDescID + 1)
+			systemTableUpperBound := keys.PrefixedSystemSQLCodec.TablePrefix(keys.MaxReservedDescID + 1)
 			if roachpb.Key(rem).Compare(systemTableUpperBound) < 0 ||
 				!StorageCoalesceAdjacentSetting.Get(&s.settings.SV) {
 				return roachpb.RKey(match.span.Key), nil

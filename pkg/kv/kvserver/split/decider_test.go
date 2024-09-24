@@ -400,12 +400,12 @@ func TestDeciderMetrics(t *testing.T) {
 	// No split key, popular key
 	for i := 0; i < 20; i++ {
 		dPopular.Record(context.Background(), ms(timeStart), ld(1), func() roachpb.Span {
-			return roachpb.Span{Key: keys.SystemSQLCodec.TablePrefix(uint32(0))}
+			return roachpb.Span{Key: keys.PrefixedSystemSQLCodec.TablePrefix(uint32(0))}
 		})
 	}
 	for i := 1; i <= 2000; i++ {
 		dPopular.Record(context.Background(), ms(timeStart+i*50), ld(1), func() roachpb.Span {
-			return roachpb.Span{Key: keys.SystemSQLCodec.TablePrefix(uint32(0))}
+			return roachpb.Span{Key: keys.PrefixedSystemSQLCodec.TablePrefix(uint32(0))}
 		})
 	}
 
@@ -421,12 +421,12 @@ func TestDeciderMetrics(t *testing.T) {
 
 	for i := 0; i < 20; i++ {
 		dNotPopular.Record(context.Background(), ms(timeStart), ld(1), func() roachpb.Span {
-			return roachpb.Span{Key: keys.SystemSQLCodec.TablePrefix(uint32(0))}
+			return roachpb.Span{Key: keys.PrefixedSystemSQLCodec.TablePrefix(uint32(0))}
 		})
 	}
 	for i := 1; i <= 2000; i++ {
 		dNotPopular.Record(context.Background(), ms(timeStart+i*50), ld(1), func() roachpb.Span {
-			return roachpb.Span{Key: keys.SystemSQLCodec.TablePrefix(uint32(i))}
+			return roachpb.Span{Key: keys.PrefixedSystemSQLCodec.TablePrefix(uint32(i))}
 		})
 	}
 
@@ -441,12 +441,12 @@ func TestDeciderMetrics(t *testing.T) {
 	}, SplitCPU)
 	for i := 0; i < 20; i++ {
 		dAllInsufficientCounters.Record(context.Background(), ms(timeStart), ld(1), func() roachpb.Span {
-			return roachpb.Span{Key: keys.SystemSQLCodec.TablePrefix(uint32(0))}
+			return roachpb.Span{Key: keys.PrefixedSystemSQLCodec.TablePrefix(uint32(0))}
 		})
 	}
 	for i := 1; i <= 80; i++ {
 		dAllInsufficientCounters.Record(context.Background(), ms(timeStart+i*1000), ld(1), func() roachpb.Span {
-			return roachpb.Span{Key: keys.SystemSQLCodec.TablePrefix(uint32(0))}
+			return roachpb.Span{Key: keys.PrefixedSystemSQLCodec.TablePrefix(uint32(0))}
 		})
 	}
 

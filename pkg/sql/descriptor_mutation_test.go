@@ -57,7 +57,7 @@ func makeMutationTest(
 // in the table equals e.
 func (mt mutationTest) checkTableSize(e int) {
 	// Check that there are no hidden values
-	tableStartKey := keys.SystemSQLCodec.TablePrefix(uint32(mt.tableDesc.ID))
+	tableStartKey := keys.PrefixedSystemSQLCodec.TablePrefix(uint32(mt.tableDesc.ID))
 	tableEndKey := tableStartKey.PrefixEnd()
 	if kvs, err := mt.kvDB.Scan(context.Background(), tableStartKey, tableEndKey, 0); err != nil {
 		mt.Error(err)
@@ -89,7 +89,7 @@ func (mt mutationTest) makeMutationsActive(ctx context.Context) {
 	}
 	if err := mt.kvDB.Put(
 		context.Background(),
-		catalogkeys.MakeDescMetadataKey(keys.SystemSQLCodec, mt.tableDesc.ID),
+		catalogkeys.MakeDescMetadataKey(keys.PrefixedSystemSQLCodec, mt.tableDesc.ID),
 		mt.tableDesc.DescriptorProto(),
 	); err != nil {
 		mt.Fatal(err)
@@ -149,7 +149,7 @@ func (mt mutationTest) writeMutation(ctx context.Context, m descpb.DescriptorMut
 	}
 	if err := mt.kvDB.Put(
 		context.Background(),
-		catalogkeys.MakeDescMetadataKey(keys.SystemSQLCodec, mt.tableDesc.ID),
+		catalogkeys.MakeDescMetadataKey(keys.PrefixedSystemSQLCodec, mt.tableDesc.ID),
 		mt.tableDesc.DescriptorProto(),
 	); err != nil {
 		mt.Fatal(err)
@@ -188,7 +188,7 @@ ALTER TABLE t.test ADD COLUMN i VARCHAR NOT NULL DEFAULT 'i';
 
 	// read table descriptor
 	tableDesc := desctestutils.TestingGetMutableExistingTableDescriptor(
-		kvDB, keys.SystemSQLCodec, "t", "test")
+		kvDB, keys.PrefixedSystemSQLCodec, "t", "test")
 
 	mTest := makeMutationTest(t, kvDB, sqlDB, tableDesc)
 	// Add column "i" as a mutation in delete/write.
@@ -247,7 +247,7 @@ func TestOperationsWithColumnMutation(t *testing.T) {
 
 	// read table descriptor
 	tableDesc := desctestutils.TestingGetMutableExistingTableDescriptor(
-		kvDB, keys.SystemSQLCodec, "t", "test")
+		kvDB, keys.PrefixedSystemSQLCodec, "t", "test")
 
 	mTest := makeMutationTest(t, kvDB, sqlDB, tableDesc)
 
@@ -266,7 +266,7 @@ func TestOperationsWithColumnMutation(t *testing.T) {
 
 					// read table descriptor
 					mTest.tableDesc = desctestutils.TestingGetMutableExistingTableDescriptor(
-						kvDB, keys.SystemSQLCodec, "t", "test")
+						kvDB, keys.PrefixedSystemSQLCodec, "t", "test")
 
 					initRows := [][]string{{"a", "z", "q"}}
 					for _, row := range initRows {
@@ -509,7 +509,7 @@ func TestOperationsWithIndexMutation(t *testing.T) {
 
 	// read table descriptor
 	tableDesc := desctestutils.TestingGetMutableExistingTableDescriptor(
-		kvDB, keys.SystemSQLCodec, "t", "test")
+		kvDB, keys.PrefixedSystemSQLCodec, "t", "test")
 
 	mTest := makeMutationTest(t, kvDB, sqlDB, tableDesc)
 
@@ -530,7 +530,7 @@ func TestOperationsWithIndexMutation(t *testing.T) {
 				sqlRunner.Exec(t, `CREATE TABLE t.test (k CHAR PRIMARY KEY, v CHAR, INDEX foo (v));`)
 				// read table descriptor
 				mTest.tableDesc = desctestutils.TestingGetMutableExistingTableDescriptor(
-					kvDB, keys.SystemSQLCodec, "t", "test")
+					kvDB, keys.PrefixedSystemSQLCodec, "t", "test")
 
 				initRows := [][]string{{"a", "z"}, {"b", "y"}}
 				for _, row := range initRows {
@@ -682,7 +682,7 @@ func TestOperationsWithColumnAndIndexMutation(t *testing.T) {
 
 	// read table descriptor
 	tableDesc := desctestutils.TestingGetMutableExistingTableDescriptor(
-		kvDB, keys.SystemSQLCodec, "t", "test")
+		kvDB, keys.PrefixedSystemSQLCodec, "t", "test")
 
 	mTest := makeMutationTest(t, kvDB, sqlDB, tableDesc)
 
@@ -715,7 +715,7 @@ func TestOperationsWithColumnAndIndexMutation(t *testing.T) {
 
 				// read table descriptor
 				mTest.tableDesc = desctestutils.TestingGetMutableExistingTableDescriptor(
-					kvDB, keys.SystemSQLCodec, "t", "test")
+					kvDB, keys.PrefixedSystemSQLCodec, "t", "test")
 
 				initRows := [][]string{{"a", "z", "q"}, {"b", "y", "r"}}
 				for _, row := range initRows {
@@ -909,7 +909,7 @@ CREATE TABLE t.test (a STRING PRIMARY KEY, b STRING, c STRING, INDEX foo (c));
 
 	// Read table descriptor
 	tableDesc := desctestutils.TestingGetMutableExistingTableDescriptor(
-		kvDB, keys.SystemSQLCodec, "t", "test")
+		kvDB, keys.PrefixedSystemSQLCodec, "t", "test")
 
 	mt := makeMutationTest(t, kvDB, sqlDB, tableDesc)
 
@@ -1040,7 +1040,7 @@ CREATE TABLE t.test (a STRING PRIMARY KEY, b STRING, c STRING, INDEX foo (c));
 	mt.Exec(t, `ALTER TABLE t.test RENAME COLUMN c TO d`)
 	// The mutation in the table descriptor has changed and we would like
 	// to update our copy to make it live.
-	mt.tableDesc = desctestutils.TestingGetMutableExistingTableDescriptor(kvDB, keys.SystemSQLCodec, "t", "test")
+	mt.tableDesc = desctestutils.TestingGetMutableExistingTableDescriptor(kvDB, keys.PrefixedSystemSQLCodec, "t", "test")
 
 	// Make "ufo" live.
 	mt.makeMutationsActive(ctx)
@@ -1067,7 +1067,7 @@ CREATE TABLE t.test (a STRING PRIMARY KEY, b STRING, c STRING, INDEX foo (c));
 	// The mutation in the table descriptor has changed and we would like
 	// to update our copy to make it live.
 	mt.tableDesc = desctestutils.TestingGetMutableExistingTableDescriptor(
-		kvDB, keys.SystemSQLCodec, "t", "test")
+		kvDB, keys.PrefixedSystemSQLCodec, "t", "test")
 
 	// Make column "e" live.
 	mt.makeMutationsActive(ctx)
@@ -1150,7 +1150,7 @@ CREATE TABLE t.test (k CHAR PRIMARY KEY, v CHAR UNIQUE);
 	}
 
 	// read table descriptor
-	tableDesc := desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.SystemSQLCodec, "t", "test")
+	tableDesc := desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.PrefixedSystemSQLCodec, "t", "test")
 
 	expected := []struct {
 		name  string
@@ -1233,12 +1233,12 @@ func TestAddingFKs(t *testing.T) {
 
 	// Step the referencing table back to the ADD state.
 	ordersDesc := desctestutils.TestingGetMutableExistingTableDescriptor(
-		kvDB, keys.SystemSQLCodec, "t", "orders")
+		kvDB, keys.PrefixedSystemSQLCodec, "t", "orders")
 	ordersDesc.State = descpb.DescriptorState_ADD
 	ordersDesc.Version++
 	if err := kvDB.Put(
 		context.Background(),
-		catalogkeys.MakeDescMetadataKey(keys.SystemSQLCodec, ordersDesc.ID),
+		catalogkeys.MakeDescMetadataKey(keys.PrefixedSystemSQLCodec, ordersDesc.ID),
 		ordersDesc.DescriptorProto(),
 	); err != nil {
 		t.Fatal(err)

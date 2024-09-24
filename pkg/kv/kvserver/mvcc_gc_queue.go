@@ -612,7 +612,7 @@ func (r *replicaGCer) send(ctx context.Context, req kvpb.GCRequest) error {
 		ba.AdmissionHeader = gcAdmissionHeader(r.repl.ClusterSettings())
 		ba.Replica.StoreID = r.storeID
 		var err error
-		admissionHandle, err = r.admissionController.AdmitKVWork(ctx, roachpb.SystemTenantID, ba)
+		admissionHandle, err = r.admissionController.AdmitKVWork(ctx, roachpb.PrefixedSystemTenantID, ba)
 		if err != nil {
 			return err
 		}

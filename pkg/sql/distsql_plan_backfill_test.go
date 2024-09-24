@@ -76,7 +76,7 @@ func TestDistBackfill(t *testing.T) {
 		sqlutils.ToRowFn(sqlutils.RowIdxFn, sqlutils.RowEnglishFn),
 	)
 	// Split the table into multiple ranges.
-	descNumToStr := desctestutils.TestingGetPublicTableDescriptor(cdb, keys.SystemSQLCodec, "test", "numtostr")
+	descNumToStr := desctestutils.TestingGetPublicTableDescriptor(cdb, keys.PrefixedSystemSQLCodec, "test", "numtostr")
 	var sps []serverutils.SplitPoint
 	// for i := 1; i <= numNodes-1; i++ {
 	for i := numNodes - 1; i > 0; i-- {

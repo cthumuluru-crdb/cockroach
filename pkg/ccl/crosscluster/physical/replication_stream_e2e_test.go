@@ -693,7 +693,7 @@ func TestTenantStreamingMultipleNodes(t *testing.T) {
 		}
 
 		if sys {
-			args.SrcTenantID = roachpb.SystemTenantID
+			args.SrcTenantID = roachpb.PrefixedSystemTenantID
 			args.SrcTenantName = "system"
 		}
 		telemetry.GetFeatureCounts(telemetry.Raw, telemetry.ResetCounts)
@@ -1321,7 +1321,7 @@ func TestStreamingRegionalConstraint(t *testing.T) {
 		args.MultitenantSingleClusterNumNodes = 3
 		args.MultiTenantSingleClusterTestRegions = regions
 		if sys {
-			args.SrcTenantID = roachpb.SystemTenantID
+			args.SrcTenantID = roachpb.PrefixedSystemTenantID
 			args.SrcTenantName = "system"
 		}
 		marsNodeID := roachpb.NodeID(1)

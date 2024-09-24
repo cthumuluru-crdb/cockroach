@@ -121,7 +121,7 @@ func generateRangeFeedCheckpoint(rng *rand.Rand) *kvpb.RangeFeedEvent {
 	const tableID = 42
 
 	startKey, err := keyside.Encode(
-		keys.SystemSQLCodec.TablePrefix(tableID),
+		keys.PrefixedSystemSQLCodec.TablePrefix(tableID),
 		startDatum,
 		encoding.Ascending,
 	)
@@ -130,7 +130,7 @@ func generateRangeFeedCheckpoint(rng *rand.Rand) *kvpb.RangeFeedEvent {
 	}
 
 	endKey, err := keyside.Encode(
-		keys.SystemSQLCodec.TablePrefix(tableID),
+		keys.PrefixedSystemSQLCodec.TablePrefix(tableID),
 		endDatum,
 		encoding.Ascending,
 	)

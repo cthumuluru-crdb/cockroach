@@ -113,7 +113,7 @@ func TestMetricsRecorderLabels(t *testing.T) {
 	manual := timeutil.NewManualTime(timeutil.Unix(0, 100))
 	st := cluster.MakeTestingClusterSettings()
 	recorder := NewMetricsRecorder(
-		roachpb.SystemTenantID,
+		roachpb.PrefixedSystemTenantID,
 		roachpb.NewTenantNameContainer(catconstants.SystemTenantName),
 		nil, /* nodeLiveness */
 		nil, /* remoteClocks */
@@ -294,7 +294,7 @@ func TestRegistryRecorder_RecordChild(t *testing.T) {
 	systemTenantNameContainer := roachpb.NewTenantNameContainer(catconstants.SystemTenantName)
 	manual := timeutil.NewManualTime(timeutil.Unix(0, 100))
 	st := cluster.MakeTestingClusterSettings()
-	recorder := NewMetricsRecorder(roachpb.SystemTenantID, systemTenantNameContainer, nil, nil, manual, st)
+	recorder := NewMetricsRecorder(roachpb.PrefixedSystemTenantID, systemTenantNameContainer, nil, nil, manual, st)
 	recorder.AddStore(store1)
 	recorder.AddStore(store2)
 
@@ -453,7 +453,7 @@ func TestMetricsRecorder(t *testing.T) {
 	}
 	manual := timeutil.NewManualTime(timeutil.Unix(0, 100))
 	st := cluster.MakeTestingClusterSettings()
-	recorder := NewMetricsRecorder(roachpb.SystemTenantID, roachpb.NewTenantNameContainer(""), nil, nil, manual, st)
+	recorder := NewMetricsRecorder(roachpb.PrefixedSystemTenantID, roachpb.NewTenantNameContainer(""), nil, nil, manual, st)
 	recorder.AddStore(store1)
 	recorder.AddStore(store2)
 	appReg := metric.NewRegistry()

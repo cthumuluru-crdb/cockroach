@@ -633,7 +633,7 @@ func TestChangePollInterval(t *testing.T) {
 	// We'll inject a request filter to detect scans due to the polling.
 	// TODO(yuzefovich): it is suspicious that we're using the system codec, yet
 	// the test passes with the test tenant. Investigate this.
-	tableStart := keys.SystemSQLCodec.TablePrefix(uint32(systemschema.StatementDiagnosticsRequestsTable.GetID()))
+	tableStart := keys.PrefixedSystemSQLCodec.TablePrefix(uint32(systemschema.StatementDiagnosticsRequestsTable.GetID()))
 	tableSpan := roachpb.Span{
 		Key:    tableStart,
 		EndKey: tableStart.PrefixEnd(),

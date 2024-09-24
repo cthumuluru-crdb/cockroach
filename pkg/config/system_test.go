@@ -41,7 +41,7 @@ func plainKV(k, v string) roachpb.KeyValue {
 }
 
 func tkey(tableID uint32, chunks ...string) []byte {
-	key := keys.SystemSQLCodec.TablePrefix(tableID)
+	key := keys.PrefixedSystemSQLCodec.TablePrefix(tableID)
 	for _, c := range chunks {
 		key = append(key, []byte(c)...)
 	}
@@ -70,7 +70,7 @@ func sqlKV(tableID uint32, indexID, descID uint64) roachpb.KeyValue {
 
 func descriptor(descID uint32) roachpb.KeyValue {
 	id := descpb.ID(descID)
-	k := catalogkeys.MakeDescMetadataKey(keys.SystemSQLCodec, id)
+	k := catalogkeys.MakeDescMetadataKey(keys.PrefixedSystemSQLCodec, id)
 	v := &descpb.Descriptor{Union: &descpb.Descriptor_Table{Table: &descpb.TableDescriptor{ID: id}}}
 	kv := roachpb.KeyValue{Key: k}
 	if err := kv.Value.SetProto(v); err != nil {
@@ -80,13 +80,13 @@ func descriptor(descID uint32) roachpb.KeyValue {
 }
 
 func tenant(tenID uint64) roachpb.KeyValue {
-	k := keys.SystemSQLCodec.TenantMetadataKey(roachpb.MustMakeTenantID(tenID))
+	k := keys.PrefixedSystemSQLCodec.TenantMetadataKey(roachpb.MustMakeTenantID(tenID))
 	return kv(k, nil)
 }
 
 func zoneConfig(descID descpb.ID, spans ...zonepb.SubzoneSpan) roachpb.KeyValue {
 	kv := roachpb.KeyValue{
-		Key: config.MakeZoneKey(keys.SystemSQLCodec, descID),
+		Key: config.MakeZoneKey(keys.PrefixedSystemSQLCodec, descID),
 	}
 	if err := kv.Value.SetProto(&zonepb.ZoneConfig{SubzoneSpans: spans}); err != nil {
 		panic(err)
@@ -208,7 +208,7 @@ func TestGetLargestID(t *testing.T) {
 
 		// Real SQL layout.
 		func() testCase {
-			ms := bootstrap.MakeMetadataSchema(keys.SystemSQLCodec, zonepb.DefaultZoneConfigRef(), zonepb.DefaultSystemZoneConfigRef())
+			ms := bootstrap.MakeMetadataSchema(keys.PrefixedSystemSQLCodec, zonepb.DefaultZoneConfigRef(), zonepb.DefaultSystemZoneConfigRef())
 			descIDs := ms.DescriptorIDs()
 			maxDescID := config.ObjectID(descIDs[len(descIDs)-1])
 			kvs, _ /* splits */ := ms.GetInitialValues()
@@ -326,7 +326,7 @@ func TestComputeSplitKeySystemRanges(t *testing.T) {
 
 	cfg := config.NewSystemConfig(zonepb.DefaultZoneConfigRef())
 	kvs, _ /* splits */ := bootstrap.MakeMetadataSchema(
-		keys.SystemSQLCodec, cfg.DefaultZoneConfig, zonepb.DefaultSystemZoneConfigRef(),
+		keys.PrefixedSystemSQLCodec, cfg.DefaultZoneConfig, zonepb.DefaultSystemZoneConfigRef(),
 	).GetInitialValues()
 	cfg.SystemConfigEntries = config.SystemConfigEntries{
 		Values: kvs,
@@ -358,7 +358,7 @@ func TestComputeSplitKeyTableIDs(t *testing.T) {
 	minKey := roachpb.RKey(keys.TimeseriesPrefix.PrefixEnd())
 
 	schema := bootstrap.MakeMetadataSchema(
-		keys.SystemSQLCodec, zonepb.DefaultZoneConfigRef(), zonepb.DefaultSystemZoneConfigRef(),
+		keys.PrefixedSystemSQLCodec, zonepb.DefaultZoneConfigRef(), zonepb.DefaultSystemZoneConfigRef(),
 	)
 	// Real system tables only.
 	baseSql, _ /* splits */ := schema.GetInitialValues()
@@ -465,7 +465,7 @@ func TestComputeSplitKeyTenantBoundaries(t *testing.T) {
 	minTenID, maxTenID := roachpb.MinTenantID.ToUint64(), roachpb.MaxTenantID.ToUint64()
 
 	schema := bootstrap.MakeMetadataSchema(
-		keys.SystemSQLCodec, zonepb.DefaultZoneConfigRef(), zonepb.DefaultSystemZoneConfigRef(),
+		keys.PrefixedSystemSQLCodec, zonepb.DefaultZoneConfigRef(), zonepb.DefaultSystemZoneConfigRef(),
 	)
 	minKey := tkey(bootstrap.TestingUserDescID(0))
 
@@ -604,7 +604,7 @@ func TestGetZoneConfigForKey(t *testing.T) {
 	cfg := config.NewSystemConfig(zonepb.DefaultZoneConfigRef())
 
 	kvs, _ /* splits */ := bootstrap.MakeMetadataSchema(
-		keys.SystemSQLCodec, cfg.DefaultZoneConfig, zonepb.DefaultSystemZoneConfigRef(),
+		keys.PrefixedSystemSQLCodec, cfg.DefaultZoneConfig, zonepb.DefaultSystemZoneConfigRef(),
 	).GetInitialValues()
 	cfg.SystemConfigEntries = config.SystemConfigEntries{
 		Values: kvs,

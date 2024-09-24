@@ -107,7 +107,7 @@ func TestEnsureLocalReadsOnGlobalTables(t *testing.T) {
 	var tableID uint32
 	err = sqlDB.QueryRow(`SELECT id from system.namespace WHERE name='test_table'`).Scan(&tableID)
 	require.NoError(t, err)
-	tablePrefix := keys.MustAddr(keys.SystemSQLCodec.TablePrefix(tableID))
+	tablePrefix := keys.MustAddr(keys.PrefixedSystemSQLCodec.TablePrefix(tableID))
 	// Split the range at the start of the table and add a voter to all nodes in
 	// the cluster.
 	tc.SplitRangeOrFatal(t, tablePrefix.AsRawKey())

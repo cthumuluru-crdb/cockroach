@@ -70,7 +70,7 @@ func newKVRowProcessor(
 		})
 	}
 
-	prefixlessCodec := keys.SystemSQLCodec
+	prefixlessCodec := keys.PrefixedSystemSQLCodec
 	rfCache, err := cdcevent.NewFixedRowFetcherCache(
 		ctx, prefixlessCodec, evalCtx.Settings, cdcEventTargets, srcTablesBySrcID,
 	)

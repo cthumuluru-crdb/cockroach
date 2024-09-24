@@ -2100,7 +2100,7 @@ func TestFailedImportGC(t *testing.T) {
 	}
 	// Ensure that we have garbage written to the descriptor that we want to
 	// clean up.
-	tests.CheckKeyCount(t, kvDB, td.TableSpan(keys.SystemSQLCodec), 87)
+	tests.CheckKeyCount(t, kvDB, td.TableSpan(keys.PrefixedSystemSQLCodec), 87)
 
 	// Allow GC to progress.
 	close(blockGC)
@@ -2111,7 +2111,7 @@ func TestFailedImportGC(t *testing.T) {
 	)
 	sqlDB.CheckQueryResultsRetry(t, doneGCQuery, [][]string{{"1"}})
 	// Expect there are no more KVs for this span.
-	tests.CheckKeyCount(t, kvDB, td.TableSpan(keys.SystemSQLCodec), 0)
+	tests.CheckKeyCount(t, kvDB, td.TableSpan(keys.PrefixedSystemSQLCodec), 0)
 }
 
 // TestImportIntoCSVCancel cancels a distributed import. This test

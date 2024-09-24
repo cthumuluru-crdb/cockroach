@@ -60,7 +60,7 @@ func (s *KeyVisualizerServer) saveBoundaries(
 			boundaries
 			) VALUES ($1, $2)
 		`,
-		roachpb.SystemTenantID.ToUint64(),
+		roachpb.PrefixedSystemTenantID.ToUint64(),
 		encoded,
 	)
 

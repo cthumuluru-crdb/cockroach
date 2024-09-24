@@ -114,7 +114,7 @@ func TestHotRangesStats(t *testing.T) {
 
 	// Ensure both of node 1 and 2 have 5 distinct replicas from the table.
 	tableDesc := desctestutils.TestingGetPublicTableDescriptor(
-		tc.Server(0).DB(), keys.SystemSQLCodec, "test", "foo")
+		tc.Server(0).DB(), keys.PrefixedSystemSQLCodec, "test", "foo")
 	tc.SplitTable(t, tableDesc, []serverutils.SplitPoint{
 		{TargetNodeIdx: 1, Vals: []interface{}{100}},
 		{TargetNodeIdx: 1, Vals: []interface{}{120}},

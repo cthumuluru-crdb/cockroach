@@ -463,7 +463,7 @@ func allocateStoreIDs(
 func GetBootstrapSchema(
 	defaultZoneConfig *zonepb.ZoneConfig, defaultSystemZoneConfig *zonepb.ZoneConfig,
 ) bootstrap.MetadataSchema {
-	return bootstrap.MakeMetadataSchema(keys.SystemSQLCodec, defaultZoneConfig, defaultSystemZoneConfig)
+	return bootstrap.MakeMetadataSchema(keys.PrefixedSystemSQLCodec, defaultZoneConfig, defaultSystemZoneConfig)
 }
 
 // bootstrapCluster initializes the passed-in engines for a new cluster.
@@ -515,7 +515,7 @@ func bootstrapCluster(
 			initialValuesOpts := bootstrap.InitialValuesOpts{
 				DefaultZoneConfig:       &initCfg.defaultZoneConfig,
 				DefaultSystemZoneConfig: &initCfg.defaultSystemZoneConfig,
-				Codec:                   keys.SystemSQLCodec,
+				Codec:                   keys.PrefixedSystemSQLCodec,
 			}
 			for _, v := range bootstrap.VersionsWithInitialValues() {
 				if initCfg.latestVersion == v.Version() {
@@ -1808,7 +1808,7 @@ func (n *Node) Batch(ctx context.Context, args *kvpb.BatchRequest) (*kvpb.BatchR
 
 	tenantID, ok := roachpb.ClientTenantFromContext(ctx)
 	if !ok {
-		tenantID = roachpb.SystemTenantID
+		tenantID = roachpb.PrefixedSystemTenantID
 	} else {
 		// We had this tag before the ResetAndAnnotateCtx() call above.
 		ctx = logtags.AddTag(ctx, "tenant", tenantID)
@@ -1829,7 +1829,7 @@ func (n *Node) Batch(ctx context.Context, args *kvpb.BatchRequest) (*kvpb.BatchR
 	// for the locality of the origin of the request. The replica stats aggregate
 	// all incoming BatchRequests and which localities they come from in order to
 	// compute per second stats used for the rebalancing decisions.
-	if args.GatewayNodeID == 0 && tenantID != roachpb.SystemTenantID {
+	if args.GatewayNodeID == 0 && tenantID != roachpb.PrefixedSystemTenantID {
 		args.GatewayNodeID = n.Descriptor.NodeID
 	}
 
@@ -1896,7 +1896,7 @@ func (sp *spanForRequest) finish(br *kvpb.BatchResponse, redactOpt redactOpt) {
 		// Even if the recording sent to a tenant is redacted (anything sensitive
 		// is stripped out of the verbose messages), structured payloads
 		// stay untouched.
-		needRedaction := sp.tenID != roachpb.SystemTenantID && redactOpt == redactIfTenantRequest
+		needRedaction := sp.tenID != roachpb.PrefixedSystemTenantID && redactOpt == redactIfTenantRequest
 		if needRedaction {
 			redactRecording(rec)
 		}
@@ -2661,7 +2661,7 @@ func (n *Node) TokenBucket(
 ) (*kvpb.TokenBucketResponse, error) {
 	// Check tenant ID. Note that in production configuration, the tenant ID has
 	// already been checked in the RPC layer (see rpc.tenantAuthorizer).
-	if in.TenantID == 0 || in.TenantID == roachpb.SystemTenantID.ToUint64() {
+	if in.TenantID == 0 || in.TenantID == roachpb.PrefixedSystemTenantID.ToUint64() {
 		return &kvpb.TokenBucketResponse{
 			Error: errors.EncodeError(ctx, errors.Errorf(
 				"token bucket request with invalid tenant ID %d", in.TenantID,

@@ -465,7 +465,7 @@ func refreshTenant(
 	// Read the tenant's GC TTL to check if the tenant's data has expired.
 	cfg := execCfg.SystemConfig.GetSystemConfig()
 	tenantTTLSeconds := execCfg.DefaultZoneConfig.GC.TTLSeconds
-	zoneCfg, err := cfg.GetZoneConfigForObject(keys.SystemSQLCodec, keys.TenantsRangesID)
+	zoneCfg, err := cfg.GetZoneConfigForObject(keys.PrefixedSystemSQLCodec, keys.TenantsRangesID)
 	if err == nil {
 		tenantTTLSeconds = zoneCfg.GC.TTLSeconds
 	} else {

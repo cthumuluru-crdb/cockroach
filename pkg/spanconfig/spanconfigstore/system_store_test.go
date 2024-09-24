@@ -67,14 +67,14 @@ func TestSystemSpanConfigStoreCombine(t *testing.T) {
 		),
 		makeSpanConfigAddition(spanconfig.MakeTargetFromSystemTarget(
 			spanconfig.TestingMakeTenantKeyspaceTargetOrFatal(
-				t, roachpb.SystemTenantID, roachpb.SystemTenantID,
+				t, roachpb.PrefixedSystemTenantID, roachpb.PrefixedSystemTenantID,
 			),
 		),
 			makeSystemSpanConfig(120),
 		),
 		makeSpanConfigAddition(spanconfig.MakeTargetFromSystemTarget(
 			spanconfig.TestingMakeTenantKeyspaceTargetOrFatal(
-				t, roachpb.SystemTenantID, roachpb.MustMakeTenantID(10),
+				t, roachpb.PrefixedSystemTenantID, roachpb.MustMakeTenantID(10),
 			),
 		),
 			makeSystemSpanConfig(150),
@@ -95,7 +95,7 @@ func TestSystemSpanConfigStoreCombine(t *testing.T) {
 		),
 		makeSpanConfigAddition(spanconfig.MakeTargetFromSystemTarget(
 			spanconfig.TestingMakeTenantKeyspaceTargetOrFatal(
-				t, roachpb.SystemTenantID, roachpb.MustMakeTenantID(30),
+				t, roachpb.PrefixedSystemTenantID, roachpb.MustMakeTenantID(30),
 			),
 		),
 			makeSystemSpanConfig(500),
@@ -112,7 +112,7 @@ func TestSystemSpanConfigStoreCombine(t *testing.T) {
 		expectedPTSs []hlc.Timestamp
 	}{
 		{
-			key:          roachpb.RKey(append(keys.MakeTenantPrefix(roachpb.SystemTenantID), byte('a'))),
+			key:          roachpb.RKey(append(keys.MakeTenantPrefix(roachpb.PrefixedSystemTenantID), byte('a'))),
 			expectedPTSs: []hlc.Timestamp{ts(1), ts(100), ts(120)},
 		},
 		{

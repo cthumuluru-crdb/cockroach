@@ -1083,8 +1083,8 @@ func AddressResolver(s kvclient.NodeDescStore) nodedialer.AddressResolver {
 var GossipSubscriptionSystemConfigMask = config.MakeSystemConfigMask(
 	// Tenant SQL servers need just enough of the zone hierarchy to understand
 	// which zone configurations apply to their keyspace.
-	config.MakeZoneKey(keys.SystemSQLCodec, keys.RootNamespaceID),
-	config.MakeZoneKey(keys.SystemSQLCodec, keys.TenantsRangesID),
+	config.MakeZoneKey(keys.PrefixedSystemSQLCodec, keys.RootNamespaceID),
+	config.MakeZoneKey(keys.PrefixedSystemSQLCodec, keys.TenantsRangesID),
 )
 
 // CombineKVAddresses combines the remote and loopback addresses into a single

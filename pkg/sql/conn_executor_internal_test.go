@@ -297,7 +297,7 @@ func startConnExecutor(
 	})
 	// This pool should never be Stop()ed because, if the test is failing, memory
 	// is not properly released.
-	collectionFactory := descs.NewBareBonesCollectionFactory(st, keys.SystemSQLCodec)
+	collectionFactory := descs.NewBareBonesCollectionFactory(st, keys.PrefixedSystemSQLCodec)
 	cfg := &ExecutorConfig{
 		AmbientCtx: ambientCtx,
 		Settings:   st,
@@ -312,7 +312,7 @@ func startConnExecutor(
 			NodeID:           nodeID,
 			LogicalClusterID: func() uuid.UUID { return uuid.UUID{} },
 		},
-		Codec: keys.SystemSQLCodec,
+		Codec: keys.PrefixedSystemSQLCodec,
 		DistSQLPlanner: NewDistSQLPlanner(
 			ctx, st, 1, /* sqlInstanceID */
 			nil, /* rpcCtx */
@@ -338,7 +338,7 @@ func startConnExecutor(
 			nil, /* connHealthCheckerSystem */
 			nil, /* instanceConnHealthChecker */
 			nil, /* sqlInstanceDialer */
-			keys.SystemSQLCodec,
+			keys.PrefixedSystemSQLCodec,
 			nil, /* sqlAddressResolver */
 			clock,
 		),

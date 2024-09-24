@@ -33,7 +33,7 @@ import (
 func TestBackfillerTracker(t *testing.T) {
 	defer leaktest.AfterTest(t)()
 	mkSpans := func(tableID, indexID uint32, ks ...string) (ret []roachpb.Span) {
-		prefix := keys.SystemSQLCodec.IndexPrefix(tableID, indexID)
+		prefix := keys.PrefixedSystemSQLCodec.IndexPrefix(tableID, indexID)
 		prefix = prefix[:len(prefix):len(prefix)]
 		switch len(ks) {
 		case 0:
@@ -113,7 +113,7 @@ func TestBackfillerTracker(t *testing.T) {
 		ctx := context.Background()
 		var bts backfillerTrackerTestState
 		bts.mu.rangeSpans = tc.rangeSpans
-		tr := newTracker(keys.SystemSQLCodec, bts.cfg(), tc.backfillProgress, tc.mergeProgress)
+		tr := newTracker(keys.PrefixedSystemSQLCodec, bts.cfg(), tc.backfillProgress, tc.mergeProgress)
 
 		t.Run("retrieving initial state", func(t *testing.T) {
 			{
@@ -236,7 +236,7 @@ func TestBackfillerTracker(t *testing.T) {
 		ctx := context.Background()
 		var bts backfillerTrackerTestState
 		bts.mu.rangeSpans = tc.rangeSpans
-		tr := newTracker(keys.SystemSQLCodec, bts.cfg(), tc.backfillProgress, tc.mergeProgress)
+		tr := newTracker(keys.PrefixedSystemSQLCodec, bts.cfg(), tc.backfillProgress, tc.mergeProgress)
 
 		t.Run("retrieving initial state", func(t *testing.T) {
 			{

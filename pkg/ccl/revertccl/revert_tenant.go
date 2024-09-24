@@ -66,7 +66,7 @@ func RevertTenantToTimestamp(
 			return err
 		}
 
-		if tenantID.Equal(roachpb.SystemTenantID) {
+		if tenantID.Equal(roachpb.PrefixedSystemTenantID) {
 			return errors.New("cannot revert the system tenant")
 		}
 

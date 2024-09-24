@@ -21,17 +21,27 @@ import (
 	"github.com/cockroachdb/errors"
 )
 
-// SystemTenantID is the ID associated with the tenant that manages a cluster.
+// TODO(chandrat) Revisit this later.
 //
-// The system tenant must exist and must use shared service, to be available to
-// node-internal processes. Additionally it is given special treatment in any
-// authorization decisions, bypassing typical restrictions that tenants act only
-// on their own key spans.
-var SystemTenantID = TenantOne
+//// SystemTenantID is the ID associated with the tenant that manages a cluster.
+////
+//// The system tenant must exist and must use shared service, to be available to
+//// node-internal processes. Additionally it is given special treatment in any
+//// authorization decisions, bypassing typical restrictions that tenants act only
+//// on their own key spans.
+//var SystemTenantID = TenantOne
+
+var PrefixedSystemTenantID = TenantTwo
+
+// var UnprefixedSystemTenantID = TenantOne
 
 // TenantOne is a special tenant ID, associated the numeric ID 1, which for
 // legacy compatibility reasons stores its tables without a tenant prefix.
 var TenantOne = MustMakeTenantID(1)
+
+// TenantTwo is a system tenant ID, associated the numeric ID 2. It stores
+// its tables with a tenant prefix.
+var TenantTwo = MustMakeTenantID(2)
 
 // MinTenantID is the minimum ID of a (non-system) tenant in a multi-tenant
 // cluster.
@@ -47,7 +57,7 @@ func init() {
 	// Inject the string representation of SystemTenantID into the log package
 	// to avoid an import dependency cycle.
 	serverident.SetSystemTenantID(
-		strconv.FormatUint(SystemTenantID.ToUint64(), 10))
+		strconv.FormatUint(PrefixedSystemTenantID.ToUint64(), 10))
 }
 
 // MustMakeTenantID constructs a new TenantID from the provided uint64.
@@ -77,8 +87,10 @@ func (t TenantID) String() string {
 	switch t {
 	case TenantID{}:
 		return "invalid"
-	case SystemTenantID:
+	case PrefixedSystemTenantID:
 		return "system"
+	//case UnprefixedSystemTenantID:
+	//	return "system"
 	default:
 		return strconv.FormatUint(t.InternalValue, 10)
 	}
@@ -117,7 +129,7 @@ func (t TenantID) IsSystem() bool {
 // IsSystemTenantID returns whether the provided ID corresponds to that of the
 // system tenant.
 func IsSystemTenantID(id uint64) bool {
-	return id == SystemTenantID.ToUint64()
+	return id == PrefixedSystemTenantID.ToUint64()
 }
 
 type tenantKey struct{}

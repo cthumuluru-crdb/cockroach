@@ -284,7 +284,7 @@ func TestTenantVersionCheck(t *testing.T) {
 	})
 	// Ensure the same behavior when a tenant ID exists but is for the system tenant.
 	t.Run("too old, system tenant", func(t *testing.T) {
-		tenantCtx := roachpb.ContextWithClientTenant(context.Background(), roachpb.SystemTenantID)
+		tenantCtx := roachpb.ContextWithClientTenant(context.Background(), roachpb.PrefixedSystemTenantID)
 		_, err := heartbeat.Ping(tenantCtx, request)
 		require.Regexp(t, failedRE, err)
 	})

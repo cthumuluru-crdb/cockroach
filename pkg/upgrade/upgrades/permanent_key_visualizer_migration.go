@@ -42,7 +42,7 @@ func keyVisualizerTablesMigration(
 	}
 
 	for _, table := range tables {
-		err := createSystemTable(ctx, d.DB, d.Settings, keys.SystemSQLCodec,
+		err := createSystemTable(ctx, d.DB, d.Settings, keys.PrefixedSystemSQLCodec,
 			table,
 			tree.LocalityLevelTable)
 		if err != nil {

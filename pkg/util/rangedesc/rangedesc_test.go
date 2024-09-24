@@ -52,8 +52,8 @@ var scopes = []roachpb.Span{
 		EndKey: keys.SystemZonesTableSpan.EndKey,
 	},
 	{ // = /Table/{38-48}
-		Key:    keys.SystemSQLCodec.TablePrefix(keys.TenantsRangesID),
-		EndKey: keys.SystemSQLCodec.TablePrefix(keys.SpanConfigurationsTableID + 1),
+		Key:    keys.PrefixedSystemSQLCodec.TablePrefix(keys.TenantsRangesID),
+		EndKey: keys.PrefixedSystemSQLCodec.TablePrefix(keys.SpanConfigurationsTableID + 1),
 	},
 	{ // = /Table/{0-Max}
 		Key:    keys.TableDataMin,

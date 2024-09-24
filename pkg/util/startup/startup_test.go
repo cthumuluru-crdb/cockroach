@@ -52,7 +52,7 @@ func TestMain(m *testing.M) {
 // failing range from test and plug in into faultKey.
 // As of time of writing following ranges trigger retries:
 // - /System/NodeLivenessMax (keys.BootstrapVersionKey)
-// - /Table/11 (keys.SystemSQLCodec.TablePrefix(11))
+// - /Table/11 (keys.PrefixedSystemSQLCodec.TablePrefix(11))
 // If startup.IsRetryableReplicaError is changed to return false every time,
 // test should fail if range from above is used.
 func TestStartupFailure(t *testing.T) {

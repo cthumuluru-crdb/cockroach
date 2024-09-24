@@ -42,7 +42,7 @@ func generateStartAndEndKeyFromK(rand *rand.Rand, k int) (roachpb.Key, roachpb.K
 	const tableID = 42
 
 	startKey, err := keyside.Encode(
-		keys.SystemSQLCodec.TablePrefix(tableID),
+		keys.PrefixedSystemSQLCodec.TablePrefix(tableID),
 		startDatum,
 		encoding.Ascending,
 	)
@@ -51,7 +51,7 @@ func generateStartAndEndKeyFromK(rand *rand.Rand, k int) (roachpb.Key, roachpb.K
 	}
 
 	endKey, err := keyside.Encode(
-		keys.SystemSQLCodec.TablePrefix(tableID),
+		keys.PrefixedSystemSQLCodec.TablePrefix(tableID),
 		endDatum,
 		encoding.Ascending,
 	)

@@ -38,7 +38,7 @@ func TestInitialSplitPoints(t *testing.T) {
 	defer log.Scope(t).Close(t)
 
 	testutils.RunTrueAndFalse(t, "tenant", func(t *testing.T, isSystem bool) {
-		codec := keys.SystemSQLCodec
+		codec := keys.PrefixedSystemSQLCodec
 		if !isSystem {
 			seed := randutil.NewPseudoSeed()
 			t.Logf("seed is %d", seed)

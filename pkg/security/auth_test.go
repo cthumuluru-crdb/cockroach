@@ -400,34 +400,34 @@ func TestAuthenticationHook(t *testing.T) {
 		expectedErr                string
 	}{
 		// Insecure mode, empty username.
-		{true, "", username.EmptyRole, "", "", true, false, false, roachpb.SystemTenantID, false, false, `user is missing`},
+		{true, "", username.EmptyRole, "", "", true, false, false, roachpb.PrefixedSystemTenantID, false, false, `user is missing`},
 		// Insecure mode, non-empty username.
-		{true, "", fooUser, "", "", true, true, false, roachpb.SystemTenantID, false, false, `user "foo" is not allowed`},
+		{true, "", fooUser, "", "", true, true, false, roachpb.PrefixedSystemTenantID, false, false, `user "foo" is not allowed`},
 		// Secure mode, no TLS state.
-		{false, "", username.EmptyRole, "", "", false, false, false, roachpb.SystemTenantID, false, false, `no client certificates in request`},
+		{false, "", username.EmptyRole, "", "", false, false, false, roachpb.PrefixedSystemTenantID, false, false, `no client certificates in request`},
 		// Secure mode, bad user.
-		{false, "(CN=foo)", username.NodeUser, "", "", true, false, false, roachpb.SystemTenantID,
+		{false, "(CN=foo)", username.NodeUser, "", "", true, false, false, roachpb.PrefixedSystemTenantID,
 			false, false, `certificate authentication failed for user "node"`},
 		// Secure mode, node user.
-		{false, "(CN=node)", username.NodeUser, "", "", true, true, true, roachpb.SystemTenantID, false, false, ``},
+		{false, "(CN=node)", username.NodeUser, "", "", true, true, true, roachpb.PrefixedSystemTenantID, false, false, ``},
 		// Secure mode, node cert and unrelated user.
-		{false, "(CN=node)", fooUser, "", "", true, false, false, roachpb.SystemTenantID,
+		{false, "(CN=node)", fooUser, "", "", true, false, false, roachpb.PrefixedSystemTenantID,
 			false, false, `certificate authentication failed for user "foo"`},
 		// Secure mode, root user.
-		{false, "(CN=root)", username.NodeUser, "", "", true, false, false, roachpb.SystemTenantID,
+		{false, "(CN=root)", username.NodeUser, "", "", true, false, false, roachpb.PrefixedSystemTenantID,
 			false, false, `certificate authentication failed for user "node"`},
 		// Secure mode, tenant cert, foo user.
-		{false, "(OU=Tenants,CN=foo)", fooUser, "", "", true, false, false, roachpb.SystemTenantID,
+		{false, "(OU=Tenants,CN=foo)", fooUser, "", "", true, false, false, roachpb.PrefixedSystemTenantID,
 			false, false, `using tenant client certificate as user certificate is not allowed`},
 		// Secure mode, multiple cert principals.
-		{false, "(CN=foo)dns:bar", fooUser, "", "", true, true, false, roachpb.SystemTenantID, false, false, `user "foo" is not allowed`},
-		{false, "(CN=foo)dns:bar", barUser, "", "", true, true, false, roachpb.SystemTenantID, false, false, `user "bar" is not allowed`},
+		{false, "(CN=foo)dns:bar", fooUser, "", "", true, true, false, roachpb.PrefixedSystemTenantID, false, false, `user "foo" is not allowed`},
+		{false, "(CN=foo)dns:bar", barUser, "", "", true, true, false, roachpb.PrefixedSystemTenantID, false, false, `user "bar" is not allowed`},
 		// Secure mode, principal map.
-		{false, "(CN=foo)dns:bar", blahUser, "", "foo:blah", true, true, false, roachpb.SystemTenantID, false, false, `user "blah" is not allowed`},
-		{false, "(CN=foo)dns:bar", blahUser, "", "bar:blah", true, true, false, roachpb.SystemTenantID, false, false, `user "blah" is not allowed`},
+		{false, "(CN=foo)dns:bar", blahUser, "", "foo:blah", true, true, false, roachpb.PrefixedSystemTenantID, false, false, `user "blah" is not allowed`},
+		{false, "(CN=foo)dns:bar", blahUser, "", "bar:blah", true, true, false, roachpb.PrefixedSystemTenantID, false, false, `user "blah" is not allowed`},
 		{false, "(CN=foo)uri:crdb://tenant/123/user/foo", fooUser, "", "", true, true, false, roachpb.MustMakeTenantID(123),
 			false, false, `user "foo" is not allowed`},
-		{false, "(CN=foo)uri:crdb://tenant/123/user/foo", fooUser, "", "", true, false, false, roachpb.SystemTenantID,
+		{false, "(CN=foo)uri:crdb://tenant/123/user/foo", fooUser, "", "", true, false, false, roachpb.PrefixedSystemTenantID,
 			false, false, `certificate authentication failed for user "foo"`},
 		{false, "(CN=foo)", fooUser, subjectDNString, "", true, true, false, roachpb.MustMakeTenantID(123),
 			false, false, `user "foo" is not allowed`},

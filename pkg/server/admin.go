@@ -3262,7 +3262,7 @@ func (s *systemAdminServer) SendKVBatch(
 	}
 	log.StructuredEvent(ctx, severity.INFO, event)
 
-	ctx, sp := s.server.node.setupSpanForIncomingRPC(ctx, roachpb.SystemTenantID, ba)
+	ctx, sp := s.server.node.setupSpanForIncomingRPC(ctx, roachpb.PrefixedSystemTenantID, ba)
 	// Wipe the tracing information from the request. We've used this info in the
 	// setupSpanForIncomingRPC() call above; from now on the request is traced as
 	// per the span we just created.

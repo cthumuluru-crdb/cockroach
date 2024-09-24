@@ -143,9 +143,10 @@ type sqlDecoder struct {
 
 // MakeSQLCodec creates a new  SQLCodec suitable for manipulating SQL keys.
 func MakeSQLCodec(tenID roachpb.TenantID) SQLCodec {
-	if tenID.IsSystem() {
-		return SystemSQLCodec
-	}
+	//if tenID == roachpb.UnprefixedSystemTenantID {
+	//	return UnprefixedSystemSQLCodec
+	//}
+
 	sp := MakeTenantSpan(tenID)
 	sp.Key = sp.Key[:len(sp.Key):len(sp.Key)]             // bound capacity, avoid aliasing
 	sp.EndKey = sp.EndKey[:len(sp.EndKey):len(sp.EndKey)] // bound capacity, avoid aliasing
@@ -155,18 +156,31 @@ func MakeSQLCodec(tenID roachpb.TenantID) SQLCodec {
 	}
 }
 
-// SystemSQLCodec is a SQL key codec for the system tenant.
-//
-// NB: We don't use MakeSQLCodec here since the system tenant is special and its
-// prefix is empty, rather than the start of its span, so the Codec for it wants
-// the empty key, rather than start key, as its buf. Ideally we would set the
-// endKey to TableDataMax instead of MaxKey here, but TableDataMax is currently
-// defined in terms of this codec. We would want to fix this if/when we make the
-// tenant with ID one non-system, but we'll get rid of/rename this then as well.
-var SystemSQLCodec = SQLCodec{
-	sqlEncoder: sqlEncoder{&MinKey, &MaxKey, roachpb.SystemTenantID},
-	sqlDecoder: sqlDecoder{&MinKey},
+func MakePrefixedSystemSQLCodec(tenID roachpb.TenantID) SQLCodec {
+	tenIDint := tenID.ToUint64()
+	if tenIDint != 2 {
+		panic("invalid system tenant ID")
+	}
+
+	sp := roachpb.Span{
+		Key:    encoding.EncodeUvarintAscending(TenantPrefix, tenIDint),
+		EndKey: encoding.EncodeUvarintAscending(TenantPrefix, tenIDint+1),
+	}
+
+	sp.Key = sp.Key[:len(sp.Key):len(sp.Key)]             // bound capacity, avoid aliasing
+	sp.EndKey = sp.EndKey[:len(sp.EndKey):len(sp.EndKey)] // bound capacity, avoid aliasing
+	return SQLCodec{
+		sqlEncoder: sqlEncoder{&sp.Key, &sp.EndKey, tenID},
+		sqlDecoder: sqlDecoder{&sp.Key},
+	}
 }
+
+//var UnprefixedSystemSQLCodec = SQLCodec{
+//	sqlEncoder: sqlEncoder{&MinKey, &MaxKey, roachpb.UnprefixedSystemTenantID},
+//	sqlDecoder: sqlDecoder{&MinKey},
+//}
+
+var PrefixedSystemSQLCodec = MakePrefixedSystemSQLCodec(roachpb.PrefixedSystemTenantID)
 
 // ForSystemTenant returns whether the encoder is bound to the system tenant.
 func (e sqlEncoder) ForSystemTenant() bool {

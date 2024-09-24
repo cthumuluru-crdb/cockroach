@@ -160,7 +160,7 @@ func (s *SQLTranslator) generateSystemSpanConfigRecords(
 	if len(clusterProtections) != 0 {
 		var systemTarget spanconfig.SystemTarget
 		var err error
-		if sourceTenantID == roachpb.SystemTenantID {
+		if sourceTenantID == roachpb.PrefixedSystemTenantID {
 			systemTarget = spanconfig.MakeEntireKeyspaceTarget()
 		} else {
 			systemTarget, err = spanconfig.MakeTenantKeyspaceTarget(sourceTenantID, sourceTenantID)

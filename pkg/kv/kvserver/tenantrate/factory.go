@@ -64,7 +64,7 @@ func NewLimiterFactory(
 	rl.mu.tenants = make(map[roachpb.TenantID]*refCountedLimiter)
 	rl.mu.config = ConfigFromSettings(sv)
 	rl.systemLimiter = systemLimiter{
-		tenantMetrics: rl.metrics.tenantMetrics(roachpb.SystemTenantID),
+		tenantMetrics: rl.metrics.tenantMetrics(roachpb.PrefixedSystemTenantID),
 	}
 	updateFn := func(_ context.Context) {
 		config := ConfigFromSettings(sv)
@@ -84,7 +84,7 @@ func (rl *LimiterFactory) GetTenant(
 	ctx context.Context, tenantID roachpb.TenantID, closer <-chan struct{},
 ) Limiter {
 
-	if tenantID == roachpb.SystemTenantID {
+	if tenantID == roachpb.PrefixedSystemTenantID {
 		return &rl.systemLimiter
 	}
 

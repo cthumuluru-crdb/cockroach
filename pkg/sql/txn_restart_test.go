@@ -1331,7 +1331,7 @@ func TestDistSQLRetryableError(t *testing.T) {
 	}()
 	indexID := uint32(1)
 	valInTable := uint64(2)
-	indexKey := keys.SystemSQLCodec.IndexPrefix(firstTableID, indexID)
+	indexKey := keys.PrefixedSystemSQLCodec.IndexPrefix(firstTableID, indexID)
 	targetKey := encoding.EncodeUvarintAscending(indexKey, valInTable)
 
 	restarted := true

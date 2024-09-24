@@ -976,7 +976,7 @@ func handleKVRequest(
 		err := ds.getSQLDB(t, cluster, user).QueryRow(`SELECT id FROM system.namespace WHERE name = $1`,
 			target).Scan(&tableID)
 		require.NoError(t, err)
-		bankSpan := makeTableSpan(keys.SystemSQLCodec, tableID)
+		bankSpan := makeTableSpan(keys.PrefixedSystemSQLCodec, tableID)
 		dr := kvpb.DeleteRangeRequest{
 			// Bogus span to make it a valid request.
 			RequestHeader: kvpb.RequestHeader{

@@ -133,8 +133,8 @@ var (
 	// tenant to indicate that keys in that backup with other tenant prefixes are
 	// backing up those tenants and should not be decoded as table keys.
 	isBackupFromSystemTenantRekey = execinfrapb.TenantRekey{
-		OldID: roachpb.SystemTenantID,
-		NewID: roachpb.SystemTenantID,
+		OldID: roachpb.PrefixedSystemTenantID,
+		NewID: roachpb.PrefixedSystemTenantID,
 	}
 )
 
@@ -216,7 +216,7 @@ func makeKeyRewriter(
 // function, but it takes into account interleaved ancestors, which we don't
 // want here.
 func MakeKeyRewriterPrefixIgnoringInterleaved(tableID descpb.ID, indexID descpb.IndexID) []byte {
-	return keys.SystemSQLCodec.IndexPrefix(uint32(tableID), uint32(indexID))
+	return keys.PrefixedSystemSQLCodec.IndexPrefix(uint32(tableID), uint32(indexID))
 }
 
 // RewriteTenant rewrites a tenant key.
@@ -233,7 +233,7 @@ func (kr *KeyRewriter) rewriteTenant(key []byte, forSpan bool) ([]byte, bool, er
 		if err != nil {
 			return nil, false, err
 		}
-		_, tableID, _ := keys.SystemSQLCodec.DecodeTablePrefix(noTenantPrefix)
+		_, tableID, _ := keys.PrefixedSystemSQLCodec.DecodeTablePrefix(noTenantPrefix)
 
 		if tableID == keys.SQLInstancesTableID || tableID == keys.SqllivenessID || tableID == keys.LeaseTableID {
 			return k, false, nil
@@ -333,7 +333,7 @@ func (kr *KeyRewriter) checkAndRewriteTableKey(
 	// Fetch the original table ID for descriptor lookup. Ignore errors because
 	// they will be caught later on if tableID isn't in descs or kr doesn't
 	// perform a rewrite.
-	_, tableID, _ := keys.SystemSQLCodec.DecodeTablePrefix(key)
+	_, tableID, _ := keys.PrefixedSystemSQLCodec.DecodeTablePrefix(key)
 
 	if !forSpan {
 		// Skip keys from ephemeral cluster status tables so that the restored cluster

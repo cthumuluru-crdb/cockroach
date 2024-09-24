@@ -71,7 +71,7 @@ func (h *Handle) SetSQLDBForUser(tenantID roachpb.TenantID, user string) func() 
 func (h *Handle) InitializeTenant(ctx context.Context, tenID roachpb.TenantID) {
 	testServer := h.tc.Server(0)
 	tenantState := &Tenant{t: h.t, userToDB: make(map[string]*sqlutils.SQLRunner)}
-	if tenID == roachpb.SystemTenantID {
+	if tenID == roachpb.PrefixedSystemTenantID {
 		tenantState.ApplicationLayerInterface = testServer.SystemLayer()
 		userSQLDB := tenantState.ApplicationLayerInterface.SQLConn(h.t)
 		tenantState.curDB = sqlutils.MakeSQLRunner(userSQLDB)

@@ -1551,7 +1551,7 @@ func GetBackupManifests(
 // non-empty manifest to determine the codec. If all manifests are empty we
 // default to the system codec.
 func MakeBackupCodec(manifests []backuppb.BackupManifest) (keys.SQLCodec, error) {
-	backupCodec := keys.SystemSQLCodec
+	backupCodec := keys.PrefixedSystemSQLCodec
 	for _, manifest := range manifests {
 		if len(manifest.Spans) == 0 {
 			continue

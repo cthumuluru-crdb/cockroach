@@ -896,7 +896,7 @@ func newCPUPacerFactory(ctx context.Context, cfg *execinfra.ServerConfig) func()
 		if enablePacer {
 			tenantID, ok := roachpb.ClientTenantFromContext(ctx)
 			if !ok {
-				tenantID = roachpb.SystemTenantID
+				tenantID = roachpb.PrefixedSystemTenantID
 			}
 
 			pacer = cfg.AdmissionPacerFactory.NewPacer(

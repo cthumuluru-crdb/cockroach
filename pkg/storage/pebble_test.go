@@ -1387,7 +1387,7 @@ func TestApproximateDiskBytes(t *testing.T) {
 	defer p.Close()
 
 	keyFunc := func(i int) roachpb.Key {
-		return keys.SystemSQLCodec.TablePrefix(uint32(i))
+		return keys.PrefixedSystemSQLCodec.TablePrefix(uint32(i))
 	}
 
 	// Write keys 0000...0999.

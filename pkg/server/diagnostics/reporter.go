@@ -212,7 +212,7 @@ func (r *Reporter) CreateReport(
 	r.populateSQLInfo(uptime, &info.SQL)
 
 	// Do not collect node or store information for tenant reports.
-	if r.TenantID == roachpb.SystemTenantID {
+	if r.TenantID == roachpb.PrefixedSystemTenantID {
 		r.populateNodeInfo(ctx, uptime, &info)
 	}
 
@@ -241,7 +241,7 @@ func (r *Reporter) CreateReport(
 			row := it.Cur()
 			internalKey := string(tree.MustBeDString(row[0]))
 			info.AlteredSettings[internalKey] = settings.RedactedValue(
-				settings.InternalKey(internalKey), &r.Settings.SV, r.TenantID == roachpb.SystemTenantID,
+				settings.InternalKey(internalKey), &r.Settings.SV, r.TenantID == roachpb.PrefixedSystemTenantID,
 			)
 		}
 		if err != nil {

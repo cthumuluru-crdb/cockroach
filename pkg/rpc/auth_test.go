@@ -104,7 +104,7 @@ func TestWrappedServerStream(t *testing.T) {
 func TestAuthenticateTenant(t *testing.T) {
 	defer leaktest.AfterTest(t)()
 	correctOU := []string{security.TenantsOU}
-	stid := roachpb.SystemTenantID
+	stid := roachpb.PrefixedSystemTenantID
 	tenTen := roachpb.MustMakeTenantID(10)
 	for _, tc := range []struct {
 		systemID         roachpb.TenantID
@@ -123,7 +123,7 @@ func TestAuthenticateTenant(t *testing.T) {
 		{systemID: stid, ous: correctOU, commonName: "10", expTenID: tenTen},
 		{systemID: stid, ous: correctOU, commonName: roachpb.MinTenantID.String(), expTenID: roachpb.MinTenantID},
 		{systemID: stid, ous: correctOU, commonName: roachpb.MaxTenantID.String(), expTenID: roachpb.MaxTenantID},
-		{systemID: stid, ous: correctOU, commonName: roachpb.SystemTenantID.String() /* "system" */, expErr: `could not parse tenant ID from Common Name \(CN\)`},
+		{systemID: stid, ous: correctOU, commonName: roachpb.PrefixedSystemTenantID.String() /* "system" */, expErr: `could not parse tenant ID from Common Name \(CN\)`},
 		{systemID: stid, ous: correctOU, commonName: "-1", expErr: `could not parse tenant ID from Common Name \(CN\)`},
 		{systemID: stid, ous: correctOU, commonName: "0", expErr: `invalid tenant ID 0 in Common Name \(CN\)`},
 		{systemID: stid, ous: correctOU, commonName: "1", expErr: `invalid tenant ID 1 in Common Name \(CN\)`},
@@ -587,7 +587,7 @@ func TestTenantAuthRequest(t *testing.T) {
 				expErr: noError,
 			},
 			{
-				req:    &kvpb.TokenBucketRequest{TenantID: roachpb.SystemTenantID.ToUint64()},
+				req:    &kvpb.TokenBucketRequest{TenantID: roachpb.PrefixedSystemTenantID.ToUint64()},
 				expErr: `token bucket request for tenant system not permitted`,
 			},
 			{
@@ -858,7 +858,7 @@ func TestTenantAuthRequest(t *testing.T) {
 			},
 			{
 				req: &roachpb.GetAllSystemSpanConfigsThatApplyRequest{
-					TenantID: roachpb.SystemTenantID,
+					TenantID: roachpb.PrefixedSystemTenantID,
 				},
 				expErr: "GetAllSystemSpanConfigsThatApply request for tenant system not permitted",
 			},

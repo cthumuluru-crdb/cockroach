@@ -1806,7 +1806,7 @@ func (desc *wrapper) validatePartitioningDescriptor(
 	// Use the system-tenant SQL codec when validating the keys in the partition
 	// descriptor. We just want to know how the partitions relate to one another,
 	// so it's fine to ignore the tenant ID prefix.
-	codec := keys.SystemSQLCodec
+	codec := keys.PrefixedSystemSQLCodec
 
 	if part.NumLists() > 0 {
 		listValues := make(map[string]struct{}, part.NumLists())

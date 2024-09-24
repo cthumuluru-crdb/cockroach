@@ -4570,7 +4570,7 @@ func TestConnectionClass(t *testing.T) {
 		{key: keys.NodeIDGenerator, wantClass: rpc.SystemClass},
 		{key: keys.TimeseriesPrefix, wantClass: rpc.DefaultClass},
 		{key: keys.SystemSpanConfigPrefix, wantClass: rpc.DefaultClass},
-		{key: keys.SystemSQLCodec.TablePrefix(1234), wantClass: rpc.DefaultClass},
+		{key: keys.PrefixedSystemSQLCodec.TablePrefix(1234), wantClass: rpc.DefaultClass},
 	} {
 		t.Run(pair.key.String(), func(t *testing.T) {
 			ba := &kvpb.BatchRequest{}
@@ -6037,7 +6037,7 @@ func TestOptimisticRangeDescriptorLookups(t *testing.T) {
 		}
 	}
 	mkKey := func(i uint32) roachpb.Key {
-		return keys.SystemSQLCodec.TablePrefix(i)
+		return keys.PrefixedSystemSQLCodec.TablePrefix(i)
 	}
 	mkGet := func(k roachpb.Key) *kvpb.BatchRequest {
 		ba := kvpb.BatchRequest{}

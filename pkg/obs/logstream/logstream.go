@@ -78,7 +78,7 @@ func RegisterProcessor(
 	}
 	tID, ok := roachpb.ClientTenantFromContext(ctx)
 	if !ok {
-		tID = roachpb.SystemTenantID
+		tID = roachpb.PrefixedSystemTenantID
 	}
 	controller.rmu.Lock()
 	defer controller.rmu.Unlock()
@@ -106,7 +106,7 @@ func RegisterProcessor(
 func (l *streamController) Process(ctx context.Context, eventType log.EventType, e any) {
 	tID, ok := roachpb.ClientTenantFromContext(ctx)
 	if !ok {
-		tID = roachpb.SystemTenantID
+		tID = roachpb.PrefixedSystemTenantID
 	}
 	l.rmu.RLock()
 	defer l.rmu.RUnlock()

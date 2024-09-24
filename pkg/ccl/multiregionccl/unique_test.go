@@ -60,7 +60,7 @@ CREATE TABLE u (
 	insertValuesT := func(values []tree.Datum) {
 		// Get the table descriptor and primary index of t.
 		tableDesc := desctestutils.TestingGetTableDescriptor(
-			kvDB, keys.SystemSQLCodec, "test", "public", "t",
+			kvDB, keys.PrefixedSystemSQLCodec, "test", "public", "t",
 		)
 		primaryIndex := tableDesc.GetPrimaryIndex()
 
@@ -70,7 +70,7 @@ CREATE TABLE u (
 
 		// Construct the primary index entry to insert.
 		primaryIndexEntry, err := rowenc.EncodePrimaryIndex(
-			keys.SystemSQLCodec, tableDesc, primaryIndex, colIDtoRowIndex, values, true, /* includeEmpty */
+			keys.PrefixedSystemSQLCodec, tableDesc, primaryIndex, colIDtoRowIndex, values, true, /* includeEmpty */
 		)
 		require.NoError(t, err)
 		require.Equal(t, 1, len(primaryIndexEntry))
@@ -85,7 +85,7 @@ CREATE TABLE u (
 	insertValuesU := func(values []tree.Datum) {
 		// Get the table descriptor and indexes of u.
 		tableDesc := desctestutils.TestingGetTableDescriptor(
-			kvDB, keys.SystemSQLCodec, "test", "public", "u",
+			kvDB, keys.PrefixedSystemSQLCodec, "test", "public", "u",
 		)
 		primaryIndex := tableDesc.GetPrimaryIndex()
 		secondaryIndex := tableDesc.PublicNonPrimaryIndexes()[0]
@@ -97,12 +97,12 @@ CREATE TABLE u (
 
 		// Construct the primary and secondary index entries to insert.
 		primaryIndexEntry, err := rowenc.EncodePrimaryIndex(
-			keys.SystemSQLCodec, tableDesc, primaryIndex, colIDtoRowIndex, values, true, /* includeEmpty */
+			keys.PrefixedSystemSQLCodec, tableDesc, primaryIndex, colIDtoRowIndex, values, true, /* includeEmpty */
 		)
 		require.NoError(t, err)
 		require.Equal(t, 1, len(primaryIndexEntry))
 		secondaryIndexEntry, err := rowenc.EncodeSecondaryIndex(
-			context.Background(), keys.SystemSQLCodec, tableDesc, secondaryIndex,
+			context.Background(), keys.PrefixedSystemSQLCodec, tableDesc, secondaryIndex,
 			colIDtoRowIndex, values, true, /* includeEmpty */
 		)
 		require.NoError(t, err)

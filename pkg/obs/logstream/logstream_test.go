@@ -49,9 +49,9 @@ func TestRegisterProcessor(t *testing.T) {
 		assertProcessorRegistered(t, appTenantID, "dummy", appTenantP2)
 
 		sysTenantP1 := &dummyTestProcessor{}
-		ctx := roachpb.ContextWithClientTenant(ctx, roachpb.SystemTenantID)
+		ctx := roachpb.ContextWithClientTenant(ctx, roachpb.PrefixedSystemTenantID)
 		RegisterProcessor(ctx, stopper, testLogMeta, sysTenantP1)
-		assertProcessorRegistered(t, roachpb.SystemTenantID, "dummy", sysTenantP1)
+		assertProcessorRegistered(t, roachpb.PrefixedSystemTenantID, "dummy", sysTenantP1)
 	})
 
 	t.Run("defaults to the system tenant when no tenant ID in context", func(t *testing.T) {
@@ -61,7 +61,7 @@ func TestRegisterProcessor(t *testing.T) {
 		defer cancelTestCtx()
 		processor := &dummyTestProcessor{}
 		RegisterProcessor(ctxWithoutTenantID, stopper, testLogMeta, processor)
-		assertProcessorRegistered(t, roachpb.SystemTenantID, "dummy", processor)
+		assertProcessorRegistered(t, roachpb.PrefixedSystemTenantID, "dummy", processor)
 	})
 }
 
@@ -72,7 +72,7 @@ func TestProcess(t *testing.T) {
 
 	t.Run("calls the correct processor for tenant", func(t *testing.T) {
 		ctxApp := roachpb.ContextWithClientTenant(context.Background(), roachpb.MinTenantID)
-		ctxSystem := roachpb.ContextWithClientTenant(context.Background(), roachpb.SystemTenantID)
+		ctxSystem := roachpb.ContextWithClientTenant(context.Background(), roachpb.PrefixedSystemTenantID)
 
 		appStopper := stop.NewStopper()
 		defer appStopper.Stop(ctxApp)
@@ -101,7 +101,7 @@ func TestProcess(t *testing.T) {
 		func() {
 			controller.rmu.Lock()
 			defer controller.rmu.Unlock()
-			controller.rmu.tenantRouters[roachpb.SystemTenantID] = sysBuffer
+			controller.rmu.tenantRouters[roachpb.PrefixedSystemTenantID] = sysBuffer
 			controller.rmu.tenantRouters[roachpb.MinTenantID] = appBuffer
 		}()
 

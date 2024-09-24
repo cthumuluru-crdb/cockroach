@@ -56,7 +56,7 @@ func TestSplitFinderKey(t *testing.T) {
 	noLoadReservoir := [splitKeySampleSize]sample{}
 	for i := 0; i < splitKeySampleSize; i++ {
 		tempSample := sample{
-			key:       keys.SystemSQLCodec.TablePrefix(uint32(ReservoirKeyOffset + i)),
+			key:       keys.PrefixedSystemSQLCodec.TablePrefix(uint32(ReservoirKeyOffset + i)),
 			left:      0,
 			right:     0,
 			contained: 0,
@@ -68,7 +68,7 @@ func TestSplitFinderKey(t *testing.T) {
 	uniformReservoir := [splitKeySampleSize]sample{}
 	for i := 0; i < splitKeySampleSize; i++ {
 		tempSample := sample{
-			key:       keys.SystemSQLCodec.TablePrefix(uint32(ReservoirKeyOffset + i)),
+			key:       keys.PrefixedSystemSQLCodec.TablePrefix(uint32(ReservoirKeyOffset + i)),
 			left:      splitKeyMinCounter,
 			right:     splitKeyMinCounter,
 			contained: 0,
@@ -80,7 +80,7 @@ func TestSplitFinderKey(t *testing.T) {
 	nonUniformReservoir := [splitKeySampleSize]sample{}
 	for i := 0; i < splitKeySampleSize; i++ {
 		tempSample := sample{
-			key:       keys.SystemSQLCodec.TablePrefix(uint32(ReservoirKeyOffset + i)),
+			key:       keys.PrefixedSystemSQLCodec.TablePrefix(uint32(ReservoirKeyOffset + i)),
 			left:      splitKeyMinCounter * i,
 			right:     splitKeyMinCounter * (splitKeySampleSize - i),
 			contained: 0,
@@ -92,7 +92,7 @@ func TestSplitFinderKey(t *testing.T) {
 	singleHotKeyReservoir := [splitKeySampleSize]sample{}
 	for i := 0; i < splitKeySampleSize; i++ {
 		tempSample := sample{
-			key:       keys.SystemSQLCodec.TablePrefix(uint32(ReservoirKeyOffset + i)),
+			key:       keys.PrefixedSystemSQLCodec.TablePrefix(uint32(ReservoirKeyOffset + i)),
 			left:      0,
 			right:     splitKeyMinCounter,
 			contained: 0,
@@ -104,7 +104,7 @@ func TestSplitFinderKey(t *testing.T) {
 	multipleHotKeysReservoir := [splitKeySampleSize]sample{}
 	for i := 0; i < splitKeySampleSize; i++ {
 		tempSample := sample{
-			key:       keys.SystemSQLCodec.TablePrefix(uint32(ReservoirKeyOffset + i)),
+			key:       keys.PrefixedSystemSQLCodec.TablePrefix(uint32(ReservoirKeyOffset + i)),
 			left:      splitKeyMinCounter,
 			right:     splitKeyMinCounter,
 			contained: 0,
@@ -117,7 +117,7 @@ func TestSplitFinderKey(t *testing.T) {
 	spanningReservoir := [splitKeySampleSize]sample{}
 	for i := 0; i < splitKeySampleSize; i++ {
 		tempSample := sample{
-			key:       keys.SystemSQLCodec.TablePrefix(uint32(ReservoirKeyOffset + i)),
+			key:       keys.PrefixedSystemSQLCodec.TablePrefix(uint32(ReservoirKeyOffset + i)),
 			left:      0,
 			right:     0,
 			contained: splitKeyMinCounter,
@@ -129,7 +129,7 @@ func TestSplitFinderKey(t *testing.T) {
 	multipleSpanReservoir := [splitKeySampleSize]sample{}
 	for i := 0; i < splitKeySampleSize; i++ {
 		tempSample := sample{
-			key:       keys.SystemSQLCodec.TablePrefix(uint32(ReservoirKeyOffset + i)),
+			key:       keys.PrefixedSystemSQLCodec.TablePrefix(uint32(ReservoirKeyOffset + i)),
 			left:      splitKeyMinCounter,
 			right:     splitKeyMinCounter,
 			contained: splitKeyMinCounter,
@@ -137,7 +137,7 @@ func TestSplitFinderKey(t *testing.T) {
 		multipleSpanReservoir[i] = tempSample
 	}
 	midSample := sample{
-		key:       keys.SystemSQLCodec.TablePrefix(uint32(ReservoirKeyOffset + splitKeySampleSize/2)),
+		key:       keys.PrefixedSystemSQLCodec.TablePrefix(uint32(ReservoirKeyOffset + splitKeySampleSize/2)),
 		left:      splitKeyMinCounter,
 		right:     splitKeyMinCounter,
 		contained: 0,
@@ -153,17 +153,17 @@ func TestSplitFinderKey(t *testing.T) {
 		// Test reservoir with no load should have no splits.
 		{noLoadReservoir, nil},
 		// Test a uniform reservoir (Splits at the first key)
-		{uniformReservoir, keys.SystemSQLCodec.TablePrefix(ReservoirKeyOffset)},
+		{uniformReservoir, keys.PrefixedSystemSQLCodec.TablePrefix(ReservoirKeyOffset)},
 		// Testing a non-uniform reservoir.
-		{nonUniformReservoir, keys.SystemSQLCodec.TablePrefix(ReservoirKeyOffset + splitKeySampleSize/2)},
+		{nonUniformReservoir, keys.PrefixedSystemSQLCodec.TablePrefix(ReservoirKeyOffset + splitKeySampleSize/2)},
 		// Test a load heavy reservoir on a single hot key. Splitting can't help here.
 		{singleHotKeyReservoir, nil},
 		// Test a load heavy reservoir on multiple hot keys. Splits between the hot keys.
-		{multipleHotKeysReservoir, keys.SystemSQLCodec.TablePrefix(ReservoirKeyOffset + 1)},
+		{multipleHotKeysReservoir, keys.PrefixedSystemSQLCodec.TablePrefix(ReservoirKeyOffset + 1)},
 		// Test a spanning reservoir. Splitting will be bad here. Should avoid it.
 		{spanningReservoir, nil},
 		// Test that splits happen between two heavy spans.
-		{multipleSpanReservoir, keys.SystemSQLCodec.TablePrefix(ReservoirKeyOffset + splitKeySampleSize/2)},
+		{multipleSpanReservoir, keys.PrefixedSystemSQLCodec.TablePrefix(ReservoirKeyOffset + splitKeySampleSize/2)},
 	}
 
 	randSource := rand.New(rand.NewSource(2022))
@@ -190,8 +190,8 @@ func TestSplitFinderRecorder(t *testing.T) {
 	// Test recording a key query before the reservoir is full.
 	basicReservoir := [splitKeySampleSize]sample{}
 	basicSpan := roachpb.Span{
-		Key:    keys.SystemSQLCodec.TablePrefix(ReservoirKeyOffset),
-		EndKey: keys.SystemSQLCodec.TablePrefix(ReservoirKeyOffset + 1),
+		Key:    keys.PrefixedSystemSQLCodec.TablePrefix(ReservoirKeyOffset),
+		EndKey: keys.PrefixedSystemSQLCodec.TablePrefix(ReservoirKeyOffset + 1),
 	}
 	expectedBasicReservoir := [splitKeySampleSize]sample{}
 	expectedBasicReservoir[0] = sample{
@@ -202,7 +202,7 @@ func TestSplitFinderRecorder(t *testing.T) {
 	replacementReservoir := [splitKeySampleSize]sample{}
 	for i := 0; i < splitKeySampleSize; i++ {
 		tempSample := sample{
-			key:       keys.SystemSQLCodec.TablePrefix(uint32(ReservoirKeyOffset + i)),
+			key:       keys.PrefixedSystemSQLCodec.TablePrefix(uint32(ReservoirKeyOffset + i)),
 			left:      0,
 			right:     0,
 			contained: 0,
@@ -210,8 +210,8 @@ func TestSplitFinderRecorder(t *testing.T) {
 		replacementReservoir[i] = tempSample
 	}
 	replacementSpan := roachpb.Span{
-		Key:    keys.SystemSQLCodec.TablePrefix(ReservoirKeyOffset + splitKeySampleSize),
-		EndKey: keys.SystemSQLCodec.TablePrefix(ReservoirKeyOffset + splitKeySampleSize + 1),
+		Key:    keys.PrefixedSystemSQLCodec.TablePrefix(ReservoirKeyOffset + splitKeySampleSize),
+		EndKey: keys.PrefixedSystemSQLCodec.TablePrefix(ReservoirKeyOffset + splitKeySampleSize + 1),
 	}
 	expectedReplacementReservoir := replacementReservoir
 	expectedReplacementReservoir[0] = sample{
@@ -221,13 +221,13 @@ func TestSplitFinderRecorder(t *testing.T) {
 	// Test recording a key query after the reservoir is full without replacement.
 	fullReservoir := replacementReservoir
 	fullSpan := roachpb.Span{
-		Key:    keys.SystemSQLCodec.TablePrefix(ReservoirKeyOffset),
-		EndKey: keys.SystemSQLCodec.TablePrefix(ReservoirKeyOffset + 1),
+		Key:    keys.PrefixedSystemSQLCodec.TablePrefix(ReservoirKeyOffset),
+		EndKey: keys.PrefixedSystemSQLCodec.TablePrefix(ReservoirKeyOffset + 1),
 	}
 	expectedFullReservoir := fullReservoir
 	for i := 0; i < splitKeySampleSize; i++ {
 		tempSample := sample{
-			key:       keys.SystemSQLCodec.TablePrefix(uint32(ReservoirKeyOffset + i)),
+			key:       keys.PrefixedSystemSQLCodec.TablePrefix(uint32(ReservoirKeyOffset + i)),
 			left:      1,
 			right:     0,
 			contained: 0,
@@ -240,8 +240,8 @@ func TestSplitFinderRecorder(t *testing.T) {
 	// Test recording a spanning query.
 	spanningReservoir := replacementReservoir
 	spanningSpan := roachpb.Span{
-		Key:    keys.SystemSQLCodec.TablePrefix(ReservoirKeyOffset - 1),
-		EndKey: keys.SystemSQLCodec.TablePrefix(ReservoirKeyOffset + splitKeySampleSize + 1),
+		Key:    keys.PrefixedSystemSQLCodec.TablePrefix(ReservoirKeyOffset - 1),
+		EndKey: keys.PrefixedSystemSQLCodec.TablePrefix(ReservoirKeyOffset + splitKeySampleSize + 1),
 	}
 	expectedSpanningReservoir := spanningReservoir
 	for i := 0; i < splitKeySampleSize; i++ {
@@ -284,7 +284,7 @@ func TestFinderNoSplitKeyCause(t *testing.T) {
 		if i < 5 {
 			// Insufficient counters.
 			samples[idx] = sample{
-				key:       keys.SystemSQLCodec.TablePrefix(uint32(i)),
+				key:       keys.PrefixedSystemSQLCodec.TablePrefix(uint32(i)),
 				left:      0,
 				right:     0,
 				contained: splitKeyMinCounter - 1,
@@ -294,7 +294,7 @@ func TestFinderNoSplitKeyCause(t *testing.T) {
 			deviationLeft := rand.Intn(5)
 			deviationRight := rand.Intn(5)
 			samples[idx] = sample{
-				key:       keys.SystemSQLCodec.TablePrefix(uint32(i)),
+				key:       keys.PrefixedSystemSQLCodec.TablePrefix(uint32(i)),
 				left:      25 + deviationLeft,
 				right:     15 - deviationRight,
 				contained: int(max(float64(splitKeyMinCounter-40-deviationLeft+deviationRight), float64(40+deviationLeft-deviationRight))),
@@ -304,7 +304,7 @@ func TestFinderNoSplitKeyCause(t *testing.T) {
 			deviationLeft := rand.Intn(5)
 			deviationRight := rand.Intn(5)
 			samples[idx] = sample{
-				key:       keys.SystemSQLCodec.TablePrefix(uint32(i)),
+				key:       keys.PrefixedSystemSQLCodec.TablePrefix(uint32(i)),
 				left:      50 + deviationLeft,
 				right:     30 - deviationRight,
 				contained: int(max(float64(splitKeyMinCounter-80-deviationLeft+deviationRight), 0)),
@@ -314,7 +314,7 @@ func TestFinderNoSplitKeyCause(t *testing.T) {
 			contained := int(splitKeyMinCounter*splitKeyContainedThreshold + 1)
 			left := (splitKeyMinCounter - contained) / 2
 			samples[idx] = sample{
-				key:       keys.SystemSQLCodec.TablePrefix(uint32(i)),
+				key:       keys.PrefixedSystemSQLCodec.TablePrefix(uint32(i)),
 				left:      left,
 				right:     splitKeyMinCounter - left - contained,
 				contained: contained,
@@ -336,7 +336,7 @@ func TestFinderPopularKeyFrequency(t *testing.T) {
 	uniqueKeySample := [splitKeySampleSize]sample{}
 	for i, idx := range rand.Perm(splitKeySampleSize) {
 		uniqueKeySample[idx] = sample{
-			key: keys.SystemSQLCodec.TablePrefix(uint32(i)),
+			key: keys.PrefixedSystemSQLCodec.TablePrefix(uint32(i)),
 		}
 	}
 	twentyPercentPopularKeySample := [splitKeySampleSize]sample{}
@@ -348,7 +348,7 @@ func TestFinderPopularKeyFrequency(t *testing.T) {
 			tableID = 6
 		}
 		twentyPercentPopularKeySample[idx] = sample{
-			key: keys.SystemSQLCodec.TablePrefix(tableID),
+			key: keys.PrefixedSystemSQLCodec.TablePrefix(tableID),
 		}
 	}
 	twentyFivePercentPopularKeySample := [splitKeySampleSize]sample{}
@@ -360,13 +360,13 @@ func TestFinderPopularKeyFrequency(t *testing.T) {
 			tableID = 2
 		}
 		twentyFivePercentPopularKeySample[idx] = sample{
-			key: keys.SystemSQLCodec.TablePrefix(tableID),
+			key: keys.PrefixedSystemSQLCodec.TablePrefix(tableID),
 		}
 	}
 	fiftyPercentPopularKeySample := [splitKeySampleSize]sample{}
 	for i, idx := range rand.Perm(splitKeySampleSize) {
 		fiftyPercentPopularKeySample[idx] = sample{
-			key: keys.SystemSQLCodec.TablePrefix(uint32(i / 10)),
+			key: keys.PrefixedSystemSQLCodec.TablePrefix(uint32(i / 10)),
 		}
 	}
 	fiftyFivePercentPopularKeySample := [splitKeySampleSize]sample{}
@@ -376,13 +376,13 @@ func TestFinderPopularKeyFrequency(t *testing.T) {
 			tableID = uint32(1)
 		}
 		fiftyFivePercentPopularKeySample[idx] = sample{
-			key: keys.SystemSQLCodec.TablePrefix(tableID),
+			key: keys.PrefixedSystemSQLCodec.TablePrefix(tableID),
 		}
 	}
 	sameKeySample := [splitKeySampleSize]sample{}
 	for _, idx := range rand.Perm(splitKeySampleSize) {
 		sameKeySample[idx] = sample{
-			key: keys.SystemSQLCodec.TablePrefix(0),
+			key: keys.PrefixedSystemSQLCodec.TablePrefix(0),
 		}
 	}
 

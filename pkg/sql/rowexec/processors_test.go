@@ -703,7 +703,7 @@ func TestUncertaintyErrorIsReturned(t *testing.T) {
 	// Create a 30-row table, split and scatter evenly across the numNodes nodes.
 	dbConn := tc.ServerConn(0)
 	sqlutils.CreateTable(t, dbConn, "t", "x INT, y INT, INDEX (y)", 30, sqlutils.ToRowFn(sqlutils.RowIdxFn, sqlutils.RowIdxFn))
-	tableID := desctestutils.TestingGetPublicTableDescriptor(tc.Server(0).DB(), keys.SystemSQLCodec, "test", "t").GetID()
+	tableID := desctestutils.TestingGetPublicTableDescriptor(tc.Server(0).DB(), keys.PrefixedSystemSQLCodec, "test", "t").GetID()
 	// onerow is a table created to test #51458. The value of the only row in this
 	// table is explicitly set to 2 so that it is routed by hash to a desired
 	// destination.
@@ -799,7 +799,7 @@ func TestUncertaintyErrorIsReturned(t *testing.T) {
 					for _, nodeIdx := range errorOrigin {
 						filters[nodeIdx].Lock()
 						filters[nodeIdx].enabled = true
-						filters[nodeIdx].keyPrefix = keys.SystemSQLCodec.TablePrefix(uint32(tableID))
+						filters[nodeIdx].keyPrefix = keys.PrefixedSystemSQLCodec.TablePrefix(uint32(tableID))
 						filters[nodeIdx].Unlock()
 					}
 					// Reset all filters for the next test case.

@@ -94,14 +94,14 @@ func TestJoinReader(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	tdSecondary := desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.SystemSQLCodec, "test", "t")
+	tdSecondary := desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.PrefixedSystemSQLCodec, "test", "t")
 
 	sqlutils.CreateTable(t, sqlDB, "t2",
 		"a INT, b INT, sum INT, s STRING, PRIMARY KEY (a,b), FAMILY f1 (a, b), FAMILY f2 (s), FAMILY f3 (sum), INDEX bs (b,s), INDEX bssum (b,s,sum)",
 		99,
 		sqlutils.ToRowFn(aFn, bFn, sumFn, sqlutils.RowEnglishFn))
 
-	tdFamily := desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.SystemSQLCodec, "test", "t2")
+	tdFamily := desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.PrefixedSystemSQLCodec, "test", "t2")
 
 	sqlutils.CreateTable(t, sqlDB, "t3parent",
 		"a INT PRIMARY KEY",
@@ -1122,7 +1122,7 @@ func TestJoinReader(t *testing.T) {
 							var fetchSpec fetchpb.IndexFetchSpec
 							if err := rowenc.InitIndexFetchSpec(
 								&fetchSpec,
-								keys.SystemSQLCodec,
+								keys.PrefixedSystemSQLCodec,
 								td, index, fetchColIDs,
 							); err != nil {
 								t.Fatal(err)
@@ -1244,7 +1244,7 @@ CREATE TABLE test.t (a INT, s STRING, INDEX (a, s))`); err != nil {
 		key, stringColVal, numRows); err != nil {
 		t.Fatal(err)
 	}
-	td := desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.SystemSQLCodec, "test", "t")
+	td := desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.PrefixedSystemSQLCodec, "test", "t")
 
 	st := cluster.MakeTestingClusterSettings()
 	tempEngine, _, err := storage.NewTempEngine(ctx, base.DefaultTestTempStorageConfig(st), base.DefaultTestStoreSpec, nil /* statsCollector */)
@@ -1282,7 +1282,7 @@ CREATE TABLE test.t (a INT, s STRING, INDEX (a, s))`); err != nil {
 	var fetchSpec fetchpb.IndexFetchSpec
 	if err := rowenc.InitIndexFetchSpec(
 		&fetchSpec,
-		keys.SystemSQLCodec,
+		keys.PrefixedSystemSQLCodec,
 		td,
 		td.ActiveIndexes()[1],
 		[]descpb.ColumnID{1, 2, 3},
@@ -1349,7 +1349,7 @@ func TestJoinReaderDrain(t *testing.T) {
 		1, /* numRows */
 		sqlutils.ToRowFn(sqlutils.RowIdxFn),
 	)
-	td := desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.SystemSQLCodec, "test", "t")
+	td := desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.PrefixedSystemSQLCodec, "test", "t")
 
 	st := s.ClusterSettings()
 	tempEngine, _, err := storage.NewTempEngine(context.Background(), base.DefaultTestTempStorageConfig(st), base.DefaultTestStoreSpec, nil /* statsCollector */)
@@ -1391,7 +1391,7 @@ func TestJoinReaderDrain(t *testing.T) {
 	var fetchSpec fetchpb.IndexFetchSpec
 	if err := rowenc.InitIndexFetchSpec(
 		&fetchSpec,
-		keys.SystemSQLCodec,
+		keys.PrefixedSystemSQLCodec,
 		td, td.GetPrimaryIndex(), []descpb.ColumnID{1},
 	); err != nil {
 		t.Fatal(err)
@@ -1498,8 +1498,8 @@ func TestIndexJoiner(t *testing.T) {
 		99,
 		sqlutils.ToRowFn(aFn, bFn, sumFn, sqlutils.RowEnglishFn))
 
-	td := desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.SystemSQLCodec, "test", "t")
-	tdf := desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.SystemSQLCodec, "test", "t2")
+	td := desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.PrefixedSystemSQLCodec, "test", "t")
+	tdf := desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.PrefixedSystemSQLCodec, "test", "t2")
 
 	v := [10]rowenc.EncDatum{}
 	for i := range v {
@@ -1564,7 +1564,7 @@ func TestIndexJoiner(t *testing.T) {
 			var fetchSpec fetchpb.IndexFetchSpec
 			if err := rowenc.InitIndexFetchSpec(
 				&fetchSpec,
-				keys.SystemSQLCodec,
+				keys.PrefixedSystemSQLCodec,
 				c.desc, c.desc.GetPrimaryIndex(),
 				[]descpb.ColumnID{1, 2, 3, 4},
 			); err != nil {
@@ -1792,7 +1792,7 @@ func benchmarkJoinReader(b *testing.B, bc JRBenchConfig) {
 
 								// Get the table descriptor and find the index that will provide us with
 								// the expected match ratio.
-								tableDesc := desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.SystemSQLCodec, "test", tableName)
+								tableDesc := desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.PrefixedSystemSQLCodec, "test", tableName)
 								foundIndex := catalog.FindPublicNonPrimaryIndex(tableDesc, func(idx catalog.Index) bool {
 									require.Equal(b, 1, idx.NumKeyColumns(), "all indexes created in this benchmark should only contain one column")
 									return idx.GetKeyColumnName(0) == columnDef.name
@@ -1810,7 +1810,7 @@ func benchmarkJoinReader(b *testing.B, bc JRBenchConfig) {
 								var fetchSpec fetchpb.IndexFetchSpec
 								if err := rowenc.InitIndexFetchSpec(
 									&fetchSpec,
-									keys.SystemSQLCodec,
+									keys.PrefixedSystemSQLCodec,
 									tableDesc, tableDesc.ActiveIndexes()[indexIdx],
 									[]descpb.ColumnID{descpb.ColumnID(columnIdx + 1)},
 								); err != nil {
@@ -2002,7 +2002,7 @@ func BenchmarkJoinReaderLookupStress(b *testing.B) {
 
 			// Get the table descriptor and find the index that will provide us with
 			// the expected match ratio.
-			tableDesc := desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.SystemSQLCodec, "test", tableName)
+			tableDesc := desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.PrefixedSystemSQLCodec, "test", tableName)
 			foundIndex := catalog.FindPublicNonPrimaryIndex(tableDesc, func(idx catalog.Index) bool {
 				return idx.NumKeyColumns() == numCols
 			})
@@ -2024,7 +2024,7 @@ func BenchmarkJoinReaderLookupStress(b *testing.B) {
 			var fetchSpec fetchpb.IndexFetchSpec
 			if err := rowenc.InitIndexFetchSpec(
 				&fetchSpec,
-				keys.SystemSQLCodec,
+				keys.PrefixedSystemSQLCodec,
 				tableDesc, tableDesc.ActiveIndexes()[indexIdx],
 				fetchColumnIDs,
 			); err != nil {

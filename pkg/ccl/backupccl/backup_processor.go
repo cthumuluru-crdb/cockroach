@@ -461,7 +461,7 @@ func runBackupProcessor(
 		if fileSSTSinkElasticCPUControlEnabled.Get(&clusterSettings.SV) {
 			tenantID, ok := roachpb.ClientTenantFromContext(ctx)
 			if !ok {
-				tenantID = roachpb.SystemTenantID
+				tenantID = roachpb.PrefixedSystemTenantID
 			}
 			pacer = flowCtx.Cfg.AdmissionPacerFactory.NewPacer(
 				100*time.Millisecond,

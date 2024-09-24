@@ -81,7 +81,7 @@ func (s *TestState) ClusterID() uuid.UUID {
 
 // Codec implements the scbuild.Dependencies interface.
 func (s *TestState) Codec() keys.SQLCodec {
-	return keys.SystemSQLCodec
+	return keys.PrefixedSystemSQLCodec
 }
 
 // SessionData implements the scbuild.Dependencies interface.

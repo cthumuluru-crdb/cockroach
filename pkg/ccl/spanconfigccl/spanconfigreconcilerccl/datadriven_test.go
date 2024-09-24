@@ -126,10 +126,10 @@ func TestDataDriven(t *testing.T) {
 		spanConfigTestCluster := spanconfigtestcluster.NewHandle(t, tc, scKnobs)
 		defer spanConfigTestCluster.Cleanup()
 
-		systemTenant := spanConfigTestCluster.InitializeTenant(ctx, roachpb.SystemTenantID)
+		systemTenant := spanConfigTestCluster.InitializeTenant(ctx, roachpb.PrefixedSystemTenantID)
 		kvAccessor := systemTenant.SpanConfigKVAccessor().(spanconfig.KVAccessor)
 		datadriven.RunTest(t, path, func(t *testing.T, d *datadriven.TestData) string {
-			tenantID := roachpb.SystemTenantID
+			tenantID := roachpb.PrefixedSystemTenantID
 			if d.HasArg("tenant") {
 				if d.Cmd == "state" {
 					d.Fatalf(t, "unexpected argument 'tenant' for command %q", d.Cmd)

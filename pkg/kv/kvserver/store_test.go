@@ -131,7 +131,7 @@ type testStoreOpts struct {
 
 func (opts *testStoreOpts) splits() (_kvs []roachpb.KeyValue, _splits []roachpb.RKey) {
 	kvs, splits := bootstrap.MakeMetadataSchema(
-		keys.SystemSQLCodec, zonepb.DefaultZoneConfigRef(), zonepb.DefaultSystemZoneConfigRef(),
+		keys.PrefixedSystemSQLCodec, zonepb.DefaultZoneConfigRef(), zonepb.DefaultSystemZoneConfigRef(),
 	).GetInitialValues()
 	if !opts.createSystemRanges {
 		return kvs, nil

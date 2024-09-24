@@ -2414,7 +2414,7 @@ func TestRemoveLeaseholder(t *testing.T) {
 			ReplicationMode: base.ReplicationManual,
 		})
 	defer tc.Stopper().Stop(context.Background())
-	_, rhsDesc := tc.SplitRangeOrFatal(t, bootstrap.TestingUserTableDataMin(keys.SystemSQLCodec))
+	_, rhsDesc := tc.SplitRangeOrFatal(t, bootstrap.TestingUserTableDataMin(keys.PrefixedSystemSQLCodec))
 
 	// We start with having the range under test on (1,2,3).
 	tc.AddVotersOrFatal(t, rhsDesc.StartKey.AsRawKey(), tc.Targets(1, 2)...)
@@ -4128,7 +4128,7 @@ func TestStrictGCEnforcement(t *testing.T) {
 		}
 		tableID       = getTableID()
 		tenSecondsAgo hlc.Timestamp // written in setup
-		tableKey      = keys.SystemSQLCodec.TablePrefix(tableID)
+		tableKey      = keys.PrefixedSystemSQLCodec.TablePrefix(tableID)
 		tableSpan     = roachpb.Span{Key: tableKey, EndKey: tableKey.PrefixEnd()}
 		tableTarget   = ptpb.MakeSchemaObjectsTarget([]descpb.ID{descpb.ID(tableID)})
 		mkRecord      = func() ptpb.Record {
@@ -4296,7 +4296,7 @@ func TestStrictGCEnforcement(t *testing.T) {
 	t.Run("system ranges are unaffected", func(t *testing.T) {
 		setSystemGCTTL(t, 1)
 		txn := mkStaleTxn()
-		descriptorTable := keys.SystemSQLCodec.TablePrefix(keys.DescriptorTableID)
+		descriptorTable := keys.PrefixedSystemSQLCodec.TablePrefix(keys.DescriptorTableID)
 		_, err := txn.Scan(ctx, descriptorTable, descriptorTable.PrefixEnd(), 1)
 		require.NoError(t, err)
 	})
@@ -4658,10 +4658,10 @@ func TestTenantID(t *testing.T) {
 	t.Run("(1) initial set", func(t *testing.T) {
 		// Ensure that a normal range has the system tenant.
 		{
-			_, repl := getFirstStoreReplica(t, tc.Server(0), bootstrap.TestingUserTableDataMin(keys.SystemSQLCodec))
+			_, repl := getFirstStoreReplica(t, tc.Server(0), bootstrap.TestingUserTableDataMin(keys.PrefixedSystemSQLCodec))
 			tenantId, valid := repl.TenantID()
 			require.True(t, valid)
-			require.Equal(t, roachpb.SystemTenantID, tenantId, "%v", repl)
+			require.Equal(t, roachpb.PrefixedSystemTenantID, tenantId, "%v", repl)
 		}
 		// Ensure that a range with a tenant prefix has the proper tenant ID.
 		tc.SplitRangeOrFatal(t, tenant2Prefix)

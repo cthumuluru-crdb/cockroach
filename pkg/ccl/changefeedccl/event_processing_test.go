@@ -227,7 +227,7 @@ func makeKVEventKeyOnly(rng *rand.Rand, upper int) kvevent.Event {
 	testTableID := 42
 
 	key, err := keyside.Encode(
-		keys.SystemSQLCodec.TablePrefix(uint32(testTableID)),
+		keys.PrefixedSystemSQLCodec.TablePrefix(uint32(testTableID)),
 		tree.NewDInt(tree.DInt(rng.Intn(upper))),
 		encoding.Ascending,
 	)

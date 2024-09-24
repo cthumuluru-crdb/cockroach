@@ -135,7 +135,7 @@ func retrieveAllTenantsMetadata(
 	rows, err := txn.QueryBuffered(
 		ctx, "backupccl.retrieveAllTenantsMetadata", txn.KV(),
 		tenantMetadataQuery+` WHERE id != $1`,
-		roachpb.SystemTenantID.ToUint64(),
+		roachpb.PrefixedSystemTenantID.ToUint64(),
 	)
 	if err != nil {
 		return nil, err

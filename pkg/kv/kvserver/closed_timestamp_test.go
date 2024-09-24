@@ -411,7 +411,7 @@ func TestClosedTimestampCanServeAfterSplitAndMerges(t *testing.T) {
 		t.Fatalf("failed to lookup ids: %+v", err)
 	}
 	// Split the table at key 2.
-	idxPrefix := keys.SystemSQLCodec.IndexPrefix(uint32(tableID), 1)
+	idxPrefix := keys.PrefixedSystemSQLCodec.IndexPrefix(uint32(tableID), 1)
 	k, err := keyside.Encode(idxPrefix, tree.NewDInt(2), encoding.Ascending)
 	if err != nil {
 		t.Fatalf("failed to encode key: %+v", err)
@@ -1005,7 +1005,7 @@ func getEncodedKeyForTable(
 	if err != nil {
 		t.Fatalf("failed to lookup ids: %+v", err)
 	}
-	idxPrefix := keys.SystemSQLCodec.IndexPrefix(uint32(tableID), 1)
+	idxPrefix := keys.PrefixedSystemSQLCodec.IndexPrefix(uint32(tableID), 1)
 	k, err := keyside.Encode(idxPrefix, val, encoding.Ascending)
 	if err != nil {
 		t.Fatalf("failed to encode split key: %+v", err)

@@ -519,7 +519,7 @@ func TestRowLevelTTLJobMultipleNodes(t *testing.T) {
 			}
 			tableDesc := desctestutils.TestingGetPublicTableDescriptor(
 				th.kvDB,
-				keys.SystemSQLCodec,
+				keys.PrefixedSystemSQLCodec,
 				"defaultdb", /* database */
 				tableName,
 			)
@@ -861,7 +861,7 @@ func TestRowLevelTTLJobRandomEntries(t *testing.T) {
 			if tc.numSplits > 0 {
 				tbDesc := desctestutils.TestingGetPublicTableDescriptor(
 					th.kvDB,
-					keys.SystemSQLCodec,
+					keys.PrefixedSystemSQLCodec,
 					"defaultdb",
 					createTableStmt.Table.Table(),
 				)

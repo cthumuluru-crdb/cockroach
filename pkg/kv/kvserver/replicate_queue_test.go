@@ -93,7 +93,7 @@ func TestReplicateQueueRebalance(t *testing.T) {
 	trackedRanges := map[roachpb.RangeID]struct{}{}
 	for i := uint32(0); i < newRanges; i++ {
 		tableID := bootstrap.TestingUserDescID(i)
-		splitKey := keys.SystemSQLCodec.TablePrefix(tableID)
+		splitKey := keys.PrefixedSystemSQLCodec.TablePrefix(tableID)
 		// Retry the splits on descriptor errors which are likely as the replicate
 		// queue is already hard at work.
 		testutils.SucceedsSoon(t, func() error {
@@ -133,7 +133,7 @@ func TestReplicateQueueRebalance(t *testing.T) {
 	}
 
 	initialRanges, err := server.ExpectedInitialRangeCount(
-		keys.SystemSQLCodec,
+		keys.PrefixedSystemSQLCodec,
 		zonepb.DefaultZoneConfigRef(),
 		zonepb.DefaultSystemZoneConfigRef(),
 	)
@@ -263,7 +263,7 @@ func TestReplicateQueueRebalanceMultiStore(t *testing.T) {
 			trackedRanges := map[roachpb.RangeID]struct{}{}
 			for i := 0; i < newRanges; i++ {
 				tableID := bootstrap.TestingUserDescID(uint32(i))
-				splitKey := keys.SystemSQLCodec.TablePrefix(tableID)
+				splitKey := keys.PrefixedSystemSQLCodec.TablePrefix(tableID)
 				// Retry the splits on descriptor errors which are likely as the replicate
 				// queue is already hard at work.
 				testutils.SucceedsSoon(t, func() error {

@@ -43,7 +43,7 @@ func TestMergeQueueShouldQueue(t *testing.T) {
 	kvserverbase.MergeQueueEnabled.Override(ctx, &testCtx.store.ClusterSettings().SV, true)
 
 	tableKey := func(offset uint32) []byte {
-		return keys.SystemSQLCodec.TablePrefix(bootstrap.TestingUserDescID(offset))
+		return keys.PrefixedSystemSQLCodec.TablePrefix(bootstrap.TestingUserDescID(offset))
 	}
 
 	config.TestingSetZoneConfig(config.ObjectID(bootstrap.TestingUserDescID(0)), *zonepb.NewZoneConfig())

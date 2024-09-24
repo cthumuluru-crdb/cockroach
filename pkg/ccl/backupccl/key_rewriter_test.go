@@ -75,14 +75,14 @@ func TestKeyRewriter(t *testing.T) {
 		},
 	}
 
-	kr, err := MakeKeyRewriterFromRekeys(keys.SystemSQLCodec, rekeys,
+	kr, err := MakeKeyRewriterFromRekeys(keys.PrefixedSystemSQLCodec, rekeys,
 		nil /* tenantRekeys */, false /* restoreTenantFromStream */)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	t.Run("normal", func(t *testing.T) {
-		key := rowenc.MakeIndexKeyPrefix(keys.SystemSQLCodec,
+		key := rowenc.MakeIndexKeyPrefix(keys.PrefixedSystemSQLCodec,
 			systemschema.NamespaceTable.GetID(), desc.GetPrimaryIndexID())
 		newKey, ok, err := kr.RewriteKey(key, 0)
 		if err != nil {
@@ -101,7 +101,7 @@ func TestKeyRewriter(t *testing.T) {
 	})
 
 	t.Run("prefix end", func(t *testing.T) {
-		key := roachpb.Key(rowenc.MakeIndexKeyPrefix(keys.SystemSQLCodec,
+		key := roachpb.Key(rowenc.MakeIndexKeyPrefix(keys.PrefixedSystemSQLCodec,
 			systemschema.NamespaceTable.GetID(), desc.GetPrimaryIndexID())).PrefixEnd()
 		newKey, ok, err := kr.RewriteKey(key, 0)
 		if err != nil {
@@ -123,7 +123,7 @@ func TestKeyRewriter(t *testing.T) {
 		desc.ID = oldID + 10
 		desc2 := tabledesc.NewBuilder(&desc.TableDescriptor).BuildCreatedMutableTable()
 		desc2.ID += 10
-		newKr, err := MakeKeyRewriterFromRekeys(keys.SystemSQLCodec, []execinfrapb.TableRekey{
+		newKr, err := MakeKeyRewriterFromRekeys(keys.PrefixedSystemSQLCodec, []execinfrapb.TableRekey{
 			{OldID: uint32(oldID), NewDesc: mustMarshalDesc(t, desc.TableDesc())},
 			{OldID: uint32(desc.ID), NewDesc: mustMarshalDesc(t, desc2.TableDesc())},
 		}, nil /* tenantRekeys */, false /* restoreTenantFromStream */)
@@ -131,7 +131,7 @@ func TestKeyRewriter(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		key := rowenc.MakeIndexKeyPrefix(keys.SystemSQLCodec, systemschema.NamespaceTable.GetID(), desc.GetPrimaryIndexID())
+		key := rowenc.MakeIndexKeyPrefix(keys.PrefixedSystemSQLCodec, systemschema.NamespaceTable.GetID(), desc.GetPrimaryIndexID())
 		newKey, ok, err := newKr.RewriteKey(key, 0)
 		if err != nil {
 			t.Fatal(err)
@@ -153,12 +153,12 @@ func TestKeyRewriter(t *testing.T) {
 		// Create a new key rewriter with a table descriptor undergoing an in-progress import.
 		desc.ID = oldID + 20
 		desc.ImportStartWallTime = 2
-		newKr, err := MakeKeyRewriterFromRekeys(keys.SystemSQLCodec, []execinfrapb.TableRekey{
+		newKr, err := MakeKeyRewriterFromRekeys(keys.PrefixedSystemSQLCodec, []execinfrapb.TableRekey{
 			{OldID: uint32(oldID), NewDesc: mustMarshalDesc(t, desc.TableDesc())},
 		}, nil /* tenantRekeys */, false /* restoreTenantFromStream */)
 		require.NoError(t, err)
 
-		key := rowenc.MakeIndexKeyPrefix(keys.SystemSQLCodec,
+		key := rowenc.MakeIndexKeyPrefix(keys.PrefixedSystemSQLCodec,
 			systemschema.NamespaceTable.GetID(), desc.GetPrimaryIndexID())
 
 		// If the passed in walltime is at or above the ImportStartWalltime,
@@ -184,7 +184,7 @@ func TestKeyRewriter(t *testing.T) {
 			t.Fatalf("got %d expected %d", id, newID)
 		}
 	})
-	systemTenant := roachpb.SystemTenantID
+	systemTenant := roachpb.PrefixedSystemTenantID
 	tenant3 := roachpb.MustMakeTenantID(3)
 	tenant4 := roachpb.MustMakeTenantID(4)
 

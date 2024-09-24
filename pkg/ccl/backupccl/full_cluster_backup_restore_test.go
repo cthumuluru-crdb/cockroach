@@ -235,7 +235,7 @@ CREATE TABLE data2.foo (a int);
 
 			// Check there is no data in the span that we expect user data to be imported.
 			store := tcRestore.GetFirstStoreFromServer(t, 0)
-			startKey := keys.SystemSQLCodec.TablePrefix(uint32(id))
+			startKey := keys.PrefixedSystemSQLCodec.TablePrefix(uint32(id))
 			endKey := startKey.PrefixEnd()
 			it, err := store.TODOEngine().NewMVCCIterator(context.Background(), storage.MVCCKeyAndIntentsIterKind, storage.IterOptions{
 				UpperBound: endKey,

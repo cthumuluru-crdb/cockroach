@@ -215,7 +215,7 @@ func makeFetchSpec(
 		}
 	}
 	var fetchSpec fetchpb.IndexFetchSpec
-	if err := rowenc.InitIndexFetchSpec(&fetchSpec, keys.SystemSQLCodec, table, index, colIDs); err != nil {
+	if err := rowenc.InitIndexFetchSpec(&fetchSpec, keys.PrefixedSystemSQLCodec, table, index, colIDs); err != nil {
 		t.Fatal(err)
 	}
 	return fetchSpec

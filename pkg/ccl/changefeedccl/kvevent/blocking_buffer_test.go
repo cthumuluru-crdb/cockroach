@@ -42,7 +42,7 @@ func makeRangeFeedEvent(rnd *rand.Rand, valSize int, prevValSize int) *kvpb.Rang
 	const tableID = 42
 
 	key, err := keyside.Encode(
-		keys.SystemSQLCodec.TablePrefix(tableID),
+		keys.PrefixedSystemSQLCodec.TablePrefix(tableID),
 		randgen.RandDatumSimple(rnd, types.String),
 		encoding.Ascending,
 	)
@@ -111,7 +111,7 @@ func TestBlockingBuffer(t *testing.T) {
 		rnd, _ := randutil.NewTestRand()
 		for {
 			if rnd.Int()%20 == 0 {
-				prefix := keys.SystemSQLCodec.TablePrefix(42)
+				prefix := keys.PrefixedSystemSQLCodec.TablePrefix(42)
 				sp := roachpb.Span{Key: prefix, EndKey: prefix.Next()}
 				if err := buf.Add(ctx, kvevent.NewBackfillResolvedEvent(sp, hlc.Timestamp{}, jobspb.ResolvedSpan_BACKFILL)); err != nil {
 					return err

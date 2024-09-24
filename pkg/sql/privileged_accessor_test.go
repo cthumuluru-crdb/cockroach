@@ -38,7 +38,7 @@ func TestLookupNamespaceID(t *testing.T) {
 	err := kvDB.Txn(ctx, func(ctx context.Context, txn *kv.Txn) error {
 		return txn.Put(
 			ctx,
-			catalogkeys.EncodeNameKey(keys.SystemSQLCodec, &descpb.NameInfo{ParentID: 999, ParentSchemaID: 1000, Name: "bob"}),
+			catalogkeys.EncodeNameKey(keys.PrefixedSystemSQLCodec, &descpb.NameInfo{ParentID: 999, ParentSchemaID: 1000, Name: "bob"}),
 			9999,
 		)
 	})

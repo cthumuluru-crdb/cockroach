@@ -41,7 +41,7 @@ func lockTableKey(key roachpb.Key) roachpb.Key {
 }
 
 func TestSafeFormatKey_SystemTenant(t *testing.T) {
-	tenSysCodec := keys.SystemSQLCodec
+	tenSysCodec := keys.PrefixedSystemSQLCodec
 	testCases := []struct {
 		name string
 		key  roachpb.Key
@@ -208,7 +208,7 @@ func TestSafeFormatKey_AppTenant(t *testing.T) {
 }
 
 func TestPrettyPrint(t *testing.T) {
-	tenSysCodec := keys.SystemSQLCodec
+	tenSysCodec := keys.PrefixedSystemSQLCodec
 	ten5Codec := keys.MakeSQLCodec(roachpb.MustMakeTenantID(5))
 	tm, _ := time.Parse(time.RFC3339Nano, "2016-03-30T13:40:35.053725008Z")
 	duration := duration.MakeDuration(1*time.Second.Nanoseconds(), 1, 1)
@@ -553,7 +553,7 @@ func massagePrettyPrintedSpanForTest(span string, dirs []encoding.Direction) str
 }
 
 func TestPrettyPrintRange(t *testing.T) {
-	tenSysCodec := keys.SystemSQLCodec
+	tenSysCodec := keys.PrefixedSystemSQLCodec
 	ten5Codec := keys.MakeSQLCodec(roachpb.MustMakeTenantID(5))
 	key := makeKey([]byte("a"))
 	key2 := makeKey([]byte("z"))

@@ -374,7 +374,7 @@ func (a kvAuth) selectAuthzMethod(
 		// The client is a tenant server. We have two possible cases:
 		// - tenant server to KV node.
 		// - tenant server to another tenant server.
-		if a.tenant.tenantID == roachpb.SystemTenantID {
+		if a.tenant.tenantID == roachpb.PrefixedSystemTenantID {
 			return authzTenantServerToKVServer(res), nil
 		}
 		return authzTenantServerToTenantServer{}, nil

@@ -213,7 +213,7 @@ func TestGenerateClientCerts(t *testing.T) {
 		require.NoError(t, security.CreateCAPair(certsDir, caKeyFile, testKeySize,
 			time.Hour*72, false /* allowReuse */, false /* overwrite */))
 
-		tenantIDs := []roachpb.TenantID{roachpb.SystemTenantID}
+		tenantIDs := []roachpb.TenantID{roachpb.PrefixedSystemTenantID}
 		for _, tenantID := range tc.tenantIDs {
 			tenantIDs = append(tenantIDs, roachpb.MustMakeTenantID(tenantID))
 		}
@@ -326,7 +326,7 @@ func generateBaseCerts(certsDir string, clientCertLifetime time.Duration) error 
 			clientCertLifetime,
 			true,
 			username.RootUserName(),
-			[]roachpb.TenantID{roachpb.SystemTenantID},
+			[]roachpb.TenantID{roachpb.PrefixedSystemTenantID},
 			nil, /* tenantNames */
 			false,
 		); err != nil {
@@ -383,7 +383,7 @@ func generateSplitCACerts(certsDir string) error {
 	if err := security.CreateClientPair(
 		certsDir, filepath.Join(certsDir, certnames.EmbeddedClientCAKey),
 		testKeySize, time.Hour*48, true, username.NodeUserName(),
-		[]roachpb.TenantID{roachpb.SystemTenantID}, nil /* tenantNames */, false,
+		[]roachpb.TenantID{roachpb.PrefixedSystemTenantID}, nil /* tenantNames */, false,
 	); err != nil {
 		return errors.Wrap(err, "could not generate Client pair")
 	}
@@ -391,7 +391,7 @@ func generateSplitCACerts(certsDir string) error {
 	if err := security.CreateClientPair(
 		certsDir, filepath.Join(certsDir, certnames.EmbeddedClientCAKey),
 		testKeySize, time.Hour*48, true, username.RootUserName(),
-		[]roachpb.TenantID{roachpb.SystemTenantID}, nil, false,
+		[]roachpb.TenantID{roachpb.PrefixedSystemTenantID}, nil, false,
 	); err != nil {
 		return errors.Wrap(err, "could not generate Client pair")
 	}
@@ -448,7 +448,7 @@ func TestUseCerts(t *testing.T) {
 	sCtx := rpc.NewSecurityContext(
 		clientContext,
 		security.CommandTLSSettings{},
-		roachpb.SystemTenantID,
+		roachpb.PrefixedSystemTenantID,
 		tenantcapabilitiesauthorizer.NewAllowEverythingAuthorizer(),
 	)
 	httpClient, err := sCtx.GetHTTPClient()
@@ -472,7 +472,7 @@ func TestUseCerts(t *testing.T) {
 		secondSCtx := rpc.NewSecurityContext(
 			clientContext,
 			security.CommandTLSSettings{},
-			roachpb.SystemTenantID,
+			roachpb.PrefixedSystemTenantID,
 			tenantcapabilitiesauthorizer.NewAllowEverythingAuthorizer(),
 		)
 		httpClient, err = secondSCtx.GetHTTPClient()
@@ -544,7 +544,7 @@ func TestUseSplitCACerts(t *testing.T) {
 	sCtx := rpc.NewSecurityContext(
 		clientContext,
 		security.CommandTLSSettings{},
-		roachpb.SystemTenantID,
+		roachpb.PrefixedSystemTenantID,
 		tenantcapabilitiesauthorizer.NewAllowEverythingAuthorizer(),
 	)
 	httpClient, err := sCtx.GetHTTPClient()
@@ -568,7 +568,7 @@ func TestUseSplitCACerts(t *testing.T) {
 		secondSCtx := rpc.NewSecurityContext(
 			clientContext,
 			security.CommandTLSSettings{},
-			roachpb.SystemTenantID,
+			roachpb.PrefixedSystemTenantID,
 			tenantcapabilitiesauthorizer.NewAllowEverythingAuthorizer(),
 		)
 		httpClient, err = secondSCtx.GetHTTPClient()
@@ -676,7 +676,7 @@ func TestUseWrongSplitCACerts(t *testing.T) {
 	sCtx := rpc.NewSecurityContext(
 		clientContext,
 		security.CommandTLSSettings{},
-		roachpb.SystemTenantID,
+		roachpb.PrefixedSystemTenantID,
 		tenantcapabilitiesauthorizer.NewAllowEverythingAuthorizer(),
 	)
 	httpClient, err := sCtx.GetHTTPClient()
@@ -700,7 +700,7 @@ func TestUseWrongSplitCACerts(t *testing.T) {
 		secondCtx := rpc.NewSecurityContext(
 			clientContext,
 			security.CommandTLSSettings{},
-			roachpb.SystemTenantID,
+			roachpb.PrefixedSystemTenantID,
 			tenantcapabilitiesauthorizer.NewAllowEverythingAuthorizer(),
 		)
 		httpClient, err = secondCtx.GetHTTPClient()

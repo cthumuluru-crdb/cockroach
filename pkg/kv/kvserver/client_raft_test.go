@@ -4930,7 +4930,7 @@ func TestDefaultConnectionDisruptionDoesNotInterfereWithSystemTraffic(t *testing
 		})
 	defer tc.Stopper().Stop(ctx)
 	// Make a key that's in the user data space.
-	keyA := append(keys.SystemSQLCodec.TablePrefix(100), 'a')
+	keyA := append(keys.PrefixedSystemSQLCodec.TablePrefix(100), 'a')
 	// Split so that we can assign voters to the range and assign all three.
 	tc.SplitRangeOrFatal(t, keyA)
 	tc.AddVotersOrFatal(t, keyA, tc.Targets(1, 2)...)

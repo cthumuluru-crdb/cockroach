@@ -102,7 +102,7 @@ func (k *KVAccessor) GetAllSystemSpanConfigsThatApply(
 	ctx context.Context, id roachpb.TenantID,
 ) (spanConfigs []roachpb.SpanConfig, _ error) {
 	hostSetOnTenant, err := spanconfig.MakeTenantKeyspaceTarget(
-		roachpb.SystemTenantID, id,
+		roachpb.PrefixedSystemTenantID, id,
 	)
 	if err != nil {
 		return nil, err
@@ -121,7 +121,7 @@ func (k *KVAccessor) GetAllSystemSpanConfigsThatApply(
 
 	// We only need to do this for secondary tenants; we've already added this
 	// target if tenID == system tenant.
-	if id != roachpb.SystemTenantID {
+	if id != roachpb.PrefixedSystemTenantID {
 		target, err := spanconfig.MakeTenantKeyspaceTarget(id, id)
 		if err != nil {
 			return nil, err

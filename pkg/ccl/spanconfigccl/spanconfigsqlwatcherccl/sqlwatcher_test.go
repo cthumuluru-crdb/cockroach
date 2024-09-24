@@ -83,7 +83,7 @@ func TestSQLWatcherReactsToUpdates(t *testing.T) {
 
 	noopCheckpointDuration := 100 * time.Millisecond
 	sqlWatcher := spanconfigsqlwatcher.New(
-		keys.SystemSQLCodec,
+		keys.PrefixedSystemSQLCodec,
 		ts.ClusterSettings(),
 		ts.RangeFeedFactory().(*rangefeed.Factory),
 		1<<20, /* 1 MB, bufferMemLimit */

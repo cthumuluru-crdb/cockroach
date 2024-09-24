@@ -237,8 +237,8 @@ func TestMuxRangeFeedConnectsToNodeOnce(t *testing.T) {
 	}
 
 	fooDesc := desctestutils.TestingGetPublicTableDescriptor(
-		ts.DB(), keys.SystemSQLCodec, "defaultdb", "foo")
-	fooSpan := fooDesc.PrimaryIndexSpan(keys.SystemSQLCodec)
+		ts.DB(), keys.PrefixedSystemSQLCodec, "defaultdb", "foo")
+	fooSpan := fooDesc.PrimaryIndexSpan(keys.PrefixedSystemSQLCodec)
 
 	allSeen, onValue := observeNValues(1000)
 	closeFeed := rangeFeed(ts.DistSenderI(), fooSpan, startTime, onValue)
@@ -277,8 +277,8 @@ func TestMuxRangeCatchupScanQuotaReleased(t *testing.T) {
 	)
 
 	fooDesc := desctestutils.TestingGetPublicTableDescriptor(
-		ts.DB(), keys.SystemSQLCodec, "defaultdb", "foo")
-	fooSpan := fooDesc.PrimaryIndexSpan(keys.SystemSQLCodec)
+		ts.DB(), keys.PrefixedSystemSQLCodec, "defaultdb", "foo")
+	fooSpan := fooDesc.PrimaryIndexSpan(keys.PrefixedSystemSQLCodec)
 
 	// This error causes rangefeed to restart after re-resolving spans, and causes
 	// catchup scan quota acquisition.
@@ -331,8 +331,8 @@ func TestRangeFeedMetricsManagement(t *testing.T) {
 	)
 
 	fooDesc := desctestutils.TestingGetPublicTableDescriptor(
-		ts.DB(), keys.SystemSQLCodec, "defaultdb", "foo")
-	fooSpan := fooDesc.PrimaryIndexSpan(keys.SystemSQLCodec)
+		ts.DB(), keys.PrefixedSystemSQLCodec, "defaultdb", "foo")
+	fooSpan := fooDesc.PrimaryIndexSpan(keys.PrefixedSystemSQLCodec)
 
 	metrics := kvcoord.TestingMakeRangeFeedMetrics()
 
@@ -488,8 +488,8 @@ func TestRangefeedRangeObserver(t *testing.T) {
 	}()
 
 	fooDesc := desctestutils.TestingGetPublicTableDescriptor(
-		ts.DB(), keys.SystemSQLCodec, "defaultdb", "foo")
-	fooSpan := fooDesc.PrimaryIndexSpan(keys.SystemSQLCodec)
+		ts.DB(), keys.PrefixedSystemSQLCodec, "defaultdb", "foo")
+	fooSpan := fooDesc.PrimaryIndexSpan(keys.PrefixedSystemSQLCodec)
 
 	ignoreValues := func(event kvcoord.RangeFeedMessage) {}
 
@@ -596,8 +596,8 @@ func TestMuxRangeFeedCanCloseStream(t *testing.T) {
 	)
 
 	fooDesc := desctestutils.TestingGetPublicTableDescriptor(
-		ts.DB(), keys.SystemSQLCodec, "defaultdb", "foo")
-	fooSpan := fooDesc.PrimaryIndexSpan(keys.SystemSQLCodec)
+		ts.DB(), keys.PrefixedSystemSQLCodec, "defaultdb", "foo")
+	fooSpan := fooDesc.PrimaryIndexSpan(keys.PrefixedSystemSQLCodec)
 
 	frontier, err := span.MakeFrontier(fooSpan)
 	require.NoError(t, err)
@@ -746,8 +746,8 @@ func TestMuxRangeFeedDoesNotDeadlockWithLocalStreams(t *testing.T) {
 	)
 
 	fooDesc := desctestutils.TestingGetPublicTableDescriptor(
-		ts.DB(), keys.SystemSQLCodec, "defaultdb", "foo")
-	fooSpan := fooDesc.PrimaryIndexSpan(keys.SystemSQLCodec)
+		ts.DB(), keys.PrefixedSystemSQLCodec, "defaultdb", "foo")
+	fooSpan := fooDesc.PrimaryIndexSpan(keys.PrefixedSystemSQLCodec)
 
 	allSeen, onValue := observeNValues(1000)
 	closeFeed := rangeFeed(ts.DistSenderI(), fooSpan, startFrom, onValue,

@@ -91,7 +91,7 @@ func hasManuallySplitRangesOnIndex(
 		if err := ranges[i].ValueProto(&desc); err != nil {
 			t.Fatal(err)
 		}
-		_, _, foundIndexID, err := keys.SystemSQLCodec.DecodeIndexPrefix(roachpb.Key(desc.StartKey))
+		_, _, foundIndexID, err := keys.PrefixedSystemSQLCodec.DecodeIndexPrefix(roachpb.Key(desc.StartKey))
 		if err != nil {
 			continue
 		}
@@ -219,7 +219,7 @@ func TestUnsplitRanges(t *testing.T) {
 	}
 
 	tableTruncateSucceed := func(kvDB *kv.DB, sqlDB *gosql.DB, tableDesc catalog.TableDescriptor, indexSpan roachpb.Span) error {
-		tableSpan := tableDesc.TableSpan(keys.SystemSQLCodec)
+		tableSpan := tableDesc.TableSpan(keys.PrefixedSystemSQLCodec)
 		if kvs, err := kvDB.Scan(context.Background(), tableSpan.Key, tableSpan.EndKey, 0); err != nil {
 			return err
 		} else if len(kvs) != 0 {
@@ -294,15 +294,15 @@ func TestUnsplitRanges(t *testing.T) {
 
 		require.NoError(t, tests.CreateKVTable(sqlDB, tableName, numRows))
 
-		tableDesc := desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.SystemSQLCodec, "t", tableName)
-		tableSpan := tableDesc.TableSpan(keys.SystemSQLCodec)
+		tableDesc := desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.PrefixedSystemSQLCodec, "t", tableName)
+		tableSpan := tableDesc.TableSpan(keys.PrefixedSystemSQLCodec)
 		tests.CheckKeyCount(t, kvDB, tableSpan, numKeys)
 
 		idx, err := catalog.MustFindIndexByName(tableDesc, "foo")
 		if err != nil {
 			t.Fatal(err)
 		}
-		indexSpan := tableDesc.IndexSpan(keys.SystemSQLCodec, idx.GetID())
+		indexSpan := tableDesc.IndexSpan(keys.PrefixedSystemSQLCodec, idx.GetID())
 		tests.CheckKeyCount(t, kvDB, indexSpan, numRows)
 
 		// Split the first range in the table.

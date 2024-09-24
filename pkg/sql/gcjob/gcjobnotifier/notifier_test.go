@@ -60,7 +60,7 @@ func TestNotifier(t *testing.T) {
 	t.Run("start with stopped stopper leads to nil being returned", func(t *testing.T) {
 		stopper := stop.NewStopper()
 		stopper.Stop(ctx)
-		n := New(settings, &testingProvider{}, keys.SystemSQLCodec, stopper)
+		n := New(settings, &testingProvider{}, keys.PrefixedSystemSQLCodec, stopper)
 		n.Start(ctx)
 		ch, _ := n.AddNotifyee(ctx)
 		require.Nil(t, ch)
@@ -68,14 +68,14 @@ func TestNotifier(t *testing.T) {
 	stopper := stop.NewStopper()
 	defer stopper.Stop(ctx)
 	t.Run("panic on double start", func(t *testing.T) {
-		n := New(settings, &testingProvider{ch: make(chan struct{})}, keys.SystemSQLCodec, stopper)
+		n := New(settings, &testingProvider{ch: make(chan struct{})}, keys.PrefixedSystemSQLCodec, stopper)
 		n.Start(ctx)
 		require.Panics(t, func() {
 			n.Start(ctx)
 		})
 	})
 	t.Run("panic on AddNotifyee before start", func(t *testing.T) {
-		n := New(settings, &testingProvider{ch: make(chan struct{})}, keys.SystemSQLCodec, stopper)
+		n := New(settings, &testingProvider{ch: make(chan struct{})}, keys.PrefixedSystemSQLCodec, stopper)
 		require.Panics(t, func() {
 			n.AddNotifyee(ctx)
 		})
@@ -84,7 +84,7 @@ func TestNotifier(t *testing.T) {
 		ch := make(chan struct{}, 1)
 		cfg := mkSystemConfig(mkZoneConfigKV(1, 1, "1"))
 		p := &testingProvider{ch: ch}
-		n := New(settings, p, keys.SystemSQLCodec, stopper)
+		n := New(settings, p, keys.PrefixedSystemSQLCodec, stopper)
 		n.Start(ctx)
 		n1Ch, cleanup := n.AddNotifyee(ctx)
 		defer cleanup()
@@ -107,7 +107,7 @@ func TestNotifier(t *testing.T) {
 			cfg: mkSystemConfig(mkZoneConfigKV(1, 1, "1")),
 			ch:  ch,
 		}
-		n := New(settings, p, keys.SystemSQLCodec, stopper)
+		n := New(settings, p, keys.PrefixedSystemSQLCodec, stopper)
 		n.Start(ctx)
 		n1Ch, cleanup1 := n.AddNotifyee(ctx)
 
@@ -162,7 +162,7 @@ func expectSend(t *testing.T, ch <-chan struct{}) {
 
 func mkZoneConfigKV(id descpb.ID, ts int64, value string) roachpb.KeyValue {
 	kv := roachpb.KeyValue{
-		Key: config.MakeZoneKey(keys.SystemSQLCodec, id),
+		Key: config.MakeZoneKey(keys.PrefixedSystemSQLCodec, id),
 		Value: roachpb.Value{
 			Timestamp: hlc.Timestamp{WallTime: ts},
 		},

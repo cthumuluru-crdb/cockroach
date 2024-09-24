@@ -37,13 +37,13 @@ func TestDecodeSystemTenantObjectID(t *testing.T) {
 		{roachpb.RKeyMax, nil, false, 0},
 
 		// Valid, even if there are things after the ID.
-		{testutils.MakeKey(keys.SystemSQLCodec.TablePrefix(42), roachpb.RKey("\xff")), []byte{'\xff'}, true, 42},
-		{roachpb.RKey(keys.SystemSQLCodec.TablePrefix(0)), []byte{}, true, 0},
-		{roachpb.RKey(keys.SystemSQLCodec.TablePrefix(999)), []byte{}, true, 999},
+		{testutils.MakeKey(keys.PrefixedSystemSQLCodec.TablePrefix(42), roachpb.RKey("\xff")), []byte{'\xff'}, true, 42},
+		{roachpb.RKey(keys.PrefixedSystemSQLCodec.TablePrefix(0)), []byte{}, true, 0},
+		{roachpb.RKey(keys.PrefixedSystemSQLCodec.TablePrefix(999)), []byte{}, true, 999},
 	}
 
 	for tcNum, tc := range testCases {
-		id, keySuffix, success := config.DecodeObjectID(keys.SystemSQLCodec, tc.key)
+		id, keySuffix, success := config.DecodeObjectID(keys.PrefixedSystemSQLCodec, tc.key)
 		if success != tc.success {
 			t.Errorf("#%d: expected success=%t", tcNum, tc.success)
 			continue

@@ -40,7 +40,7 @@ import (
 )
 
 var configID = descpb.ID(1)
-var configDescKey = catalogkeys.MakeDescMetadataKey(keys.SystemSQLCodec, descpb.ID(bootstrap.TestingUserDescID(0)))
+var configDescKey = catalogkeys.MakeDescMetadataKey(keys.PrefixedSystemSQLCodec, descpb.ID(bootstrap.TestingUserDescID(0)))
 
 // forceNewConfig forces a system config update by writing a bogus descriptor with an
 // incremented value inside. It then repeatedly fetches the gossip config until the
@@ -125,7 +125,7 @@ func TestGetZoneConfig(t *testing.T) {
 		for tcNum, tc := range testCases {
 			// Verify SystemConfig.GetZoneConfigForKey.
 			{
-				key := append(roachpb.RKey(keys.SystemSQLCodec.TablePrefix(tc.objectID)), tc.keySuffix...)
+				key := append(roachpb.RKey(keys.PrefixedSystemSQLCodec.TablePrefix(tc.objectID)), tc.keySuffix...)
 				_, zoneCfg, err := config.TestingGetSystemTenantZoneConfigForKey(cfg, key) // Complete ZoneConfig
 				if err != nil {
 					t.Fatalf("#%d: err=%s", tcNum, err)
@@ -359,7 +359,7 @@ func TestCascadingZoneConfig(t *testing.T) {
 		for tcNum, tc := range testCases {
 			// Verify SystemConfig.GetZoneConfigForKey.
 			{
-				key := append(roachpb.RKey(keys.SystemSQLCodec.TablePrefix(tc.objectID)), tc.keySuffix...)
+				key := append(roachpb.RKey(keys.PrefixedSystemSQLCodec.TablePrefix(tc.objectID)), tc.keySuffix...)
 				_, zoneCfg, err := config.TestingGetSystemTenantZoneConfigForKey(cfg, key) // Complete ZoneConfig
 				if err != nil {
 					t.Fatalf("#%d: err=%s", tcNum, err)
@@ -655,7 +655,7 @@ func BenchmarkGetZoneConfig(b *testing.B) {
 	tdb.Exec(b, `SET CLUSTER SETTING kv.rangefeed.closed_timestamp_refresh_interval = '20ms'`)
 	cfg := forceNewConfig(b, s)
 
-	key := roachpb.RKey(keys.SystemSQLCodec.TablePrefix(bootstrap.TestingUserDescID(0)))
+	key := roachpb.RKey(keys.PrefixedSystemSQLCodec.TablePrefix(bootstrap.TestingUserDescID(0)))
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		_, _, err := config.TestingGetSystemTenantZoneConfigForKey(cfg, key)

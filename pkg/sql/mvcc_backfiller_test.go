@@ -218,7 +218,7 @@ func TestIndexBackfillFractionTracking(t *testing.T) {
 			BackfillChunkSize: chunkSize,
 			RunBeforeResume: func(id jobspb.JobID) error {
 				jobID = id
-				tableDesc := desctestutils.TestingGetTableDescriptor(kvDB, keys.SystemSQLCodec, "t", "public", "test")
+				tableDesc := desctestutils.TestingGetTableDescriptor(kvDB, keys.PrefixedSystemSQLCodec, "t", "public", "test")
 				split(tableDesc, tableDesc.GetPrimaryIndex())
 				return nil
 			},
@@ -226,7 +226,7 @@ func TestIndexBackfillFractionTracking(t *testing.T) {
 				for i := rowCount + 1; i < (rowCount*2)+1; i++ {
 					sqlRunner.Exec(t, "INSERT INTO t.test VALUES ($1, $1)", i)
 				}
-				tableDesc := desctestutils.TestingGetTableDescriptor(kvDB, keys.SystemSQLCodec, "t", "public", "test")
+				tableDesc := desctestutils.TestingGetTableDescriptor(kvDB, keys.PrefixedSystemSQLCodec, "t", "public", "test")
 				tempIdx, err := findCorrespondingTemporaryIndex(tableDesc, "new_idx")
 				require.NoError(t, err)
 				split(tableDesc, tempIdx)
@@ -660,7 +660,7 @@ func splitIndex(
 	rkts := make(map[roachpb.RangeID]rangeAndKT)
 	for _, sp := range sps {
 
-		pik, err := randgen.TestingMakeSecondaryIndexKey(desc, index, keys.SystemSQLCodec, sp.Vals...)
+		pik, err := randgen.TestingMakeSecondaryIndexKey(desc, index, keys.PrefixedSystemSQLCodec, sp.Vals...)
 		if err != nil {
 			return err
 		}

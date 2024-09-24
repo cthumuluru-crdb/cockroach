@@ -102,11 +102,11 @@ func TestWriteResumeSpan(t *testing.T) {
 
 	registry := server.JobRegistry().(*jobs.Registry)
 	tableDesc := desctestutils.TestingGetMutableExistingTableDescriptor(
-		kvDB, keys.SystemSQLCodec, "t", "test")
+		kvDB, keys.PrefixedSystemSQLCodec, "t", "test")
 
 	if err := kvDB.Put(
 		ctx,
-		catalogkeys.MakeDescMetadataKey(keys.SystemSQLCodec, tableDesc.ID),
+		catalogkeys.MakeDescMetadataKey(keys.PrefixedSystemSQLCodec, tableDesc.ID),
 		tableDesc.DescriptorProto(),
 	); err != nil {
 		t.Fatal(err)
@@ -182,7 +182,7 @@ func TestWriteResumeSpan(t *testing.T) {
 			return TestingWriteResumeSpan(
 				ctx,
 				txn,
-				keys.SystemSQLCodec,
+				keys.PrefixedSystemSQLCodec,
 				col,
 				tableDesc.ID,
 				mutationID,
@@ -220,7 +220,7 @@ func TestWriteResumeSpan(t *testing.T) {
 	var got []roachpb.Span
 	if err := sql.TestingDescsTxn(ctx, server, func(ctx context.Context, txn isql.Txn, col *descs.Collection) (err error) {
 		got, _, _, err = rowexec.GetResumeSpans(
-			ctx, registry, txn, keys.SystemSQLCodec, col, tableDesc.ID, mutationID, backfill.IndexMutationFilter)
+			ctx, registry, txn, keys.PrefixedSystemSQLCodec, col, tableDesc.ID, mutationID, backfill.IndexMutationFilter)
 		return err
 	}); err != nil {
 		t.Error(err)

@@ -1088,7 +1088,7 @@ func TestCreateCheckpoint_SpanConstrained(t *testing.T) {
 
 	rng, _ := randutil.NewTestRand()
 	key := func(i int) roachpb.Key {
-		return keys.SystemSQLCodec.TablePrefix(uint32(i))
+		return keys.PrefixedSystemSQLCodec.TablePrefix(uint32(i))
 	}
 
 	mem := vfs.NewMem()

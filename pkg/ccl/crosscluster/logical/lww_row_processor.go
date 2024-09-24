@@ -213,7 +213,7 @@ func makeSQLProcessorFromQuerier(
 		})
 	}
 
-	prefixlessCodec := keys.SystemSQLCodec
+	prefixlessCodec := keys.PrefixedSystemSQLCodec
 	rfCache, err := cdcevent.NewFixedRowFetcherCache(ctx, prefixlessCodec, settings, cdcEventTargets, tableDescsBySrcID)
 	if err != nil {
 		return nil, err

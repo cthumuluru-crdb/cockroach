@@ -72,11 +72,11 @@ func TestTableReader(t *testing.T) {
 		19,
 		sqlutils.ToRowFn(aFn, bFn, sumFn, sqlutils.RowEnglishFn))
 
-	td := desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.SystemSQLCodec, "test", "t")
+	td := desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.PrefixedSystemSQLCodec, "test", "t")
 
 	makeIndexSpan := func(start, end int) roachpb.Span {
 		var span roachpb.Span
-		prefix := roachpb.Key(rowenc.MakeIndexKeyPrefix(keys.SystemSQLCodec, td.GetID(), td.PublicNonPrimaryIndexes()[0].GetID()))
+		prefix := roachpb.Key(rowenc.MakeIndexKeyPrefix(keys.PrefixedSystemSQLCodec, td.GetID(), td.PublicNonPrimaryIndexes()[0].GetID()))
 		span.Key = append(prefix, encoding.EncodeVarintAscending(nil, int64(start))...)
 		span.EndKey = append(span.EndKey, prefix...)
 		span.EndKey = append(span.EndKey, encoding.EncodeVarintAscending(nil, int64(end))...)
@@ -91,14 +91,14 @@ func TestTableReader(t *testing.T) {
 		{
 			spec: execinfrapb.TableReaderSpec{
 				FetchSpec: makeFetchSpec(t, td, "t_pkey", "a,b"),
-				Spans:     []roachpb.Span{td.PrimaryIndexSpan(keys.SystemSQLCodec)},
+				Spans:     []roachpb.Span{td.PrimaryIndexSpan(keys.PrefixedSystemSQLCodec)},
 			},
 			expected: "[[0 1] [0 2] [0 3] [0 4] [0 5] [0 6] [0 7] [0 8] [0 9] [1 0] [1 1] [1 2] [1 3] [1 4] [1 5] [1 6] [1 7] [1 8] [1 9]]",
 		},
 		{
 			spec: execinfrapb.TableReaderSpec{
 				FetchSpec: makeFetchSpec(t, td, "t_pkey", "s"),
-				Spans:     []roachpb.Span{td.PrimaryIndexSpan(keys.SystemSQLCodec)},
+				Spans:     []roachpb.Span{td.PrimaryIndexSpan(keys.PrefixedSystemSQLCodec)},
 			},
 			post: execinfrapb.PostProcessSpec{
 				Limit: 4,
@@ -216,7 +216,7 @@ ALTER TABLE t EXPERIMENTAL_RELOCATE VALUES (ARRAY[2], 1), (ARRAY[1], 2), (ARRAY[
 	}
 
 	kvDB := tc.Server(0).DB()
-	td := desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.SystemSQLCodec, "test", "t")
+	td := desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.PrefixedSystemSQLCodec, "test", "t")
 
 	st := tc.Server(0).ClusterSettings()
 	evalCtx := eval.MakeTestingEvalContext(st)
@@ -241,7 +241,7 @@ ALTER TABLE t EXPERIMENTAL_RELOCATE VALUES (ARRAY[2], 1), (ARRAY[1], 2), (ARRAY[
 	testutils.RunTrueAndFalse(t, "row-source", func(t *testing.T, rowSource bool) {
 		spec := execinfrapb.TableReaderSpec{
 			FetchSpec: makeFetchSpec(t, td, "t_pkey", "num"),
-			Spans:     []roachpb.Span{td.PrimaryIndexSpan(keys.SystemSQLCodec)},
+			Spans:     []roachpb.Span{td.PrimaryIndexSpan(keys.PrefixedSystemSQLCodec)},
 		}
 		var out execinfra.RowReceiver
 		var buf *distsqlutils.RowBuffer
@@ -320,7 +320,7 @@ func TestTableReaderDrain(t *testing.T) {
 		3, /* numRows */
 		sqlutils.ToRowFn(sqlutils.RowIdxFn))
 
-	td := desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.SystemSQLCodec, "test", "t")
+	td := desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.PrefixedSystemSQLCodec, "test", "t")
 
 	// Run the flow in a verbose trace so that we can test for tracing info.
 	tracer := s.TracerI().(*tracing.Tracer)
@@ -347,7 +347,7 @@ func TestTableReaderDrain(t *testing.T) {
 		NodeID:  evalCtx.NodeID,
 	}
 	spec := execinfrapb.TableReaderSpec{
-		Spans:     []roachpb.Span{td.PrimaryIndexSpan(keys.SystemSQLCodec)},
+		Spans:     []roachpb.Span{td.PrimaryIndexSpan(keys.PrefixedSystemSQLCodec)},
 		FetchSpec: makeFetchSpec(t, td, "t_pkey", "num"),
 	}
 	post := execinfrapb.PostProcessSpec{}
@@ -379,7 +379,7 @@ func TestLimitScans(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	tableDesc := desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.SystemSQLCodec, "test", "t")
+	tableDesc := desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.PrefixedSystemSQLCodec, "test", "t")
 
 	st := s.ClusterSettings()
 	evalCtx := eval.MakeTestingEvalContext(st)
@@ -401,7 +401,7 @@ func TestLimitScans(t *testing.T) {
 	}
 	spec := execinfrapb.TableReaderSpec{
 		FetchSpec: makeFetchSpec(t, tableDesc, "t_pkey", ""),
-		Spans:     []roachpb.Span{tableDesc.PrimaryIndexSpan(keys.SystemSQLCodec)},
+		Spans:     []roachpb.Span{tableDesc.PrimaryIndexSpan(keys.PrefixedSystemSQLCodec)},
 	}
 	// We're going to ask for 3 rows, all contained in the first range.
 	const limit = 3
@@ -495,7 +495,7 @@ func BenchmarkTableReader(b *testing.B) {
 			numRows,
 			sqlutils.ToRowFn(sqlutils.RowIdxFn, sqlutils.RowModuloFn(42)),
 		)
-		tableDesc := desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.SystemSQLCodec, "test", tableName)
+		tableDesc := desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.PrefixedSystemSQLCodec, "test", tableName)
 		flowCtx := execinfra.FlowCtx{
 			EvalCtx: &evalCtx,
 			Mon:     evalCtx.TestingMon,
@@ -511,7 +511,7 @@ func BenchmarkTableReader(b *testing.B) {
 		}
 
 		b.Run(fmt.Sprintf("rows=%d", numRows), func(b *testing.B) {
-			span := tableDesc.PrimaryIndexSpan(keys.SystemSQLCodec)
+			span := tableDesc.PrimaryIndexSpan(keys.PrefixedSystemSQLCodec)
 			spec := execinfrapb.TableReaderSpec{
 				FetchSpec: makeFetchSpec(b, tableDesc, tableName+"_pkey", "k,v"),
 				// Spans will be set below.

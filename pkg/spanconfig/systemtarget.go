@@ -128,7 +128,7 @@ func (st SystemTarget) toProto() *roachpb.SystemSpanConfigTarget {
 // keyspace. Only the host tenant is allowed to target the entire keyspace.
 func MakeEntireKeyspaceTarget() SystemTarget {
 	return SystemTarget{
-		sourceTenantID:   roachpb.SystemTenantID,
+		sourceTenantID:   roachpb.PrefixedSystemTenantID,
 		systemTargetType: SystemTargetTypeEntireKeyspace,
 	}
 }
@@ -158,7 +158,7 @@ func (st SystemTarget) keyspaceTargeted() roachpb.Span {
 		// If the system tenant's keyspace is being targeted then this means
 		// everything from the start of the keyspace to where all non-system tenant
 		// keys begin.
-		if st.targetTenantID == roachpb.SystemTenantID {
+		if st.targetTenantID == roachpb.PrefixedSystemTenantID {
 			return roachpb.Span{
 				Key:    keys.MinKey,
 				EndKey: keys.TenantTableDataMin,
@@ -193,7 +193,7 @@ func (st SystemTarget) encode() roachpb.Span {
 	case SystemTargetTypeEntireKeyspace:
 		k = keys.SystemSpanConfigEntireKeyspace
 	case SystemTargetTypeSpecificTenantKeyspace:
-		if st.sourceTenantID == roachpb.SystemTenantID {
+		if st.sourceTenantID == roachpb.PrefixedSystemTenantID {
 			k = encoding.EncodeUvarintAscending(
 				keys.SystemSpanConfigHostOnTenantKeyspace, st.targetTenantID.ToUint64(),
 			)
@@ -203,7 +203,7 @@ func (st SystemTarget) encode() roachpb.Span {
 			)
 		}
 	case SystemTargetTypeAllTenantKeyspaceTargetsSet:
-		if st.sourceTenantID == roachpb.SystemTenantID {
+		if st.sourceTenantID == roachpb.PrefixedSystemTenantID {
 			k = keys.SystemSpanConfigHostOnTenantKeyspace
 		} else {
 			k = encoding.EncodeUvarintAscending(
@@ -224,7 +224,7 @@ func (st SystemTarget) validate() error {
 			)
 		}
 	case SystemTargetTypeEntireKeyspace:
-		if st.sourceTenantID != roachpb.SystemTenantID {
+		if st.sourceTenantID != roachpb.PrefixedSystemTenantID {
 			return errors.AssertionFailedf("only the host tenant is allowed to target the entire keyspace")
 		}
 		if st.targetTenantID.IsSet() {
@@ -236,7 +236,7 @@ func (st SystemTarget) validate() error {
 				"malformed system target for specific tenant keyspace; targetTenantID unset",
 			)
 		}
-		if st.sourceTenantID != roachpb.SystemTenantID && st.sourceTenantID != st.targetTenantID {
+		if st.sourceTenantID != roachpb.PrefixedSystemTenantID && st.sourceTenantID != st.targetTenantID {
 			return errors.AssertionFailedf(
 				"secondary tenant %s cannot target another tenant with ID %s",
 				st.sourceTenantID,
@@ -330,7 +330,7 @@ func decodeSystemTarget(span roachpb.Span) (SystemTarget, error) {
 			return SystemTarget{}, err
 		}
 		tenID := roachpb.MustMakeTenantID(tenIDRaw)
-		return MakeTenantKeyspaceTarget(roachpb.SystemTenantID, tenID)
+		return MakeTenantKeyspaceTarget(roachpb.PrefixedSystemTenantID, tenID)
 	case bytes.HasPrefix(span.Key, keys.SystemSpanConfigSecondaryTenantOnEntireKeyspace):
 		// System span config was applied by a secondary tenant over its entire
 		// keyspace.

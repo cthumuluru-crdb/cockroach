@@ -1450,7 +1450,7 @@ func TestPartitionSpans(t *testing.T) {
 						TestingKnobs: execinfra.TestingKnobs{MinimumNumberOfGatewayPartitions: 1},
 					},
 				},
-				codec:     keys.SystemSQLCodec,
+				codec:     keys.PrefixedSystemSQLCodec,
 				nodeDescs: mockGossip,
 			}
 
@@ -1459,7 +1459,7 @@ func TestPartitionSpans(t *testing.T) {
 				require.NoError(t, locFilter.Set(tc.locFilter))
 			}
 			evalCtx := &eval.Context{
-				Codec: keys.SystemSQLCodec,
+				Codec: keys.PrefixedSystemSQLCodec,
 				SessionDataStack: sessiondata.NewStack(&sessiondata.SessionData{
 					SessionData: sessiondatapb.SessionData{
 						DistsqlPlanGatewayBias: 2,
@@ -1806,12 +1806,12 @@ func TestPartitionSpansSkipsNodesNotInGossip(t *testing.T) {
 				return true
 			},
 		},
-		codec: keys.SystemSQLCodec,
+		codec: keys.PrefixedSystemSQLCodec,
 	}
 
 	ctx := context.Background()
 	planCtx := dsp.NewPlanningCtx(
-		ctx, &extendedEvalContext{Context: eval.Context{Codec: keys.SystemSQLCodec}},
+		ctx, &extendedEvalContext{Context: eval.Context{Codec: keys.PrefixedSystemSQLCodec}},
 		nil /* planner */, nil /* txn */, FullDistribution,
 	)
 	partitions, err := dsp.PartitionSpans(ctx, planCtx, roachpb.Spans{span})

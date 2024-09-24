@@ -104,7 +104,7 @@ func TestDeletePreservingIndexEncoding(t *testing.T) {
 		<-mergeFinished
 
 		// Find the descriptor for the temporary index mutation.
-		codec := keys.SystemSQLCodec
+		codec := keys.PrefixedSystemSQLCodec
 		tableDesc := desctestutils.TestingGetMutableExistingTableDescriptor(kvDB, codec, "d", "t")
 		var index *descpb.IndexDescriptor
 		for _, i := range tableDesc.Mutations {
@@ -125,7 +125,7 @@ func TestDeletePreservingIndexEncoding(t *testing.T) {
 		end := kvDB.Clock().Now()
 
 		// Grab the revision histories for the index.
-		prefix := rowenc.MakeIndexKeyPrefix(keys.SystemSQLCodec, tableDesc.GetID(), index.ID)
+		prefix := rowenc.MakeIndexKeyPrefix(keys.PrefixedSystemSQLCodec, tableDesc.GetID(), index.ID)
 		prefixEnd := append(prefix, []byte("\xff")...)
 
 		revisionsCh := make(chan []backupccl.VersionedValues)
@@ -621,7 +621,7 @@ func TestMergeProcessor(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		codec := keys.SystemSQLCodec
+		codec := keys.PrefixedSystemSQLCodec
 		tableDesc := desctestutils.TestingGetMutableExistingTableDescriptor(kvDB, codec, "d", "t")
 		settings := server.ClusterSettings()
 		execCfg := server.ExecutorConfig().(sql.ExecutorConfig)
@@ -779,9 +779,9 @@ func fetchIndex(
 	}
 
 	var spec fetchpb.IndexFetchSpec
-	require.NoError(t, rowenc.InitIndexFetchSpec(&spec, keys.SystemSQLCodec, table, idx, columns))
+	require.NoError(t, rowenc.InitIndexFetchSpec(&spec, keys.PrefixedSystemSQLCodec, table, idx, columns))
 
-	spans := []roachpb.Span{table.IndexSpan(keys.SystemSQLCodec, idx.GetID())}
+	spans := []roachpb.Span{table.IndexSpan(keys.PrefixedSystemSQLCodec, idx.GetID())}
 	const reverse = false
 	require.NoError(t, fetcher.Init(
 		ctx,

@@ -431,7 +431,7 @@ func TestCreateInitialSplits(t *testing.T) {
 
 	t.Run("rekeys before splitting", func(t *testing.T) {
 		ts := &testSplitter{}
-		err := createInitialSplits(ctx, keys.SystemSQLCodec, ts, topo, numDestnodes, destTenantID)
+		err := createInitialSplits(ctx, keys.PrefixedSystemSQLCodec, ts, topo, numDestnodes, destTenantID)
 		require.NoError(t, err)
 		expectedSplitsAndScatters := make([]roachpb.Key, 0, len(outputSpans))
 		for _, sp := range outputSpans {
@@ -445,14 +445,14 @@ func TestCreateInitialSplits(t *testing.T) {
 
 	})
 	t.Run("split errors are fatal", func(t *testing.T) {
-		require.Error(t, createInitialSplits(ctx, keys.SystemSQLCodec, &testSplitter{
+		require.Error(t, createInitialSplits(ctx, keys.PrefixedSystemSQLCodec, &testSplitter{
 			splitErr: func(_ roachpb.Key) error {
 				return errors.New("test error")
 			},
 		}, topo, numDestnodes, destTenantID))
 	})
 	t.Run("ignores scatter errors", func(t *testing.T) {
-		require.NoError(t, createInitialSplits(ctx, keys.SystemSQLCodec, &testSplitter{
+		require.NoError(t, createInitialSplits(ctx, keys.PrefixedSystemSQLCodec, &testSplitter{
 			scatterErr: func(_ roachpb.Key) error {
 				return errors.New("test error")
 			},
@@ -513,7 +513,7 @@ func TestParallelInitialSplits(t *testing.T) {
 	}
 
 	ts := &testSplitter{}
-	err := createInitialSplits(ctx, keys.SystemSQLCodec, ts, topo, numDestNodes, destTenantID)
+	err := createInitialSplits(ctx, keys.PrefixedSystemSQLCodec, ts, topo, numDestNodes, destTenantID)
 	require.NoError(t, err)
 	require.Equal(t, len(outputSpans), len(ts.mu.splits))
 	require.Equal(t, len(outputSpans), len(ts.mu.scatters))

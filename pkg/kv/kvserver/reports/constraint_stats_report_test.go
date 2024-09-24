@@ -987,7 +987,7 @@ func compileTestCase(tc baseReportTestCase) (compiledTestCase, error) {
 		allStores = append(allStores, sds...)
 	}
 
-	keyScanner := keysutils.MakePrettyScannerForNamedTables(roachpb.SystemTenantID, tableToID, idxToID)
+	keyScanner := keysutils.MakePrettyScannerForNamedTables(roachpb.PrefixedSystemTenantID, tableToID, idxToID)
 	ranges, err := processSplits(keyScanner, tc.splits, allStores)
 	if err != nil {
 		return compiledTestCase{}, err
@@ -1054,7 +1054,7 @@ func generateTableZone(t table, tableDesc descpb.TableDescriptor) (*zonepb.ZoneC
 	if tableZone != nil {
 		var err error
 		tableZone.SubzoneSpans, err = sql.GenerateSubzoneSpans(
-			nil, keys.SystemSQLCodec,
+			nil, keys.PrefixedSystemSQLCodec,
 			tabledesc.NewBuilder(&tableDesc).BuildImmutableTable(), tableZone.Subzones, false /* hasNewSubzones */)
 		if err != nil {
 			return nil, errors.Wrap(err, "error generating subzone spans")
@@ -1262,7 +1262,7 @@ func (b *systemConfigBuilder) setDefaultZoneConfig(cfg zonepb.ZoneConfig) error 
 }
 
 func (b *systemConfigBuilder) addZoneInner(objectName string, id int, cfg zonepb.ZoneConfig) error {
-	k := config.MakeZoneKey(keys.SystemSQLCodec, descpb.ID(id))
+	k := config.MakeZoneKey(keys.PrefixedSystemSQLCodec, descpb.ID(id))
 	var v roachpb.Value
 	if err := v.SetProto(&cfg); err != nil {
 		panic(err)
@@ -1324,7 +1324,7 @@ func (b *systemConfigBuilder) addTableDesc(id int, tableDesc descpb.TableDescrip
 		panic(fmt.Sprintf("parent not set for table %q", tableDesc.Name))
 	}
 	// Write the table to the SystemConfig, in the descriptors table.
-	k := catalogkeys.MakeDescMetadataKey(keys.SystemSQLCodec, descpb.ID(id))
+	k := catalogkeys.MakeDescMetadataKey(keys.PrefixedSystemSQLCodec, descpb.ID(id))
 	pb := tabledesc.NewBuilder(&tableDesc).BuildCreatedMutable().DescriptorProto()
 	// Use a bogus timestamp for the descriptor modification time.
 	ts := hlc.Timestamp{WallTime: 123}
@@ -1342,7 +1342,7 @@ func (b *systemConfigBuilder) addTableDesc(id int, tableDesc descpb.TableDescrip
 // addTableDesc adds a database descriptor to the SystemConfig.
 func (b *systemConfigBuilder) addDBDesc(id int, dbDesc catalog.DatabaseDescriptor) {
 	// Write the table to the SystemConfig, in the descriptors table.
-	k := catalogkeys.MakeDescMetadataKey(keys.SystemSQLCodec, descpb.ID(id))
+	k := catalogkeys.MakeDescMetadataKey(keys.PrefixedSystemSQLCodec, descpb.ID(id))
 	var v roachpb.Value
 	if err := v.SetProto(dbDesc.DescriptorProto()); err != nil {
 		panic(err)

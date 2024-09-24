@@ -197,10 +197,10 @@ func doTestSchemaChangeGCJob(t *testing.T, dropItem DropItem, ttlTime TTLTime) {
 
 	if err := kvDB.Txn(ctx, func(ctx context.Context, txn *kv.Txn) error {
 		b := txn.NewBatch()
-		descKey := catalogkeys.MakeDescMetadataKey(keys.SystemSQLCodec, myTableID)
+		descKey := catalogkeys.MakeDescMetadataKey(keys.PrefixedSystemSQLCodec, myTableID)
 		descDesc := myTableDesc.DescriptorProto()
 		b.Put(descKey, descDesc)
-		descKey2 := catalogkeys.MakeDescMetadataKey(keys.SystemSQLCodec, myOtherTableID)
+		descKey2 := catalogkeys.MakeDescMetadataKey(keys.PrefixedSystemSQLCodec, myOtherTableID)
 		descDesc2 := myOtherTableDesc.DescriptorProto()
 		b.Put(descKey2, descDesc2)
 		return txn.Run(ctx, b)

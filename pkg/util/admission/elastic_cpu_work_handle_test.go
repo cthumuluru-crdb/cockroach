@@ -35,7 +35,7 @@ func TestElasticCPUWorkHandle(t *testing.T) {
 
 	setRunning(zero)
 
-	handle := newElasticCPUWorkHandle(roachpb.SystemTenantID, allotment)
+	handle := newElasticCPUWorkHandle(roachpb.PrefixedSystemTenantID, allotment)
 	handle.testingOverrideRunningTime = func() time.Duration {
 		overrideMu.Lock()
 		defer overrideMu.Unlock()
@@ -177,7 +177,7 @@ func TestElasticCPUWorkHandlePreWork(t *testing.T) {
 
 	setRunning(zero)
 
-	handle := newElasticCPUWorkHandle(roachpb.SystemTenantID, allotment)
+	handle := newElasticCPUWorkHandle(roachpb.PrefixedSystemTenantID, allotment)
 	handle.testingOverrideRunningTime = func() time.Duration {
 		overrideMu.Lock()
 		defer overrideMu.Unlock()

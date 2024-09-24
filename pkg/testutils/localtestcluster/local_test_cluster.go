@@ -258,7 +258,7 @@ func (ltc *LocalTestCluster) Start(t testing.TB, initFactory InitFactoryFn) {
 		nil, /* registry */
 	)
 	cfg.SystemConfigProvider = systemconfigwatcher.New(
-		keys.SystemSQLCodec,
+		keys.PrefixedSystemSQLCodec,
 		cfg.Clock,
 		rangeFeedFactory,
 		zonepb.DefaultZoneConfigRef(),
@@ -270,7 +270,7 @@ func (ltc *LocalTestCluster) Start(t testing.TB, initFactory InitFactoryFn) {
 	var splits []roachpb.RKey
 	if !ltc.DontCreateSystemRanges {
 		schema := bootstrap.MakeMetadataSchema(
-			keys.SystemSQLCodec, zonepb.DefaultZoneConfigRef(), zonepb.DefaultSystemZoneConfigRef(),
+			keys.PrefixedSystemSQLCodec, zonepb.DefaultZoneConfigRef(), zonepb.DefaultSystemZoneConfigRef(),
 		)
 		var tableSplits []roachpb.RKey
 		initialValues, tableSplits = schema.GetInitialValues()

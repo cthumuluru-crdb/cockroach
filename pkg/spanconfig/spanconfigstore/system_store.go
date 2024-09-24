@@ -80,7 +80,7 @@ func (s *systemSpanConfigStore) combine(
 	}
 
 	hostSetOnTenant, err := spanconfig.MakeTenantKeyspaceTarget(
-		roachpb.SystemTenantID, tenID,
+		roachpb.PrefixedSystemTenantID, tenID,
 	)
 	if err != nil {
 		return roachpb.SpanConfig{}, err
@@ -97,7 +97,7 @@ func (s *systemSpanConfigStore) combine(
 
 	// We only need to do this for secondary tenants; we've already added this
 	// target if tenID == system tenant.
-	if tenID != roachpb.SystemTenantID {
+	if tenID != roachpb.PrefixedSystemTenantID {
 		target, err := spanconfig.MakeTenantKeyspaceTarget(tenID, tenID)
 		if err != nil {
 			return roachpb.SpanConfig{}, err

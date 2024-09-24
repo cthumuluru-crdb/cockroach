@@ -37,7 +37,7 @@ import (
 func newTestMetricSource(clock hlc.WallClock) metricMarshaler {
 	st := cluster.MakeTestingClusterSettings()
 	metricSource := status.NewMetricsRecorder(
-		roachpb.SystemTenantID,
+		roachpb.PrefixedSystemTenantID,
 		roachpb.NewTenantNameContainer(catconstants.SystemTenantName),
 		nil, /* nodeLiveness */
 		nil, /* remoteClocks */
@@ -72,7 +72,7 @@ func newTestMetricSource(clock hlc.WallClock) metricMarshaler {
 	}
 	regTenant := metric.NewRegistry()
 	regTenant.AddMetricStruct(&m)
-	metricSource.AddTenantRegistry(roachpb.SystemTenantID, regTenant)
+	metricSource.AddTenantRegistry(roachpb.PrefixedSystemTenantID, regTenant)
 	return metricSource
 }
 

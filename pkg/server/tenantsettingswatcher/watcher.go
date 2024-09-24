@@ -118,7 +118,7 @@ func (w *Watcher) startRangeFeed(
 	if err != nil {
 		return err
 	}
-	tenantSettingsTablePrefix := keys.SystemSQLCodec.TablePrefix(uint32(tableID))
+	tenantSettingsTablePrefix := keys.PrefixedSystemSQLCodec.TablePrefix(uint32(tableID))
 	tenantSettingsTableSpan := roachpb.Span{
 		Key:    tenantSettingsTablePrefix,
 		EndKey: tenantSettingsTablePrefix.PrefixEnd(),

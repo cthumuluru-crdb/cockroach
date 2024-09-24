@@ -65,7 +65,7 @@ func TestElasticCPUWorkQueue(t *testing.T) {
 					d.ScanArgs(t, "disabled", &elasticCPUInternalWorkQueue.disabled)
 				}
 
-				handle, err := elasticWorkQ.Admit(ctx, duration, WorkInfo{TenantID: roachpb.SystemTenantID})
+				handle, err := elasticWorkQ.Admit(ctx, duration, WorkInfo{TenantID: roachpb.PrefixedSystemTenantID})
 				require.NoError(t, err)
 
 				var buf strings.Builder
@@ -98,7 +98,7 @@ func TestElasticCPUWorkQueue(t *testing.T) {
 				allotted, err := time.ParseDuration(allottedStr)
 				require.NoError(t, err)
 
-				handle := &ElasticCPUWorkHandle{tenantID: roachpb.SystemTenantID}
+				handle := &ElasticCPUWorkHandle{tenantID: roachpb.PrefixedSystemTenantID}
 				handle.testingOverrideRunningTime = func() time.Duration {
 					return running
 				}

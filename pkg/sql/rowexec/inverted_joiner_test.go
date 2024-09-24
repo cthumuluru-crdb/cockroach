@@ -247,7 +247,7 @@ func TestInvertedJoiner(t *testing.T) {
 	const dciIndex = 4
 	const daciIndex = 5
 
-	td := desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.SystemSQLCodec, "test", "t")
+	td := desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.PrefixedSystemSQLCodec, "test", "t")
 
 	type testCase struct {
 		description           string
@@ -678,7 +678,7 @@ func TestInvertedJoiner(t *testing.T) {
 				var fetchSpec fetchpb.IndexFetchSpec
 				if err := rowenc.InitIndexFetchSpec(
 					&fetchSpec,
-					keys.SystemSQLCodec,
+					keys.PrefixedSystemSQLCodec,
 					td, index, fetchColIDs,
 				); err != nil {
 					t.Fatal(err)
@@ -763,7 +763,7 @@ func TestInvertedJoinerDrain(t *testing.T) {
 		invertedJoinerNumRows,
 		sqlutils.ToRowFn(aFn, bFn))
 	const biIndex = 1
-	td := desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.SystemSQLCodec, "test", "t")
+	td := desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.PrefixedSystemSQLCodec, "test", "t")
 
 	tracer := s.TracerI().(*tracing.Tracer)
 	ctx, sp := tracer.StartSpanCtx(context.Background(), "test flow ctx", tracing.WithRecording(tracingpb.RecordingVerbose))
@@ -798,7 +798,7 @@ func TestInvertedJoinerDrain(t *testing.T) {
 		var fetchSpec fetchpb.IndexFetchSpec
 		if err := rowenc.InitIndexFetchSpec(
 			&fetchSpec,
-			keys.SystemSQLCodec,
+			keys.PrefixedSystemSQLCodec,
 			td, td.ActiveIndexes()[biIndex],
 			[]descpb.ColumnID{1, 2},
 		); err != nil {

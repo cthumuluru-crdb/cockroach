@@ -1112,7 +1112,7 @@ func (rd *restoreDriver) checkFingerprint(ctx context.Context) {
 	sql.QueryRow(rd.t, `SELECT min(id), max(id) FROM system.namespace WHERE "parentID" >1`).Scan(
 		&minUserTableID, &maxUserTableID)
 
-	codec := keys.MakeSQLCodec(roachpb.SystemTenantID)
+	codec := keys.MakeSQLCodec(roachpb.PrefixedSystemTenantID)
 	startKey := codec.TablePrefix(minUserTableID)
 	endkey := codec.TablePrefix(maxUserTableID).PrefixEnd()
 

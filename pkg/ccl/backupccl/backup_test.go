@@ -3976,7 +3976,7 @@ func TestRestoreAsOfSystemTimeGCBounds(t *testing.T) {
 	gcr := kvpb.GCRequest{
 		// Bogus span to make it a valid request.
 		RequestHeader: kvpb.RequestHeader{
-			Key:    keys.SystemSQLCodec.TablePrefix(bootstrap.TestingUserDescID(0)),
+			Key:    keys.PrefixedSystemSQLCodec.TablePrefix(bootstrap.TestingUserDescID(0)),
 			EndKey: keys.MaxKey,
 		},
 		Threshold: s.Clock().Now(),
@@ -6319,7 +6319,7 @@ func TestPublicIndexTableSpans(t *testing.T) {
 	}
 
 	for _, useSecondaryTenant := range []bool{false, true} {
-		name, codec := "system", keys.SystemSQLCodec
+		name, codec := "system", keys.PrefixedSystemSQLCodec
 		if useSecondaryTenant {
 			const tenantID = 42
 			name, codec = "secondary", keys.MakeSQLCodec(roachpb.MustMakeTenantID(tenantID))

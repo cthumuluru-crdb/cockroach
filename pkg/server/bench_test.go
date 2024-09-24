@@ -58,7 +58,7 @@ func BenchmarkSetupSpanForIncomingRPC(b *testing.B) {
 
 			b.ResetTimer()
 			for i := 0; i < b.N; i++ {
-				_, sp := setupSpanForIncomingRPC(ctx, roachpb.SystemTenantID, ba, tr)
+				_, sp := setupSpanForIncomingRPC(ctx, roachpb.PrefixedSystemTenantID, ba, tr)
 				sp.finish(nil /* br */, dontRedactEvenIfTenantRequest)
 			}
 		})

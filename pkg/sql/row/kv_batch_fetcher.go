@@ -474,7 +474,7 @@ func (f *txnKVFetcher) maybeInitAdmissionPacer(
 				// nodes running colocated SQL+KV code where all SQL code is run
 				// on behalf of the one tenant. So from an AC perspective, the
 				// tenant ID we pass through here is irrelevant.
-				TenantID:   roachpb.SystemTenantID,
+				TenantID:   roachpb.PrefixedSystemTenantID,
 				Priority:   admissionPri,
 				CreateTime: admissionHeader.CreateTime,
 			})
@@ -808,7 +808,7 @@ func (f *txnKVFetcher) maybeAdmitBatchResponse(ctx context.Context, br *kvpb.Bat
 		}
 	} else if f.responseAdmissionQ != nil {
 		responseAdmission := admission.WorkInfo{
-			TenantID:   roachpb.SystemTenantID,
+			TenantID:   roachpb.PrefixedSystemTenantID,
 			Priority:   admissionpb.WorkPriority(f.requestAdmissionHeader.Priority),
 			CreateTime: f.requestAdmissionHeader.CreateTime,
 		}

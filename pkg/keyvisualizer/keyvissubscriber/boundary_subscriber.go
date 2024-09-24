@@ -61,7 +61,7 @@ func Start(
 		return err
 	}
 
-	tablePrefix := keys.SystemSQLCodec.TablePrefix(uint32(tableID))
+	tablePrefix := keys.PrefixedSystemSQLCodec.TablePrefix(uint32(tableID))
 	tableSpan := roachpb.Span{
 		Key:    tablePrefix,
 		EndKey: tablePrefix.PrefixEnd(),
@@ -81,7 +81,7 @@ func Start(
 		colTypes := []*types.T{columns[0].GetType()}
 		tenantIDRow := make([]rowenc.EncDatum, 1)
 		if _, err := rowenc.DecodeIndexKey(
-			keys.SystemSQLCodec,
+			keys.PrefixedSystemSQLCodec,
 			tenantIDRow,
 			nil, /* colDirs */
 			kv.Key,
@@ -138,7 +138,7 @@ func Start(
 			// belong to a secondary tenant, but we don't support that right
 			// now. During a rolling update, a node that hasn't been updated
 			// should just no-op if it receives a row for a secondary tenant.
-			if *tID == roachpb.SystemTenantID {
+			if *tID == roachpb.PrefixedSystemTenantID {
 				handleBoundaryUpdate(update)
 			} else {
 				log.Warningf(ctx,

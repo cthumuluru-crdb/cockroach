@@ -13549,7 +13549,7 @@ func TestReplicaTelemetryCounterForPushesDueToClosedTimestamp(t *testing.T) {
 	defer leaktest.AfterTest(t)()
 	defer log.Scope(t).Close(t)
 	ctx := context.Background()
-	keyA := append(keys.SystemSQLCodec.TablePrefix(math.MaxUint32), 'a')
+	keyA := append(keys.PrefixedSystemSQLCodec.TablePrefix(math.MaxUint32), 'a')
 	keyAA := append(keyA[:len(keyA):len(keyA)], 'a')
 	rKeyA, err := keys.Addr(keyA)
 	putReq := func(key roachpb.Key) *kvpb.PutRequest {
@@ -14041,7 +14041,7 @@ func isSystemTenantRepl(t *testing.T, repl *Replica) {
 	require.Nil(t, repl.tenantLimiter)
 	tenID, ok := repl.TenantID()
 	require.True(t, ok) // repl is initialized
-	require.Equal(t, roachpb.SystemTenantID, tenID)
+	require.Equal(t, roachpb.PrefixedSystemTenantID, tenID)
 	// Even though the system tenant is not populated with a rate limiter and
 	// there is no refcounting for the system tenant, there is a system rate
 	// limiter (which would exist and be used for some requests even if the store
@@ -14074,7 +14074,7 @@ func TestStoreTenantMetricsAndRateLimiterRefcount(t *testing.T) {
 
 	// The metrics only know the system tenant.
 	require.Equal(t,
-		map[roachpb.TenantID]struct{}{roachpb.SystemTenantID: {}},
+		map[roachpb.TenantID]struct{}{roachpb.PrefixedSystemTenantID: {}},
 		tenantsWithMetrics(tc.store.metrics),
 	)
 
@@ -14093,8 +14093,8 @@ func TestStoreTenantMetricsAndRateLimiterRefcount(t *testing.T) {
 	// and the rate limiter registry has an entry for it as well.
 	require.Equal(t,
 		map[roachpb.TenantID]struct{}{
-			roachpb.SystemTenantID: {},
-			ten123:                 {},
+			roachpb.PrefixedSystemTenantID: {},
+			ten123:                         {},
 		},
 		tenantsWithMetrics(tc.store.metrics),
 	)
@@ -14117,7 +14117,7 @@ func TestStoreTenantMetricsAndRateLimiterRefcount(t *testing.T) {
 	// The store metrics no longer track tenant 123.
 	require.Equal(t,
 		map[roachpb.TenantID]struct{}{
-			roachpb.SystemTenantID: {},
+			roachpb.PrefixedSystemTenantID: {},
 		},
 		tenantsWithMetrics(tc.store.metrics),
 	)

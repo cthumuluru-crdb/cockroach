@@ -224,7 +224,7 @@ func runDebugZip(cmd *cobra.Command, args []string) (retErr error) {
 				return s.fail(errors.CombineErrors(err, sErr))
 			}
 			tenants = append(tenants, &serverpb.Tenant{
-				TenantId:   &roachpb.SystemTenantID,
+				TenantId:   &roachpb.PrefixedSystemTenantID,
 				TenantName: catconstants.SystemTenantName,
 				SqlAddr:    resp.SQLAddress.String(),
 				RpcAddr:    serverCfg.Addr,
@@ -311,7 +311,7 @@ func runDebugZip(cmd *cobra.Command, args []string) (retErr error) {
 
 			// Only add tenant prefix for non system tenants.
 			var prefix string
-			if tenant.TenantId.ToUint64() != roachpb.SystemTenantID.ToUint64() {
+			if tenant.TenantId.ToUint64() != roachpb.PrefixedSystemTenantID.ToUint64() {
 				prefix = fmt.Sprintf("/cluster/%s", tenant.TenantName)
 			}
 

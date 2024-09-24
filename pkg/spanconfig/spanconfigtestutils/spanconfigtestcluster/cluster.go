@@ -55,7 +55,7 @@ func NewHandle(
 func (h *Handle) InitializeTenant(ctx context.Context, tenID roachpb.TenantID) *Tenant {
 	testServer := h.tc.Server(0)
 	tenantState := &Tenant{t: h.t}
-	if tenID == roachpb.SystemTenantID {
+	if tenID == roachpb.PrefixedSystemTenantID {
 		tenantState.ApplicationLayerInterface = testServer.SystemLayer()
 		tenantState.db = h.sysDB
 		tenantState.cleanup = func() {} // noop

@@ -114,7 +114,7 @@ func TestValidateTTLScheduledJobs(t *testing.T) {
 			_, err := sqlDB.Exec(`CREATE TABLE t () WITH (ttl_expire_after = '10 mins')`)
 			require.NoError(t, err)
 
-			tableDesc := desctestutils.TestingGetMutableExistingTableDescriptor(kvDB, keys.SystemSQLCodec, "defaultdb", "t")
+			tableDesc := desctestutils.TestingGetMutableExistingTableDescriptor(kvDB, keys.PrefixedSystemSQLCodec, "defaultdb", "t")
 			require.NotNil(t, tableDesc.GetRowLevelTTL())
 			scheduleID := tableDesc.GetRowLevelTTL().ScheduleID
 

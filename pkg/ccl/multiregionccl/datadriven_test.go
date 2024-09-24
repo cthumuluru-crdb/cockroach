@@ -345,7 +345,7 @@ SET CLUSTER SETTING kv.allocator.min_lease_transfer_interval = '5m'
 					return err.Error()
 				}
 				cache := ds.tc.Server(idx).DistSenderI().(*kvcoord.DistSender).RangeDescriptorCache()
-				tablePrefix := keys.MustAddr(keys.SystemSQLCodec.TablePrefix(tableID))
+				tablePrefix := keys.MustAddr(keys.PrefixedSystemSQLCodec.TablePrefix(tableID))
 				entry, err := cache.TestingGetCached(ctx, tablePrefix, false, roachpb.LAG_BY_CLUSTER_SETTING)
 				if err != nil {
 					return err.Error()
@@ -804,7 +804,7 @@ func getRangeKeyForInput(
 	}
 
 	if !d.HasArg(partitionName) {
-		return tableDesc.TableSpan(keys.SystemSQLCodec).Key, nil
+		return tableDesc.TableSpan(keys.PrefixedSystemSQLCodec).Key, nil
 	}
 
 	var partition string
@@ -834,7 +834,7 @@ func getRangeKeyForInput(
 
 	_, keyPrefix, err := rowenc.DecodePartitionTuple(
 		&tree.DatumAlloc{},
-		keys.SystemSQLCodec,
+		keys.PrefixedSystemSQLCodec,
 		tableDesc,
 		primaryInd,
 		part,

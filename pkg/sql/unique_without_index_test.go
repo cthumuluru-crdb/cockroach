@@ -58,9 +58,9 @@ func TestUWIConstraintReferencingTypes(t *testing.T) {
 		tdb.Exec(t, "ALTER TABLE t ADD UNIQUE WITHOUT INDEX (j) WHERE (j::typ != 'a');")
 
 		// Ensure that `typ` has a back-reference to table `t`.
-		tableDesc := desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.SystemSQLCodec,
+		tableDesc := desctestutils.TestingGetPublicTableDescriptor(kvDB, keys.PrefixedSystemSQLCodec,
 			"defaultdb", "t")
-		typDesc := desctestutils.TestingGetPublicTypeDescriptor(kvDB, keys.SystemSQLCodec,
+		typDesc := desctestutils.TestingGetPublicTypeDescriptor(kvDB, keys.PrefixedSystemSQLCodec,
 			"defaultdb", "typ")
 		require.Equal(t, 1, typDesc.NumReferencingDescriptors())
 		require.Equal(t, tableDesc.GetID(), typDesc.GetReferencingDescriptorID(0))
@@ -70,7 +70,7 @@ func TestUWIConstraintReferencingTypes(t *testing.T) {
 
 		// Ensure that dropping the constraint removes the back-reference from `typ`.
 		tdb.Exec(t, "ALTER TABLE t DROP CONSTRAINT unique_j")
-		typDesc = desctestutils.TestingGetPublicTypeDescriptor(kvDB, keys.SystemSQLCodec,
+		typDesc = desctestutils.TestingGetPublicTypeDescriptor(kvDB, keys.PrefixedSystemSQLCodec,
 			"defaultdb", "typ")
 		require.Zero(t, typDesc.NumReferencingDescriptors())
 

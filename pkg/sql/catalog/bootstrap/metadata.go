@@ -581,7 +581,7 @@ func addSystemDatabaseToSchema(
 // system tenant entry.
 func addSystemTenantEntry(target *MetadataSchema) {
 	info := mtinfopb.ProtoInfo{
-		DeprecatedID:        roachpb.SystemTenantID.ToUint64(),
+		DeprecatedID:        roachpb.PrefixedSystemTenantID.ToUint64(),
 		DeprecatedDataState: mtinfopb.ProtoInfo_READY,
 	}
 	infoBytes, err := protoutil.Marshal(&info)
@@ -599,7 +599,7 @@ func addSystemTenantEntry(target *MetadataSchema) {
 	tenantsTableWriter := MakeKVWriter(target.codec, desc.(catalog.TableDescriptor))
 	kvs, err := tenantsTableWriter.RecordToKeyValues(
 		// ID
-		tree.NewDInt(tree.DInt(roachpb.SystemTenantID.ToUint64())),
+		tree.NewDInt(tree.DInt(roachpb.PrefixedSystemTenantID.ToUint64())),
 		// active -- deprecated.
 		tree.MakeDBool(true),
 		// info.
@@ -625,7 +625,7 @@ func testingMinUserDescID(codec keys.SQLCodec) uint32 {
 // TestingMinUserDescID returns the smallest user-created descriptor ID in a
 // bootstrapped cluster.
 func TestingMinUserDescID() uint32 {
-	return testingMinUserDescID(keys.SystemSQLCodec)
+	return testingMinUserDescID(keys.PrefixedSystemSQLCodec)
 }
 
 // TestingMinNonDefaultUserDescID returns the smallest user-creatable descriptor
@@ -650,7 +650,7 @@ func TestingUserTableDataMin(codec keys.SQLCodec) roachpb.Key {
 // GetAndHashInitialValuesToString generates the bootstrap keys and sha-256 that
 // can be used to generate data files (to be included in future releases).
 func GetAndHashInitialValuesToString(tenantID uint64) (initialValues string, hash string) {
-	codec := keys.SystemSQLCodec
+	codec := keys.PrefixedSystemSQLCodec
 	if tenantID > 0 {
 		codec = keys.MakeSQLCodec(roachpb.MustMakeTenantID(tenantID))
 	}

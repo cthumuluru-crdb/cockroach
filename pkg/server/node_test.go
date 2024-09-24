@@ -553,7 +553,7 @@ func TestNodeStatusWritten(t *testing.T) {
 	// Wait for full replication of initial ranges.
 	zcfg := ts.DefaultZoneConfig()
 	szcfg := ts.DefaultSystemZoneConfig()
-	initialRanges, err := ExpectedInitialRangeCount(keys.SystemSQLCodec, &zcfg, &szcfg)
+	initialRanges, err := ExpectedInitialRangeCount(keys.PrefixedSystemSQLCodec, &zcfg, &szcfg)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -769,7 +769,7 @@ func TestNodeSendUnknownBatchRequest(t *testing.T) {
 		Requests: make([]kvpb.RequestUnion, 1),
 	}
 	n := &Node{}
-	br, err := n.batchInternal(context.Background(), roachpb.SystemTenantID, &ba)
+	br, err := n.batchInternal(context.Background(), roachpb.PrefixedSystemTenantID, &ba)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1007,7 +1007,7 @@ func TestGetTenantWeights(t *testing.T) {
 	// validate exact counts. So we do some simple validation instead.
 	weights := s.Node().(*Node).GetTenantWeights()
 	// Both tenants have overall non-zero counts.
-	require.Less(t, uint32(0), weights.Node[roachpb.SystemTenantID.ToUint64()])
+	require.Less(t, uint32(0), weights.Node[roachpb.PrefixedSystemTenantID.ToUint64()])
 	require.Less(t, uint32(0), weights.Node[otherTenantID])
 	// There are two stores.
 	require.Equal(t, 2, len(weights.Stores))
@@ -1016,7 +1016,7 @@ func TestGetTenantWeights(t *testing.T) {
 		require.Equal(t, weights.Node[tenantID], weights.Stores[0].Weights[tenantID]+
 			weights.Stores[1].Weights[tenantID])
 	}
-	checkSum(roachpb.SystemTenantID.ToUint64())
+	checkSum(roachpb.PrefixedSystemTenantID.ToUint64())
 	checkSum(otherTenantID)
 }
 

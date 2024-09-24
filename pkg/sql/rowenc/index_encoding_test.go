@@ -289,7 +289,7 @@ func TestIndexKey(t *testing.T) {
 
 		testValues := append(test.primaryValues, test.secondaryValues...)
 
-		codec := keys.SystemSQLCodec
+		codec := keys.PrefixedSystemSQLCodec
 		primaryKeyPrefix := MakeIndexKeyPrefix(codec, tableDesc.GetID(), tableDesc.GetPrimaryIndexID())
 		primaryKey, _, err := EncodeIndexKey(tableDesc, tableDesc.GetPrimaryIndex(), colMap, testValues, primaryKeyPrefix)
 		if err != nil {
@@ -451,7 +451,7 @@ func TestInvertedIndexKey(t *testing.T) {
 
 		testValues := append(primaryValues, secondaryValues...)
 
-		codec := keys.SystemSQLCodec
+		codec := keys.PrefixedSystemSQLCodec
 
 		secondaryIndexEntries, err := EncodeSecondaryIndex(
 			context.Background(), codec, tableDesc, tableDesc.PublicNonPrimaryIndexes()[0],

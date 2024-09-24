@@ -67,11 +67,11 @@ func TestPrettyScanner(t *testing.T) {
 
 	tableToID := map[string]int{"t1": 50}
 	idxToID := map[string]int{"t1.idx1": 5}
-	for _, tenantID := range []roachpb.TenantID{roachpb.SystemTenantID, roachpb.MustMakeTenantID(42)} {
+	for _, tenantID := range []roachpb.TenantID{roachpb.PrefixedSystemTenantID, roachpb.MustMakeTenantID(42)} {
 		scanner := MakePrettyScannerForNamedTables(tenantID, tableToID, idxToID)
 		for _, test := range tests {
 			prettyKey := test.prettyKey
-			if tenantID != roachpb.SystemTenantID {
+			if tenantID != roachpb.PrefixedSystemTenantID {
 				prettyKey = fmt.Sprintf("/Tenant/%s%s", tenantID, prettyKey)
 			}
 			t.Run(prettyKey, func(t *testing.T) {

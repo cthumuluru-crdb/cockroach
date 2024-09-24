@@ -27,7 +27,7 @@ import (
 func (s *instance) TokenBucketRequest(
 	ctx context.Context, tenantID roachpb.TenantID, in *kvpb.TokenBucketRequest,
 ) *kvpb.TokenBucketResponse {
-	if tenantID == roachpb.SystemTenantID {
+	if tenantID == roachpb.PrefixedSystemTenantID {
 		return &kvpb.TokenBucketResponse{
 			Error: errors.EncodeError(ctx, errors.New("token bucket request for system tenant")),
 		}

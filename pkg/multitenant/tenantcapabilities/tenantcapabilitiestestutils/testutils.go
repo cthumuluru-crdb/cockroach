@@ -145,7 +145,7 @@ func GetTenantID(t *testing.T, d *datadriven.TestData) roachpb.TenantID {
 		d.ScanArgs(t, "ten", &tenantID)
 	}
 	if roachpb.IsSystemTenantName(roachpb.TenantName(tenantID)) {
-		return roachpb.SystemTenantID
+		return roachpb.PrefixedSystemTenantID
 	}
 	tID, err := roachpb.TenantIDFromString(tenantID)
 	require.NoError(t, err)

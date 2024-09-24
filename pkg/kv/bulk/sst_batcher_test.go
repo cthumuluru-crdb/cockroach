@@ -279,7 +279,7 @@ func runTestImport(t *testing.T, batchSizeValue int64) {
 		{{0, 3}, {4}},
 	} {
 		t.Run(fmt.Sprintf("%d-%v", i, testCase), func(t *testing.T) {
-			prefix := keys.SystemSQLCodec.IndexPrefix(uint32(100+i), 1)
+			prefix := keys.PrefixedSystemSQLCodec.IndexPrefix(uint32(100+i), 1)
 			key := func(i int) roachpb.Key {
 				return encoding.EncodeStringAscending(append([]byte{}, prefix...), fmt.Sprintf("k%d", i))
 			}

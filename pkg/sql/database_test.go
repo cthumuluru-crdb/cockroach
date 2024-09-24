@@ -59,7 +59,7 @@ CREATE SCHEMA sc;
 	}
 
 	// Now get the database descriptor from disk.
-	db := desctestutils.TestingGetDatabaseDescriptor(kvDB, keys.SystemSQLCodec, "d")
+	db := desctestutils.TestingGetDatabaseDescriptor(kvDB, keys.PrefixedSystemSQLCodec, "d")
 	if db.GetSchemaID("sc") == descpb.InvalidID {
 		t.Fatal("expected to find child schema sc in db")
 	}
@@ -69,7 +69,7 @@ CREATE SCHEMA sc;
 		t.Fatal(err)
 	}
 
-	db = desctestutils.TestingGetDatabaseDescriptor(kvDB, keys.SystemSQLCodec, "d")
+	db = desctestutils.TestingGetDatabaseDescriptor(kvDB, keys.PrefixedSystemSQLCodec, "d")
 	if db.GetSchemaID("sc2") == descpb.InvalidID {
 		t.Fatal("expected to find child schema sc2 in db")
 	}

@@ -145,7 +145,7 @@ func TestDebugLogSpyRun(t *testing.T) {
 			send <- f
 			return func() {}
 		},
-		tenantID: roachpb.SystemTenantID,
+		tenantID: roachpb.PrefixedSystemTenantID,
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()

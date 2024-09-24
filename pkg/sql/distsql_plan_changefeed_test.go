@@ -77,7 +77,7 @@ CREATE TABLE foo (
 
 	sqlDB.Exec(t, `CREATE TABLE bar (a INT)`)
 	fooDesc := desctestutils.TestingGetTableDescriptor(
-		kvDB, keys.SystemSQLCodec, "defaultdb", "public", "foo")
+		kvDB, keys.PrefixedSystemSQLCodec, "defaultdb", "public", "foo")
 
 	ctx := context.Background()
 	execCfg := s.ExecutorConfig().(ExecutorConfig)
@@ -89,7 +89,7 @@ CREATE TABLE foo (
 	)
 	defer cleanup()
 
-	primarySpan := fooDesc.PrimaryIndexSpan(keys.SystemSQLCodec)
+	primarySpan := fooDesc.PrimaryIndexSpan(keys.PrefixedSystemSQLCodec)
 	pkStart := primarySpan.Key
 	pkEnd := primarySpan.EndKey
 	fooID := fooDesc.GetID()
@@ -458,7 +458,7 @@ func TestChangefeedStreamsResults(t *testing.T) {
 	sqlDB := sqlutils.MakeSQLRunner(db)
 	sqlDB.Exec(t, `CREATE TABLE foo (a INT PRIMARY KEY, b int)`)
 	fooDesc := desctestutils.TestingGetTableDescriptor(
-		kvDB, keys.SystemSQLCodec, "defaultdb", "public", "foo")
+		kvDB, keys.PrefixedSystemSQLCodec, "defaultdb", "public", "foo")
 
 	ctx := context.Background()
 	execCfg := s.ExecutorConfig().(ExecutorConfig)
@@ -667,7 +667,7 @@ func mkPkKey(t *testing.T, tableID descpb.ID, vals ...int) roachpb.Key {
 
 	// Encode index id, then each value.
 	key, err := keyside.Encode(
-		keys.SystemSQLCodec.TablePrefix(uint32(tableID)),
+		keys.PrefixedSystemSQLCodec.TablePrefix(uint32(tableID)),
 		tree.NewDInt(tree.DInt(1)), encoding.Ascending)
 
 	require.NoError(t, err)

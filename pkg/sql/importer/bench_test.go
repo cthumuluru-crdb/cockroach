@@ -99,7 +99,7 @@ func benchmarkConvertToKVs(b *testing.B, g workload.Generator) {
 				0, tableDesc, table.InitialRows, 0, table.InitialRows.NumBatches, kvCh, db)
 			evalCtx := &eval.Context{
 				SessionDataStack: sessiondata.NewStack(&sessiondata.SessionData{}),
-				Codec:            keys.SystemSQLCodec,
+				Codec:            keys.PrefixedSystemSQLCodec,
 				Settings:         cluster.MakeTestingClusterSettings(),
 			}
 			semaCtx := tree.MakeSemaContext(nil /* resolver */)

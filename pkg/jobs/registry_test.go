@@ -90,7 +90,7 @@ func writeMutation(
 	}
 	if err := kvDB.Put(
 		context.Background(),
-		catalogkeys.MakeDescMetadataKey(keys.SystemSQLCodec, tableDesc.ID),
+		catalogkeys.MakeDescMetadataKey(keys.PrefixedSystemSQLCodec, tableDesc.ID),
 		tableDesc.DescriptorProto(),
 	); err != nil {
 		t.Fatal(err)
@@ -148,11 +148,11 @@ func TestRegistryGC(t *testing.T) {
 
 	setDropJob := func(dbName, tableName string) {
 		desc := desctestutils.TestingGetMutableExistingTableDescriptor(
-			kvDB, keys.SystemSQLCodec, dbName, tableName)
+			kvDB, keys.PrefixedSystemSQLCodec, dbName, tableName)
 		desc.DropJobID = 123
 		if err := kvDB.Put(
 			context.Background(),
-			catalogkeys.MakeDescMetadataKey(keys.SystemSQLCodec, desc.GetID()),
+			catalogkeys.MakeDescMetadataKey(keys.PrefixedSystemSQLCodec, desc.GetID()),
 			desc.DescriptorProto(),
 		); err != nil {
 			t.Fatal(err)
@@ -173,7 +173,7 @@ INSERT INTO t."%s" VALUES('a', 'foo');
 			t.Fatal(err)
 		}
 		tableDesc := desctestutils.TestingGetMutableExistingTableDescriptor(
-			kvDB, keys.SystemSQLCodec, "t", tableName)
+			kvDB, keys.PrefixedSystemSQLCodec, "t", tableName)
 		if mutOptions.hasDropJob {
 			setDropJob("t", tableName)
 		}

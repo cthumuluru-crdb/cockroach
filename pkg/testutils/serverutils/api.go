@@ -382,7 +382,7 @@ type ApplicationLayerInterface interface {
 	// code.
 	MustGetSQLNetworkCounter(name string) int64
 
-	// Codec returns this server's codec (or keys.SystemSQLCodec if this is the
+	// Codec returns this server's codec (or keys.PrefixedSystemSQLCodec if this is the
 	// system tenant).
 	Codec() keys.SQLCodec
 

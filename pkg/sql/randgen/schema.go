@@ -791,7 +791,7 @@ func nonComputedColumnTableDefs(cols []*tree.ColumnTableDef) []*tree.ColumnTable
 func TestingMakePrimaryIndexKey(
 	desc catalog.TableDescriptor, vals ...interface{},
 ) (roachpb.Key, error) {
-	return TestingMakePrimaryIndexKeyForTenant(desc, keys.SystemSQLCodec, vals...)
+	return TestingMakePrimaryIndexKeyForTenant(desc, keys.PrefixedSystemSQLCodec, vals...)
 }
 
 // TestingMakePrimaryIndexKeyForTenant is the same as TestingMakePrimaryIndexKey, but

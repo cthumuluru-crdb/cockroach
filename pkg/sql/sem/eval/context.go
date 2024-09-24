@@ -443,7 +443,7 @@ func MakeTestingEvalContext(st *cluster.Settings) Context {
 // EvalContext so do not start or close the memory monitor.
 func MakeTestingEvalContextWithMon(st *cluster.Settings, monitor *mon.BytesMonitor) Context {
 	ctx := Context{
-		Codec:            keys.SystemSQLCodec,
+		Codec:            keys.PrefixedSystemSQLCodec,
 		Txn:              &kv.Txn{},
 		SessionDataStack: sessiondata.NewStack(&sessiondata.SessionData{}),
 		Settings:         st,

@@ -97,7 +97,7 @@ SELECT *
 	require.Len(t, checkEntries(t), 0)
 	descDB := tc.Server(0).InternalDB().(descs.DB)
 	require.NoError(t, upgrades.CreateSystemTable(
-		ctx, descDB, tc.Server(0).ClusterSettings(), keys.SystemSQLCodec, table, tree.LocalityLevelGlobal,
+		ctx, descDB, tc.Server(0).ClusterSettings(), keys.PrefixedSystemSQLCodec, table, tree.LocalityLevelGlobal,
 	))
 	require.Len(t, checkEntries(t), 1)
 	sqlDB.CheckQueryResults(t,
@@ -106,7 +106,7 @@ SELECT *
 
 	// Make sure it's idempotent.
 	require.NoError(t, upgrades.CreateSystemTable(
-		ctx, descDB, tc.Server(0).ClusterSettings(), keys.SystemSQLCodec, table, tree.LocalityLevelGlobal,
+		ctx, descDB, tc.Server(0).ClusterSettings(), keys.PrefixedSystemSQLCodec, table, tree.LocalityLevelGlobal,
 	))
 	require.Len(t, checkEntries(t), 1)
 

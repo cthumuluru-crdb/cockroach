@@ -779,7 +779,7 @@ func TestLeasePreferencesRebalance(t *testing.T) {
 		})
 	defer tc.Stopper().Stop(ctx)
 
-	key := bootstrap.TestingUserTableDataMin(keys.SystemSQLCodec)
+	key := bootstrap.TestingUserTableDataMin(keys.PrefixedSystemSQLCodec)
 	tc.SplitRangeOrFatal(t, key)
 	tc.AddVotersOrFatal(t, key, tc.Targets(1, 2)...)
 	require.NoError(t, tc.WaitForVoters(key, tc.Targets(1, 2)...))
@@ -868,7 +868,7 @@ func TestLeaseholderRelocate(t *testing.T) {
 		})
 	defer tc.Stopper().Stop(ctx)
 
-	_, rhsDesc := tc.SplitRangeOrFatal(t, bootstrap.TestingUserTableDataMin(keys.SystemSQLCodec))
+	_, rhsDesc := tc.SplitRangeOrFatal(t, bootstrap.TestingUserTableDataMin(keys.PrefixedSystemSQLCodec))
 
 	// We start with having the range under test on (1,2,3).
 	tc.AddVotersOrFatal(t, rhsDesc.StartKey.AsRawKey(), tc.Targets(1, 2)...)
@@ -1051,7 +1051,7 @@ func TestLeasePreferencesDuringOutage(t *testing.T) {
 
 	defer tc.Stopper().Stop(ctx)
 
-	key := bootstrap.TestingUserTableDataMin(keys.SystemSQLCodec)
+	key := bootstrap.TestingUserTableDataMin(keys.PrefixedSystemSQLCodec)
 	tc.SplitRangeOrFatal(t, key)
 	tc.AddVotersOrFatal(t, key, tc.Targets(1, 3)...)
 	repl := tc.GetFirstStoreFromServer(t, 0).LookupReplica(roachpb.RKey(key))
@@ -1220,7 +1220,7 @@ func TestLeasesDontThrashWhenNodeBecomesSuspect(t *testing.T) {
 	_, err := tc.ServerConn(0).Exec(`SET CLUSTER SETTING kv.allocator.load_based_lease_rebalancing.enabled = 'false'`)
 	require.NoError(t, err)
 
-	_, rhsDesc := tc.SplitRangeOrFatal(t, bootstrap.TestingUserTableDataMin(keys.SystemSQLCodec))
+	_, rhsDesc := tc.SplitRangeOrFatal(t, bootstrap.TestingUserTableDataMin(keys.PrefixedSystemSQLCodec))
 	tc.AddVotersOrFatal(t, rhsDesc.StartKey.AsRawKey(), tc.Targets(1, 2, 3)...)
 	tc.RemoveLeaseHolderOrFatal(t, rhsDesc, tc.Target(0), tc.Target(1))
 
@@ -1375,7 +1375,7 @@ func TestAlterRangeRelocate(t *testing.T) {
 	)
 	defer tc.Stopper().Stop(ctx)
 
-	_, rhsDesc := tc.SplitRangeOrFatal(t, bootstrap.TestingUserTableDataMin(keys.SystemSQLCodec))
+	_, rhsDesc := tc.SplitRangeOrFatal(t, bootstrap.TestingUserTableDataMin(keys.PrefixedSystemSQLCodec))
 	tc.AddVotersOrFatal(t, rhsDesc.StartKey.AsRawKey(), tc.Targets(1, 2)...)
 
 	// We start with having the range under test on (1,2,3).

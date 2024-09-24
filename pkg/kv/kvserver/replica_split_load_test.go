@@ -23,7 +23,7 @@ import (
 )
 
 func roachpbKey(key uint32) roachpb.Key {
-	return keys.SystemSQLCodec.TablePrefix(key)
+	return keys.PrefixedSystemSQLCodec.TablePrefix(key)
 }
 
 func requestHeaderWithNilEndKey(key uint32) kvpb.RequestHeader {

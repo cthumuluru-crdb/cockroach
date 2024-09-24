@@ -67,7 +67,7 @@ func TestRangefeedWorksOnSystemRangesUnconditionally(t *testing.T) {
 
 	t.Run("works on system ranges", func(t *testing.T) {
 		startTS := db.Clock().Now()
-		descTableKey := keys.SystemSQLCodec.TablePrefix(keys.DescriptorTableID)
+		descTableKey := keys.PrefixedSystemSQLCodec.TablePrefix(keys.DescriptorTableID)
 		descTableSpan := roachpb.Span{
 			Key:    descTableKey,
 			EndKey: descTableKey.PrefixEnd(),
@@ -82,7 +82,7 @@ func TestRangefeedWorksOnSystemRangesUnconditionally(t *testing.T) {
 
 		// Note: 42 is a system descriptor.
 		const junkDescriptorID = 42
-		junkDescriptorKey := catalogkeys.MakeDescMetadataKey(keys.SystemSQLCodec, junkDescriptorID)
+		junkDescriptorKey := catalogkeys.MakeDescMetadataKey(keys.PrefixedSystemSQLCodec, junkDescriptorID)
 		junkDescriptor := dbdesc.NewInitial(
 			junkDescriptorID, "junk", username.AdminRoleName())
 		require.NoError(t, db.Txn(ctx, func(ctx context.Context, txn *kv.Txn) error {
@@ -168,7 +168,7 @@ func TestMergeOfRangeEventTableWhileRunningRangefeed(t *testing.T) {
 
 	// Find the range containing the range event table and then find the range
 	// to its left.
-	rangeEventTableStart := keys.SystemSQLCodec.TablePrefix(keys.RangeEventTableID)
+	rangeEventTableStart := keys.PrefixedSystemSQLCodec.TablePrefix(keys.RangeEventTableID)
 	require.NoError(t, tc.WaitForSplitAndInitialization(rangeEventTableStart))
 	store, _ := getFirstStoreReplica(t, tc.Server(0), rangeEventTableStart)
 	var lhsRepl *kvserver.Replica

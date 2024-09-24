@@ -654,7 +654,7 @@ func getTenantIDSequenceValue(ctx context.Context, txn isql.Txn) (int64, error) 
 	if err != nil {
 		return 0, err
 	}
-	return getSequenceValueFromDesc(ctx, txn.KV(), keys.SystemSQLCodec, desc)
+	return getSequenceValueFromDesc(ctx, txn.KV(), keys.PrefixedSystemSQLCodec, desc)
 }
 
 // updateTenantIDSequence sets the current value of
@@ -665,13 +665,13 @@ func updateTenantIDSequence(ctx context.Context, txn isql.Txn, newID uint64) err
 	if err != nil {
 		return err
 	}
-	curVal, err := getSequenceValueFromDesc(ctx, txn.KV(), keys.SystemSQLCodec, desc)
+	curVal, err := getSequenceValueFromDesc(ctx, txn.KV(), keys.PrefixedSystemSQLCodec, desc)
 	if err != nil {
 		return err
 	}
 
 	if newID > uint64(curVal) {
-		seqValueKey, newVal, err := MakeSequenceKeyVal(keys.SystemSQLCodec, desc, int64(newID), true /* isCalled */)
+		seqValueKey, newVal, err := MakeSequenceKeyVal(keys.PrefixedSystemSQLCodec, desc, int64(newID), true /* isCalled */)
 		if err != nil {
 			return err
 		}

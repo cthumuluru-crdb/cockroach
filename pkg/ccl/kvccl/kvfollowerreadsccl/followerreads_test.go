@@ -894,7 +894,7 @@ func TestFollowerReadsWithStaleDescriptor(t *testing.T) {
 	// Check that the cache was indeed populated.
 	var tableID uint32
 	n1.QueryRow(t, `SELECT id from system.namespace WHERE name='test'`).Scan(&tableID)
-	tablePrefix := keys.MustAddr(keys.SystemSQLCodec.TablePrefix(tableID))
+	tablePrefix := keys.MustAddr(keys.PrefixedSystemSQLCodec.TablePrefix(tableID))
 	n4Cache := tc.Server(3).DistSenderI().(*kvcoord.DistSender).RangeDescriptorCache()
 	entry, err := n4Cache.TestingGetCached(ctx, tablePrefix, false, roachpb.LAG_BY_CLUSTER_SETTING)
 	require.NoError(t, err)

@@ -97,7 +97,7 @@ func TestHandleAdmit(t *testing.T) {
 				kvflowhandle.NewMetrics(registry),
 				clock,
 				roachpb.RangeID(1),
-				roachpb.SystemTenantID,
+				roachpb.PrefixedSystemTenantID,
 				nil, /* knobs */
 			)
 
@@ -181,7 +181,7 @@ func TestFlowControlMode(t *testing.T) {
 				kvflowhandle.NewMetrics(registry),
 				clock,
 				roachpb.RangeID(1),
-				roachpb.SystemTenantID,
+				roachpb.PrefixedSystemTenantID,
 				nil, /* knobs */
 			)
 			defer handle.Close(ctx)
@@ -271,7 +271,7 @@ func TestInspectHandle(t *testing.T) {
 		kvflowhandle.NewMetrics(registry),
 		clock,
 		roachpb.RangeID(1),
-		roachpb.SystemTenantID,
+		roachpb.PrefixedSystemTenantID,
 		nil, /* knobs */
 	)
 	marshaller := jsonpb.Marshaler{

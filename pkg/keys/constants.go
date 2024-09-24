@@ -353,9 +353,9 @@ var (
 	// minimum, prefix them all with "System".
 
 	// TableDataMin is the start of the range of table data keys.
-	TableDataMin = SystemSQLCodec.TablePrefix(0)
+	TableDataMin = PrefixedSystemSQLCodec.TablePrefix(0)
 	// TableDataMax is the end of the range of table data keys.
-	TableDataMax = SystemSQLCodec.TablePrefix(math.MaxUint32).PrefixEnd()
+	TableDataMax = PrefixedSystemSQLCodec.TablePrefix(math.MaxUint32).PrefixEnd()
 	// ScratchRangeMin is a key used in tests to write arbitrary data without
 	// overlapping with meta, system or tenant ranges.
 	ScratchRangeMin = TableDataMax
@@ -366,13 +366,13 @@ var (
 	// TODO(bdarnell): this should be either roachpb.Key or RKey, not []byte.
 	SystemConfigSplitKey = []byte(TableDataMin)
 	// SystemConfigTableDataMax is the end key of system config span.
-	SystemConfigTableDataMax = SystemSQLCodec.TablePrefix(DeprecatedMaxSystemConfigDescID + 1)
+	SystemConfigTableDataMax = PrefixedSystemSQLCodec.TablePrefix(DeprecatedMaxSystemConfigDescID + 1)
 	//
 	// NamespaceTableMin is the start key of system.namespace, which is a system
 	// table that does not reside in the same range as other system tables.
-	NamespaceTableMin = SystemSQLCodec.TablePrefix(NamespaceTableID)
+	NamespaceTableMin = PrefixedSystemSQLCodec.TablePrefix(NamespaceTableID)
 	// NamespaceTableMax is the end key of system.namespace.
-	NamespaceTableMax = SystemSQLCodec.TablePrefix(NamespaceTableID + 1)
+	NamespaceTableMax = PrefixedSystemSQLCodec.TablePrefix(NamespaceTableID + 1)
 
 	// 4. Non-system tenant SQL keys
 	//

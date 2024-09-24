@@ -13,7 +13,7 @@ package serverident
 import "context"
 
 // SystemTenantID is the string representation of
-// roachpb.SystemTenantID. Injected at initialization to avoid
+// roachpb.PrefixedSystemTenantID. Injected at initialization to avoid
 // an import dependency cycle. See SetSystemTenantID.
 var SystemTenantID string
 
@@ -96,7 +96,7 @@ func GetIdentificationPayload(ctx context.Context) IDPayload {
 }
 
 // SetSystemTenantID is used to set the string representation of
-// roachpb.SystemTenantID at initialization to avoid an import dependency cycle.
+// roachpb.PrefixedSystemTenantID at initialization to avoid an import dependency cycle.
 // We need this value so we can tag each idPayload with the SystemTenantID by
 // default if no ServerIdentificationPayload is found in the context accompanying
 // the log entry, or if the ServerIdentificationPayload is missing a tenant ID.

@@ -329,7 +329,7 @@ func NewServer(cfg Config, stopper *stop.Stopper) (serverctl.ServerStartupInterf
 	authorizer := tenantcapabilitiesauthorizer.New(cfg.Settings, tenantCapabilitiesTestingKnobs)
 	rpcCtxOpts := rpc.ServerContextOptionsFromBaseConfig(cfg.BaseConfig.Config)
 
-	rpcCtxOpts.TenantID = roachpb.SystemTenantID
+	rpcCtxOpts.TenantID = roachpb.PrefixedSystemTenantID
 	rpcCtxOpts.UseNodeAuth = true
 	rpcCtxOpts.NodeID = nodeIDContainer
 	rpcCtxOpts.StorageClusterID = cfg.ClusterIDContainer
@@ -752,7 +752,7 @@ func NewServer(cfg Config, stopper *stop.Stopper) (serverctl.ServerStartupInterf
 	)
 
 	systemConfigWatcher := systemconfigwatcher.New(
-		keys.SystemSQLCodec, clock, rangeFeedFactory, &cfg.DefaultZoneConfig,
+		keys.PrefixedSystemSQLCodec, clock, rangeFeedFactory, &cfg.DefaultZoneConfig,
 	)
 
 	tenantCapabilitiesWatcher := tenantcapabilitieswatcher.New(
@@ -841,7 +841,7 @@ func NewServer(cfg Config, stopper *stop.Stopper) (serverctl.ServerStartupInterf
 	}
 
 	rangeLogWriter := rangelog.NewWriter(
-		keys.SystemSQLCodec,
+		keys.PrefixedSystemSQLCodec,
 		func() int64 {
 			return int64(builtins.GenerateUniqueInt(
 				builtins.ProcessUniqueID(nodeIDContainer.Get()),
@@ -1275,7 +1275,7 @@ func NewServer(cfg Config, stopper *stop.Stopper) (serverctl.ServerStartupInterf
 		st,
 		sqlServer.pgServer.HBADebugFn(),
 		sqlServer.execCfg.SQLStatusServer,
-		roachpb.SystemTenantID,
+		roachpb.PrefixedSystemTenantID,
 		authorizer,
 	)
 
@@ -1731,7 +1731,7 @@ func (s *topLevelServer) PreStart(ctx context.Context) error {
 	// Apply any cached initial settings (and start the gossip listener) as early
 	// as possible, to avoid spending time with stale settings.
 	if err := initializeCachedSettings(
-		ctx, keys.SystemSQLCodec, s.st.MakeUpdater(), state.initialSettingsKVs,
+		ctx, keys.PrefixedSystemSQLCodec, s.st.MakeUpdater(), state.initialSettingsKVs,
 	); err != nil {
 		return errors.Wrap(err, "during initializing settings updater")
 	}
@@ -2062,7 +2062,7 @@ func (s *topLevelServer) PreStart(ctx context.Context) error {
 			db:               s.db,
 		}), /* apiServer */
 		serverpb.FeatureFlags{
-			CanViewKvMetricDashboards:   s.rpcContext.TenantID.Equal(roachpb.SystemTenantID),
+			CanViewKvMetricDashboards:   s.rpcContext.TenantID.Equal(roachpb.PrefixedSystemTenantID),
 			DisableKvLevelAdvancedDebug: false,
 		},
 	); err != nil {

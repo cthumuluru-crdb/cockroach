@@ -97,11 +97,11 @@ func TestManagerWithPrincipalMap(t *testing.T) {
 	))
 	require.NoError(t, security.CreateClientPair(
 		certsDir, caKey, testKeySize, time.Hour*48, true, username.TestUserName(),
-		[]roachpb.TenantID{roachpb.SystemTenantID}, nil /* tenantNameScope */, false,
+		[]roachpb.TenantID{roachpb.PrefixedSystemTenantID}, nil /* tenantNameScope */, false,
 	))
 	require.NoError(t, security.CreateClientPair(
 		certsDir, caKey, testKeySize, time.Hour*48, true, username.TestUserName(),
-		nil /* tenantScope */, []roachpb.TenantName{roachpb.TenantName(roachpb.SystemTenantID.String())},
+		nil /* tenantScope */, []roachpb.TenantName{roachpb.TenantName(roachpb.PrefixedSystemTenantID.String())},
 		false,
 	))
 	require.NoError(t, security.CreateNodePair(
