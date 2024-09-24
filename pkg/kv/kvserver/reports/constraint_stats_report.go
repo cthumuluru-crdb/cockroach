@@ -394,7 +394,7 @@ func (v *constraintConformanceVisitor) init(ctx context.Context) {
 	if err != nil {
 		log.Fatalf(ctx, "unexpected failure to compute max object id: %s", err)
 	}
-	for i := config.ObjectID(1); i <= maxObjectID; i++ {
+	for i := config.ObjectID(2); i <= maxObjectID; i++ {
 		zone, err := getZoneByID(i, v.cfg)
 		if err != nil {
 			log.Fatalf(ctx, "unexpected failure to compute max object id: %s", err)
