@@ -352,11 +352,13 @@ var (
 	// TODO(nvanbenschoten): Figure out what to do with all of these. At a
 	// minimum, prefix them all with "System".
 
-	// TableDataMin is the start of the range of table data keys.
-	TableDataMin           = SystemSQLCodec.TablePrefix(0)
+	// TableDataMin is the start of the range of prefixed table data keys.
+	TableDataMin = SystemSQLCodec.TablePrefix(0)
+	// PrefixlessTableDataMin is the start of the range of prefixless table data keys.
 	PrefixlessTableDataMin = PrefixlessSystemSQLCodec.TablePrefix(0)
 	// TableDataMax is the end of the range of table data keys.
-	TableDataMax           = SystemSQLCodec.TablePrefix(math.MaxUint32).PrefixEnd()
+	TableDataMax = SystemSQLCodec.TablePrefix(math.MaxUint32).PrefixEnd()
+	// PrefixlessTableDataMax is the end of the range of prefixless table data keys.
 	PrefixlessTableDataMax = PrefixlessSystemSQLCodec.TablePrefix(math.MaxUint32).PrefixEnd()
 	// ScratchRangeMin is a key used in tests to write arbitrary data without
 	// overlapping with meta, system or tenant ranges.
