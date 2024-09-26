@@ -1672,7 +1672,7 @@ type profDataResponse struct {
 
 // fetchProfileFromAllNodes fetches the profile from all live nodes in the
 // cluster and merges the samples across all profiles.
-func (s *statusServer) fetchProfileFromAllNodes(
+func (s *systemStatusServer) fetchProfileFromAllNodes(
 	ctx context.Context, req *serverpb.ProfileRequest,
 ) (*serverpb.JSONResponse, error) {
 	response := profDataResponse{profDataByNodeID: make(map[roachpb.NodeID]*profData)}
@@ -1734,7 +1734,7 @@ func (s *statusServer) fetchProfileFromAllNodes(
 //
 // Profile returns a heap profile. This endpoint is used by the
 // `pprofui` package to satisfy local and remote pprof requests.
-func (s *statusServer) Profile(
+func (s *systemStatusServer) Profile(
 	ctx context.Context, req *serverpb.ProfileRequest,
 ) (*serverpb.JSONResponse, error) {
 	ctx = authserver.ForwardSQLIdentityThroughRPCCalls(ctx)
@@ -1859,6 +1859,20 @@ func (s *systemStatusServer) Nodes(
 	}
 
 	return resp, nil
+}
+
+func (s *statusServer) Nodes(
+	ctx context.Context, req *serverpb.NodesRequest,
+) (*serverpb.NodesResponse, error) {
+	ctx = authserver.ForwardSQLIdentityThroughRPCCalls(ctx)
+	ctx = s.AnnotateCtx(ctx)
+
+	err := s.privilegeChecker.RequireViewClusterMetadataPermission(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return s.sqlServer.tenantConnect.Nodes(ctx, req)
 }
 
 // TODO: Enhance with redaction middleware, refer: https://github.com/cockroachdb/cockroach/issues/109594
@@ -2023,7 +2037,7 @@ func (s *systemStatusServer) nodesHelper(
 }
 
 // handleNodeStatus handles GET requests for a single node's status.
-func (s *statusServer) Node(
+func (s *systemStatusServer) Node(
 	ctx context.Context, req *serverpb.NodeRequest,
 ) (*statuspb.NodeStatus, error) {
 	ctx = authserver.ForwardSQLIdentityThroughRPCCalls(ctx)
@@ -2040,6 +2054,25 @@ func (s *statusServer) Node(
 	// NB: not using srverrors.ServerError() here since nodeStatus
 	// already returns a proper gRPC error status.
 	return s.nodeStatus(ctx, req)
+}
+
+func (s *statusServer) Node(
+	ctx context.Context, req *serverpb.NodeRequest,
+) (*statuspb.NodeStatus, error) {
+	ctx = authserver.ForwardSQLIdentityThroughRPCCalls(ctx)
+	ctx = s.AnnotateCtx(ctx)
+
+	// The node status contains details about the command line, network
+	// addresses, env vars etc which are privileged information..
+	if err := s.privilegeChecker.RequireViewClusterMetadataPermission(ctx); err != nil {
+		// NB: not using srverrors.ServerError() here since the priv checker
+		// already returns a proper gRPC error status.
+		return nil, err
+	}
+
+	// NB: not using srverrors.ServerError() here since nodeStatus
+	// already returns a proper gRPC error status.
+	return s.sqlServer.tenantConnect.Node(ctx, req)
 }
 
 func (s *statusServer) nodeStatus(
