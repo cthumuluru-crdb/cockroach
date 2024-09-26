@@ -353,9 +353,11 @@ var (
 	// minimum, prefix them all with "System".
 
 	// TableDataMin is the start of the range of table data keys.
-	TableDataMin = SystemSQLCodec.TablePrefix(0)
+	TableDataMin           = SystemSQLCodec.TablePrefix(0)
+	PrefixlessTableDataMin = PrefixlessSystemSQLCodec.TablePrefix(0)
 	// TableDataMax is the end of the range of table data keys.
-	TableDataMax = SystemSQLCodec.TablePrefix(math.MaxUint32).PrefixEnd()
+	TableDataMax           = SystemSQLCodec.TablePrefix(math.MaxUint32).PrefixEnd()
+	PrefixlessTableDataMax = PrefixlessSystemSQLCodec.TablePrefix(math.MaxUint32).PrefixEnd()
 	// ScratchRangeMin is a key used in tests to write arbitrary data without
 	// overlapping with meta, system or tenant ranges.
 	ScratchRangeMin = TableDataMax
@@ -378,8 +380,8 @@ var (
 	//
 	// TenantPrefix is the prefix for all non-system tenant keys.
 	TenantPrefix       = roachpb.Key{tenantPrefixByte}
-	TenantTableDataMin = MakeTenantPrefix(roachpb.MinTenantID)
-	TenantTableDataMax = MakeTenantPrefix(roachpb.MaxTenantID).PrefixEnd()
+	TenantTableDataMin = SystemSQLCodec.TablePrefix(uint32(roachpb.MinTenantID.ToUint64()))
+	TenantTableDataMax = SystemSQLCodec.TablePrefix(uint32(roachpb.MaxTenantID.ToUint64())).PrefixEnd()
 )
 
 // Various IDs used by the structured data layer.

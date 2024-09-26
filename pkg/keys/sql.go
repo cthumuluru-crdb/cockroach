@@ -30,7 +30,7 @@ func MakeTenantPrefix(tenID roachpb.TenantID) roachpb.Key {
 // MakeTenantSpan creates the start/end key pair associated with the specified tenant.
 func MakeTenantSpan(tenID roachpb.TenantID) roachpb.Span {
 	if tenID == roachpb.TenantOne {
-		return roachpb.Span{Key: TableDataMin, EndKey: TableDataMax}
+		return roachpb.Span{Key: PrefixlessTableDataMin, EndKey: PrefixlessTableDataMax}
 	}
 	tenIDint := tenID.ToUint64()
 	return roachpb.Span{
@@ -143,8 +143,8 @@ type sqlDecoder struct {
 
 // MakeSQLCodec creates a new  SQLCodec suitable for manipulating SQL keys.
 func MakeSQLCodec(tenID roachpb.TenantID) SQLCodec {
-	if tenID.IsSystem() {
-		return SystemSQLCodec
+	if tenID == roachpb.TenantOne {
+		return PrefixlessSystemSQLCodec
 	}
 	sp := MakeTenantSpan(tenID)
 	sp.Key = sp.Key[:len(sp.Key):len(sp.Key)]             // bound capacity, avoid aliasing
@@ -156,15 +156,12 @@ func MakeSQLCodec(tenID roachpb.TenantID) SQLCodec {
 }
 
 // SystemSQLCodec is a SQL key codec for the system tenant.
-//
-// NB: We don't use MakeSQLCodec here since the system tenant is special and its
-// prefix is empty, rather than the start of its span, so the Codec for it wants
-// the empty key, rather than start key, as its buf. Ideally we would set the
-// endKey to TableDataMax instead of MaxKey here, but TableDataMax is currently
-// defined in terms of this codec. We would want to fix this if/when we make the
-// tenant with ID one non-system, but we'll get rid of/rename this then as well.
-var SystemSQLCodec = SQLCodec{
-	sqlEncoder: sqlEncoder{&MinKey, &MaxKey, roachpb.SystemTenantID},
+var SystemSQLCodec = MakeSQLCodec(roachpb.SystemTenantID)
+
+// TODO(chandrat) Revisit min and max keys
+// PrefixlessSystemSQLCodec doesn't use a tenant prefix for the legacy system tenant.
+var PrefixlessSystemSQLCodec = SQLCodec{
+	sqlEncoder: sqlEncoder{&MinKey, &MaxKey, roachpb.TenantOne},
 	sqlDecoder: sqlDecoder{&MinKey},
 }
 
