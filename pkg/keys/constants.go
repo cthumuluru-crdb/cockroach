@@ -375,8 +375,12 @@ var (
 	// NamespaceTableMin is the start key of system.namespace, which is a system
 	// table that does not reside in the same range as other system tables.
 	NamespaceTableMin = SystemSQLCodec.TablePrefix(NamespaceTableID)
+	// PrefixlessNamespaceTableMin is the start key of prefixless system.namespace table.
+	PrefixlessNamespaceTableMin = SystemSQLCodec.TablePrefix(NamespaceTableID)
 	// NamespaceTableMax is the end key of system.namespace.
 	NamespaceTableMax = SystemSQLCodec.TablePrefix(NamespaceTableID + 1)
+	// PrefixlessNamespaceTableMax is the end key of prefixless system.namespace table.
+	PrefixlessNamespaceTableMax = SystemSQLCodec.TablePrefix(NamespaceTableID + 1)
 
 	// 4. Non-system tenant SQL keys
 	//
