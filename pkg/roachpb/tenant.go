@@ -27,11 +27,15 @@ import (
 // node-internal processes. Additionally it is given special treatment in any
 // authorization decisions, bypassing typical restrictions that tenants act only
 // on their own key spans.
-var SystemTenantID = TenantOne
+var SystemTenantID = TenantTwo
 
 // TenantOne is a special tenant ID, associated the numeric ID 1, which for
 // legacy compatibility reasons stores its tables without a tenant prefix.
 var TenantOne = MustMakeTenantID(1)
+
+// TenantTwo is a special tenant ID, with associated numeric ID 2. It will
+// eventually replace TenantOne as system tenant.
+var TenantTwo = MustMakeTenantID(2)
 
 // MinTenantID is the minimum ID of a (non-system) tenant in a multi-tenant
 // cluster.
