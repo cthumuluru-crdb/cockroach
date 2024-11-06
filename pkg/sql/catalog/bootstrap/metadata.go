@@ -555,10 +555,7 @@ func addZoneConfigKVsToSchema(
 	defaultZoneConfig *zonepb.ZoneConfig,
 	defaultSystemZoneConfig *zonepb.ZoneConfig,
 ) {
-	var kvs []roachpb.KeyValue
-	if target.codec.TenantID != roachpb.TenantTwo {
-		kvs = InitialZoneConfigKVs(target.codec, defaultZoneConfig, defaultSystemZoneConfig)
-	}
+	kvs := InitialZoneConfigKVs(target.codec, defaultZoneConfig, defaultSystemZoneConfig)
 	target.otherKV = append(target.otherKV, kvs...)
 }
 
@@ -571,8 +568,10 @@ func addSystemDatabaseToSchema(
 ) {
 	addSystemDescriptorsToSchema(target)
 	addSplitIDs(target)
-	addZoneConfigKVsToSchema(target, defaultZoneConfig, defaultSystemZoneConfig)
-	addSystemTenantEntry(target)
+	if target.codec.TenantID != roachpb.TenantTwo {
+		addZoneConfigKVsToSchema(target, defaultZoneConfig, defaultSystemZoneConfig)
+		addSystemTenantEntry(target)
+	}
 }
 
 // addSystemTenantEntry adds a kv pair to system.tenants to define the initial

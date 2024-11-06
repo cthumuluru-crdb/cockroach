@@ -35,6 +35,7 @@ import (
 	"github.com/cockroachdb/cockroach/pkg/sql/sem/tree"
 	"github.com/cockroachdb/cockroach/pkg/sql/sessiondata"
 	"github.com/cockroachdb/cockroach/pkg/util/hlc"
+	"github.com/cockroachdb/cockroach/pkg/util/log"
 	"github.com/cockroachdb/cockroach/pkg/util/log/logcrash"
 	"github.com/cockroachdb/cockroach/pkg/util/protoutil"
 	"github.com/cockroachdb/cockroach/pkg/util/timeutil"
@@ -192,8 +193,8 @@ func BootstrapTenant(
 		return tid, err
 	}
 
-	{
-		copiedKVs, err := CopyZoneConfigKVs(ctx, txn, codec)
+	if tid == roachpb.TenantTwo {
+		copiedKVs, err := CopySystemTableKVs(ctx, txn, codec)
 		if err != nil {
 			return tid, err
 		}
@@ -250,40 +251,49 @@ func BootstrapTenant(
 	return tid, nil
 }
 
-func CopyZoneConfigKVs(
+func CopySystemTableKVs(
 	ctx context.Context, txn *kv.Txn, targetCodec keys.SQLCodec,
 ) ([]roachpb.KeyValue, error) {
 	sourceCodec := keys.SystemSQLCodec
-	// get all keys for the table
-
-	zoneSpan := sourceCodec.TableSpan(keys.ZonesTableID)
+	tables := []uint32{keys.ZonesTableID, keys.TenantsTableID, 50 /* hardcoded tenant_settings id for demo */}
 	batch := txn.NewBatch()
-	batch.Scan(zoneSpan.Key, zoneSpan.EndKey)
+	for _, tableID := range tables {
+		span := sourceCodec.TableSpan(tableID)
+		batch.Scan(span.Key, span.EndKey)
+	}
 
 	if err := txn.Run(ctx, batch); err != nil {
 		return nil, err
 	}
 
-	if len(batch.Results) != 1 {
-		return nil, errors.AssertionFailedf("expected exactly on batch result found %d: %+v", len(batch.Results), batch.Results[1])
+	if len(batch.Results) != len(tables) {
+		return nil, errors.AssertionFailedf(
+			"unexpected batch result count, expected: %d, found: %d",
+			len(tables),
+			len(batch.Results))
 	}
 
-	if err := batch.Results[0].Err; err != nil {
-		return nil, err
-	}
-	rows := batch.Results[0].Rows
-
-	// rewrite keys
-	targetTenantPrefix := targetCodec.TenantPrefix()
-	ret := make([]roachpb.KeyValue, 0, len(rows))
-	for _, row := range rows {
-		v := roachpb.KeyValue{
-			Key:   append(targetTenantPrefix, row.Key...),
-			Value: *row.Value,
+	ret := make([]roachpb.KeyValue, 0)
+	for _, result := range batch.Results {
+		if err := result.Err; err != nil {
+			return nil, err
 		}
-		v.Value.ClearChecksum()
-		ret = append(ret, v)
+		rows := result.Rows
+		log.Ops.Infof(ctx, "rows count: %d", len(rows))
+		// Rewrite the keys
+		targetTenantPrefix := targetCodec.TenantPrefix()
+		kvs := make([]roachpb.KeyValue, 0, len(rows))
+		for _, row := range rows {
+			v := roachpb.KeyValue{
+				Key:   append(targetTenantPrefix, row.Key...),
+				Value: *row.Value,
+			}
+			v.Value.ClearChecksum()
+			kvs = append(kvs, v)
+		}
+		ret = append(ret, kvs...)
 	}
+
 	return ret, nil
 }
 
