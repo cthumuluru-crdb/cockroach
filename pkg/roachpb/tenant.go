@@ -28,6 +28,8 @@ var SystemTenantID = TenantOne
 // legacy compatibility reasons stores its tables without a tenant prefix.
 var TenantOne = MustMakeTenantID(1)
 
+var TenantTwo = MustMakeTenantID(2)
+
 // MinTenantID is the minimum ID of a (non-system) tenant in a multi-tenant
 // cluster.
 var MinTenantID = MustMakeTenantID(2)
