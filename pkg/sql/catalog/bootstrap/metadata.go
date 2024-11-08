@@ -43,6 +43,7 @@ type MetadataSchema struct {
 	otherSplitIDs []uint32
 	otherKV       []roachpb.KeyValue
 	ids           catalog.DescriptorIDSet
+	descsIdMap    map[string]descpb.ID
 }
 
 // MakeMetadataSchema constructs a new MetadataSchema value which constructs
@@ -52,7 +53,7 @@ func MakeMetadataSchema(
 	defaultZoneConfig *zonepb.ZoneConfig,
 	defaultSystemZoneConfig *zonepb.ZoneConfig,
 ) MetadataSchema {
-	ms := MetadataSchema{codec: codec}
+	ms := MetadataSchema{codec: codec, descsIdMap: make(map[string]descpb.ID)}
 	addSystemDatabaseToSchema(&ms, defaultZoneConfig, defaultSystemZoneConfig)
 	return ms
 }
@@ -76,9 +77,10 @@ const firstNonSystemDescriptorID = 100
 
 // AddDescriptor adds a new non-config descriptor to the system schema.
 func (ms *MetadataSchema) AddDescriptor(desc catalog.Descriptor) {
+	_, isTable := desc.(catalog.TableDescriptor)
 	switch id := desc.GetID(); id {
 	case descpb.InvalidID:
-		if _, isTable := desc.(catalog.TableDescriptor); !isTable {
+		if !isTable {
 			log.Fatalf(context.TODO(), "only system tables may have dynamic IDs, got %T for %s",
 				desc, desc.GetName())
 		}
@@ -89,6 +91,10 @@ func (ms *MetadataSchema) AddDescriptor(desc catalog.Descriptor) {
 		if ms.ids.Contains(id) {
 			log.Fatalf(context.TODO(), "adding descriptor with duplicate ID: %v", desc)
 		}
+	}
+
+	if isTable {
+		ms.descsIdMap[desc.GetName()] = desc.GetID()
 	}
 	ms.descs = append(ms.descs, desc)
 }

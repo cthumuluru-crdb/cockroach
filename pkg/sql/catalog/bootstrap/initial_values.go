@@ -19,6 +19,8 @@ import (
 	"github.com/cockroachdb/cockroach/pkg/keys"
 	"github.com/cockroachdb/cockroach/pkg/kv"
 	"github.com/cockroachdb/cockroach/pkg/roachpb"
+	"github.com/cockroachdb/cockroach/pkg/sql/catalog/descpb"
+	"github.com/cockroachdb/cockroach/pkg/sql/sem/catconstants"
 	"github.com/cockroachdb/cockroach/pkg/util/log"
 	"github.com/cockroachdb/errors"
 )
@@ -93,7 +95,7 @@ func buildLatestInitialValues(
 	ctx := context.Background()
 
 	if opts.Codec.TenantID == roachpb.TenantTwo {
-		copiedKVs, err := CopySystemTableKVs(ctx, opts.Txn, opts.Codec)
+		copiedKVs, err := CopySystemTableKVs(ctx, opts.Txn, opts.Codec, schema.descsIdMap)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -104,17 +106,23 @@ func buildLatestInitialValues(
 }
 
 func CopySystemTableKVs(
-	ctx context.Context, txn *kv.Txn, targetCodec keys.SQLCodec,
+	ctx context.Context, txn *kv.Txn, targetCodec keys.SQLCodec, descsIdMap map[string]descpb.ID,
 ) ([]roachpb.KeyValue, error) {
 	sourceCodec := keys.SystemSQLCodec
-	tables := []uint32{
-		keys.ZonesTableID,
-		keys.TenantsTableID,
-		50, /* hardcoded tenant_settings id for demo */
+	tables := []catconstants.SystemTableName{
+		catconstants.ZonesTableName,
+		catconstants.TenantsTableName,
+		catconstants.TenantSettingsTableName, // rewrite table prefix for this
 	}
+
 	batch := txn.NewBatch()
-	for _, tableID := range tables {
-		span := sourceCodec.TableSpan(tableID)
+	for _, table := range tables {
+		descID, ok := descsIdMap[string(table)]
+		if !ok {
+			log.Ops.Errorf(ctx, "descID not found for : %s", table)
+			continue
+		}
+		span := sourceCodec.TableSpan(uint32(descID))
 		batch.Scan(span.Key, span.EndKey)
 	}
 
