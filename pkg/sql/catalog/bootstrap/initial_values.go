@@ -7,6 +7,7 @@ package bootstrap
 
 import (
 	"bytes"
+	"context"
 	"crypto/sha256"
 	_ "embed"
 	"encoding/hex"
@@ -16,7 +17,9 @@ import (
 	"github.com/cockroachdb/cockroach/pkg/clusterversion"
 	"github.com/cockroachdb/cockroach/pkg/config/zonepb"
 	"github.com/cockroachdb/cockroach/pkg/keys"
+	"github.com/cockroachdb/cockroach/pkg/kv"
 	"github.com/cockroachdb/cockroach/pkg/roachpb"
+	"github.com/cockroachdb/cockroach/pkg/util/log"
 	"github.com/cockroachdb/errors"
 )
 
@@ -27,6 +30,7 @@ type InitialValuesOpts struct {
 	DefaultSystemZoneConfig *zonepb.ZoneConfig
 	OverrideKey             clusterversion.Key
 	Codec                   keys.SQLCodec
+	Txn                     *kv.Txn
 }
 
 // GenerateInitialValues generates the initial values with which to bootstrap a
@@ -37,6 +41,7 @@ func (opts InitialValuesOpts) GenerateInitialValues() ([]roachpb.KeyValue, []roa
 	if opts.OverrideKey != 0 {
 		versionKey = opts.OverrideKey
 	}
+	// deal with other `versionKey` later
 	f, ok := initialValuesFactoryByKey[versionKey]
 	if !ok {
 		return nil, nil, errors.Newf("unsupported version %q", versionKey)
@@ -84,7 +89,68 @@ func buildLatestInitialValues(
 ) (kvs []roachpb.KeyValue, splits []roachpb.RKey, _ error) {
 	schema := MakeMetadataSchema(opts.Codec, opts.DefaultZoneConfig, opts.DefaultSystemZoneConfig)
 	kvs, splits = schema.GetInitialValues()
+
+	ctx := context.Background()
+
+	if opts.Codec.TenantID == roachpb.TenantTwo {
+		copiedKVs, err := CopySystemTableKVs(ctx, opts.Txn, opts.Codec)
+		if err != nil {
+			return nil, nil, err
+		}
+		kvs = append(kvs, copiedKVs...)
+	}
+
 	return kvs, splits, nil
+}
+
+func CopySystemTableKVs(
+	ctx context.Context, txn *kv.Txn, targetCodec keys.SQLCodec,
+) ([]roachpb.KeyValue, error) {
+	sourceCodec := keys.SystemSQLCodec
+	tables := []uint32{
+		keys.ZonesTableID,
+		keys.TenantsTableID,
+		50, /* hardcoded tenant_settings id for demo */
+	}
+	batch := txn.NewBatch()
+	for _, tableID := range tables {
+		span := sourceCodec.TableSpan(tableID)
+		batch.Scan(span.Key, span.EndKey)
+	}
+
+	if err := txn.Run(ctx, batch); err != nil {
+		return nil, err
+	}
+
+	if len(batch.Results) != len(tables) {
+		return nil, errors.AssertionFailedf(
+			"unexpected batch result count, expected: %d, found: %d",
+			len(tables),
+			len(batch.Results))
+	}
+
+	ret := make([]roachpb.KeyValue, 0)
+	for _, result := range batch.Results {
+		if err := result.Err; err != nil {
+			return nil, err
+		}
+		rows := result.Rows
+		log.Ops.Infof(ctx, "rows count: %d", len(rows))
+		// Rewrite the keys
+		targetTenantPrefix := targetCodec.TenantPrefix()
+		kvs := make([]roachpb.KeyValue, 0, len(rows))
+		for _, row := range rows {
+			v := roachpb.KeyValue{
+				Key:   append(targetTenantPrefix, row.Key...),
+				Value: *row.Value,
+			}
+			v.Value.ClearChecksum()
+			kvs = append(kvs, v)
+		}
+		ret = append(ret, kvs...)
+	}
+
+	return ret, nil
 }
 
 // hardCodedInitialValues defines an initialValuesFactoryFn using
