@@ -19,7 +19,6 @@ import (
 	"github.com/cockroachdb/cockroach/pkg/keys"
 	"github.com/cockroachdb/cockroach/pkg/kv"
 	"github.com/cockroachdb/cockroach/pkg/roachpb"
-	"github.com/cockroachdb/cockroach/pkg/sql/catalog/descpb"
 	"github.com/cockroachdb/cockroach/pkg/sql/sem/catconstants"
 	"github.com/cockroachdb/cockroach/pkg/util/log"
 	"github.com/cockroachdb/errors"
@@ -95,7 +94,7 @@ func buildLatestInitialValues(
 	ctx := context.Background()
 
 	if opts.Codec.TenantID == roachpb.TenantTwo {
-		copiedKVs, err := CopySystemTableKVs(ctx, opts.Txn, opts.Codec, schema.descsIdMap)
+		copiedKVs, err := CopySystemTableKVs(ctx, opts.Txn, opts.Codec, schema.descsIDMap)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -106,23 +105,23 @@ func buildLatestInitialValues(
 }
 
 func CopySystemTableKVs(
-	ctx context.Context, txn *kv.Txn, targetCodec keys.SQLCodec, descsIdMap map[string]descpb.ID,
+	ctx context.Context, txn *kv.Txn, targetCodec keys.SQLCodec, descsIDMap map[string]uint32,
 ) ([]roachpb.KeyValue, error) {
 	sourceCodec := keys.SystemSQLCodec
 	tables := []catconstants.SystemTableName{
 		catconstants.ZonesTableName,
-		catconstants.TenantsTableName,
-		catconstants.TenantSettingsTableName, // rewrite table prefix for this
+		// catconstants.TenantsTableName,
+		// catconstants.TenantSettingsTableName, // rewrite table prefix for this
 	}
 
 	batch := txn.NewBatch()
 	for _, table := range tables {
-		descID, ok := descsIdMap[string(table)]
+		descID, ok := descsIDMap[string(table)]
 		if !ok {
 			log.Ops.Errorf(ctx, "descID not found for : %s", table)
-			continue
+			return nil, errors.Errorf("descID not found for : %s", table)
 		}
-		span := sourceCodec.TableSpan(uint32(descID))
+		span := sourceCodec.TableSpan(descID)
 		batch.Scan(span.Key, span.EndKey)
 	}
 
@@ -138,21 +137,36 @@ func CopySystemTableKVs(
 	}
 
 	ret := make([]roachpb.KeyValue, 0)
-	for _, result := range batch.Results {
+	for i, result := range batch.Results {
 		if err := result.Err; err != nil {
 			return nil, err
 		}
 		rows := result.Rows
-		log.Ops.Infof(ctx, "rows count: %d", len(rows))
+		log.Ops.Infof(ctx, "rows count: %d, table id: %d", len(rows), descsIDMap[string(tables[i])])
 		// Rewrite the keys
-		targetTenantPrefix := targetCodec.TenantPrefix()
+		// targetTenantPrefix := targetCodec.TenantPrefix()
+		tablePrefix := targetCodec.TablePrefix(descsIDMap[string(tables[i])])
 		kvs := make([]roachpb.KeyValue, 0, len(rows))
 		for _, row := range rows {
+			key, err := keys.StripTablePrefix(row.Key)
+			if err != nil {
+				return nil, err
+			}
 			v := roachpb.KeyValue{
-				Key:   append(targetTenantPrefix, row.Key...),
+				// Key: append(targetTenantPrefix, row.Key...),
+				Key:   append(tablePrefix, key...),
 				Value: *row.Value,
 			}
 			v.Value.ClearChecksum()
+			// kStr := catalogkeys.PrettyKey(nil, key, -1)
+			// vStr := row.Value.PrettyPrint()
+			// log.Ops.Infof(ctx, "key: %s => value: %s", kStr, vStr)
+			// log.Ops.Infof(ctx, "rewritten: %s => %s", catalogkeys.PrettyKey(nil, v.Key, -1), v.Value.PrettyPrint())
+			// log.Ops.Infof(ctx, "rewritten: %v => %v", []byte(v.Key), v.Value.RawBytes)
+			// goodBytes := append(targetTenantPrefix, row.Key...)
+			// badBytes := append(tablePrefix, key...)
+			// equal := bytes.Equal(goodBytes, badBytes)
+			// log.Ops.Infof(ctx, "%t", equal)
 			kvs = append(kvs, v)
 		}
 		ret = append(ret, kvs...)

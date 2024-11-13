@@ -43,7 +43,7 @@ type MetadataSchema struct {
 	otherSplitIDs []uint32
 	otherKV       []roachpb.KeyValue
 	ids           catalog.DescriptorIDSet
-	descsIdMap    map[string]descpb.ID
+	descsIDMap    map[string]uint32
 }
 
 // MakeMetadataSchema constructs a new MetadataSchema value which constructs
@@ -53,7 +53,7 @@ func MakeMetadataSchema(
 	defaultZoneConfig *zonepb.ZoneConfig,
 	defaultSystemZoneConfig *zonepb.ZoneConfig,
 ) MetadataSchema {
-	ms := MetadataSchema{codec: codec, descsIdMap: make(map[string]descpb.ID)}
+	ms := MetadataSchema{codec: codec, descsIDMap: make(map[string]uint32)}
 	addSystemDatabaseToSchema(&ms, defaultZoneConfig, defaultSystemZoneConfig)
 	return ms
 }
@@ -94,7 +94,7 @@ func (ms *MetadataSchema) AddDescriptor(desc catalog.Descriptor) {
 	}
 
 	if isTable {
-		ms.descsIdMap[desc.GetName()] = desc.GetID()
+		ms.descsIDMap[desc.GetName()] = uint32(desc.GetID())
 	}
 	ms.descs = append(ms.descs, desc)
 }
