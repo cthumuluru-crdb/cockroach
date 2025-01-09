@@ -413,7 +413,9 @@ func TestSettingsPersistenceEndToEnd(t *testing.T) {
 		t.Logf("setting customized, waiting for value on 2nd node")
 
 		// Verify the setting has propagated to both nodes.
-		testutils.SucceedsSoon(t, func() error {
+		// This test timedout and flaked in the past (github.com/cockroachdb/cockroach/issues/133732).
+		timeout := time.Minute
+		testutils.SucceedsWithin(t, func() error {
 			res := db2.QueryStr(t, `SHOW CLUSTER SETTING cluster.label`)
 			if res[0][0] != differentValue {
 				err := errors.Newf("not updated yet: expecting %v, got %v", differentValue, res[0][0])
@@ -421,7 +423,7 @@ func TestSettingsPersistenceEndToEnd(t *testing.T) {
 				return err
 			}
 			return nil
-		})
+		}, timeout)
 
 		t.Logf("stopping 2nd node")
 		// Stop the 2nd node; we want to reset the setting while the first
