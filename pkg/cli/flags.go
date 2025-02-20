@@ -675,7 +675,6 @@ func init() {
 		if cmd == createClientCertCmd {
 			cliflagcfg.VarFlag(f, &tenantIDSetter{tenantIDs: &certCtx.tenantScope}, cliflags.TenantScope)
 			cliflagcfg.VarFlag(f, &tenantNameSetter{tenantNames: &certCtx.tenantNameScope}, cliflags.TenantScopeByNames)
-			_ = f.MarkHidden(cliflags.TenantScopeByNames.Name)
 
 			// PKCS8 key format is only available for the client cert command.
 			cliflagcfg.BoolFlag(f, &certCtx.generatePKCS8Key, cliflags.GeneratePKCS8Key)
@@ -1540,14 +1539,16 @@ func mtStartSQLFlagsInit(cmd *cobra.Command) error {
 	var tenantSourceFlag *cliflags.FlagInfo
 	for _, f := range []cliflags.FlagInfo{cliflags.TenantID,
 		cliflags.TenantIDFile, cliflags.TenantName, cliflags.TenantNameFile} {
-		if fs.Changed(f.Name) && tenantSourceFlag != nil {
-			return errors.Newf(
-				"--%s is incompatible with --%s",
-				f.Name,
-				tenantSourceFlag.Name,
-			)
-		} else {
-			tenantSourceFlag = &f
+		if fs.Changed(f.Name) {
+			if tenantSourceFlag == nil {
+				tenantSourceFlag = &f
+			} else {
+				return errors.Newf(
+					"--%s is incompatible with --%s",
+					f.Name,
+					tenantSourceFlag.Name,
+				)
+			}
 		}
 	}
 
