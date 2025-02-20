@@ -8,7 +8,6 @@ package rpc
 import (
 	"context"
 	"crypto/x509"
-	"fmt"
 
 	"github.com/cockroachdb/cockroach/pkg/roachpb"
 	"github.com/cockroachdb/cockroach/pkg/security"
@@ -226,7 +225,7 @@ func (a kvAuth) authenticate(ctx context.Context) (authnResult, error) {
 
 	switch res := ar.(type) {
 	case authnSuccessPeerIsTenantServer:
-		if wantedTenantID := roachpb.TenantID(res); !a.tenant.tenantID.IsSystem() && wantedTenantID != a.tenant.tenantID {
+		if wantedTenantID := roachpb.TenantID(res); !a.tenant.tenant.IsSystem() && wantedTenantID != a.tenant.tenant.tenantID {
 			log.Ops.Infof(ctx, "rejected incoming request from tenant %d (misconfiguration?)", wantedTenantID)
 			return nil, authErrorf("client tenant identity (%v) does not match server", wantedTenantID)
 		}
@@ -475,15 +474,15 @@ type tenantClientCred struct {
 // This metadata item is not meant to be used beyond authentication;
 // to access the client tenant ID inside RPC handlers or other code,
 // use roachpb.ClientTenantFromContext() instead.
-const clientTIDMetadataHeaderKey = "client-tid"
+const clientTIDMetadataHeaderKey = "client-tid" // TODO(chandrat) we should avoid updating this
 
 // newTenantClientCreds constructs a credentials.PerRPCCredentials
 // which injects the client tenant ID as extra gRPC metadata in each
 // RPC.
-func newTenantClientCreds(tid roachpb.TenantID) credentials.PerRPCCredentials {
+func newTenantClientCreds(tenant roachpb.TenantIdentifier) credentials.PerRPCCredentials {
 	return &tenantClientCred{
 		md: map[string]string{
-			clientTIDMetadataHeaderKey: fmt.Sprint(tid),
+			clientTIDMetadataHeaderKey: tenant.String(),
 		},
 	}
 }

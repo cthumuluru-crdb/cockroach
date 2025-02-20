@@ -1386,8 +1386,8 @@ func testTenantRangesRPC(_ context.Context, t *testing.T, helper serverccl.Tenan
 	waitForRangeSplit(t, tenantB)
 
 	t.Run("test TenantRanges respects tenant isolation", func(t *testing.T) {
-		tenIDA := helper.TestCluster().Tenant(0).GetRPCContext().TenantID
-		tenIDB := helper.ControlCluster().Tenant(0).GetRPCContext().TenantID
+		tenIDA := helper.TestCluster().Tenant(0).GetRPCContext().Tenant
+		tenIDB := helper.ControlCluster().Tenant(0).GetRPCContext().Tenant
 		keySpanForA := keys.MakeTenantSpan(tenIDA)
 		keySpanForB := keys.MakeTenantSpan(tenIDB)
 
@@ -1467,8 +1467,8 @@ func testRangesRPC(_ context.Context, t *testing.T, helper serverccl.TenantTestH
 	waitForRangeSplit(t, tenantB)
 
 	t.Run("test Ranges respects tenant isolation", func(t *testing.T) {
-		tenIDA := helper.TestCluster().Tenant(0).GetRPCContext().TenantID
-		tenIDB := helper.ControlCluster().Tenant(0).GetRPCContext().TenantID
+		tenIDA := helper.TestCluster().Tenant(0).GetRPCContext().Tenant
+		tenIDB := helper.ControlCluster().Tenant(0).GetRPCContext().Tenant
 		keySpanForA := keys.MakeTenantSpan(tenIDA)
 		keySpanForB := keys.MakeTenantSpan(tenIDB)
 

@@ -299,7 +299,7 @@ func TestStatusLocalLogsTenantFilter(t *testing.T) {
 	for _, testCase := range testCases {
 		// Non-system tenant servers filter to the tenant that they belong to.
 		// Set the server tenant ID for this test case.
-		ts.RPCContext().TenantID = testCase.tenantID
+		ts.RPCContext().Tenant = testCase.tenantID
 
 		var logfilesResp serverpb.LogEntriesResponse
 		if err := srvtestutils.GetStatusJSONProto(ts, "logfiles/local/"+listFilesResp.Files[0].Name, &logfilesResp); err != nil {

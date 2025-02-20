@@ -1716,7 +1716,7 @@ func TestBackupRestoreResume(t *testing.T) {
 	tc, outerDB, dir, cleanupFn := backupRestoreTestSetupWithParams(t, multiNode, numAccounts, InitManualReplication, params)
 	defer cleanupFn()
 	srv := tc.ApplicationLayer(0)
-	codec := keys.MakeSQLCodec(srv.RPCContext().TenantID)
+	codec := keys.MakeSQLCodec(srv.RPCContext().Tenant)
 	clusterID := srv.RPCContext().LogicalClusterID.Get()
 	backupTableDesc := desctestutils.TestingGetPublicTableDescriptor(srv.DB(), codec, "data", "bank")
 

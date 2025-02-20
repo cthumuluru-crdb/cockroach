@@ -107,7 +107,7 @@ func NewClientContext(ctx context.Context, cfg ClientConnConfig) (*Context, *sto
 		// that the TLS cert selection will not attempt to use
 		// a tenant server cert to connect to the remote server,
 		// and instead pick up a regular client cert.
-		TenantID: roachpb.SystemTenantID,
+		Tenant: roachpb.SystemTenantID,
 
 		Stopper:  stopper,
 		Settings: cfg.Settings,

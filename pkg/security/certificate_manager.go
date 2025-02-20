@@ -10,6 +10,7 @@ import (
 	"crypto/tls"
 	"strconv"
 
+	"github.com/cockroachdb/cockroach/pkg/roachpb"
 	"github.com/cockroachdb/cockroach/pkg/security/certnames"
 	"github.com/cockroachdb/cockroach/pkg/security/username"
 	"github.com/cockroachdb/cockroach/pkg/util/log"
@@ -43,8 +44,8 @@ import (
 //   - client.node.crt    client certificate for the 'node' user. If it does not exist,
 //     fall back on 'node.crt'.
 type CertificateManager struct {
-	tenantIdentifier uint64
-	timeSource       timeutil.TimeSource
+	tenant     roachpb.TenantIdentifier
+	timeSource timeutil.TimeSource
 	certnames.Locator
 
 	tlsSettings TLSSettings
@@ -95,10 +96,10 @@ func makeCertificateManager(
 	}
 
 	cm := &CertificateManager{
-		Locator:          certnames.MakeLocator(certsDir),
-		tenantIdentifier: o.tenantIdentifier,
-		timeSource:       o.timeSource,
-		tlsSettings:      tlsSettings,
+		Locator:     certnames.MakeLocator(certsDir),
+		tenant:      o.tenant,
+		timeSource:  o.timeSource,
+		tlsSettings: tlsSettings,
 	}
 	cm.certMetrics = createMetricsLocked(cm)
 	return cm
@@ -107,7 +108,7 @@ func makeCertificateManager(
 type cmOptions struct {
 	// tenantIdentifier, if set, specifies the tenant to use for loading tenant
 	// client certs.
-	tenantIdentifier uint64
+	tenant roachpb.TenantIdentifier
 
 	// timeSource, if set, specifies the time source with which the metrics are set.
 	timeSource timeutil.TimeSource
@@ -119,9 +120,9 @@ type Option func(*cmOptions)
 // ForTenant is an option to NewCertificateManager which ties the manager to
 // the provided tenant. Without this option, tenant client certs are not
 // available.
-func ForTenant(tenantIdentifier uint64) Option {
+func ForTenant(tenant roachpb.TenantIdentifier) Option {
 	return func(opts *cmOptions) {
-		opts.tenantIdentifier = tenantIdentifier
+		opts.tenant = tenant
 	}
 }
 
@@ -159,7 +160,7 @@ func NewCertificateManagerFirstRun(
 // IsForTenant returns true iff this certificate manager is handling certs
 // for a SQL-only server process.
 func (cm *CertificateManager) IsForTenant() bool {
-	return cm.tenantIdentifier != 0
+	return !cm.tenant.IsSystem()
 }
 
 // Metrics returns the metrics struct.
@@ -314,7 +315,7 @@ func (cm *CertificateManager) LoadCertificates() error {
 			if err != nil {
 				return errors.Errorf("invalid tenant id %s", ci.Name)
 			}
-			if tenantID == cm.tenantIdentifier {
+			if cm.tenant.IsEqual(roachpb.MustMakeTenantID(tenantID)) {
 				tenantCert = ci
 			}
 		case TenantSigningPem:
@@ -325,7 +326,7 @@ func (cm *CertificateManager) LoadCertificates() error {
 			if err != nil {
 				return errors.Errorf("invalid tenant id %s", ci.Name)
 			}
-			if tenantID == cm.tenantIdentifier {
+			if cm.tenant.IsEqual(roachpb.MustMakeTenantID(tenantID)) {
 				tenantSigningCert = ci
 			}
 		case TenantCAPem:
@@ -374,8 +375,8 @@ func (cm *CertificateManager) LoadCertificates() error {
 		}
 	}
 
-	if tenantCert == nil && cm.tenantIdentifier != 0 {
-		return makeErrorf(errors.New("tenant client cert not found"), "for %d in %s", cm.tenantIdentifier, cm.CertsDir())
+	if tenantCert == nil && cm.tenant.IsSet() {
+		return makeErrorf(errors.New("tenant client cert not found"), "for %v in %s", cm.tenant, cm.CertsDir())
 	}
 
 	if nodeClientCert == nil && nodeCert != nil {

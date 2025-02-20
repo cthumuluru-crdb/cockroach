@@ -25,9 +25,9 @@ import (
 // server, that is, it ensures that the request only accesses resources
 // available to the tenant.
 type tenantAuthorizer struct {
-	// tenantID is the tenant ID for the current node.
-	// Equals SystemTenantID when running a KV node.
-	tenantID roachpb.TenantID
+	// tenant is the tenant identifier for the current node.
+	// Equals SystemTenant when running a KV node.
+	tenant roachpb.TenantIdentifier
 	// capabilitiesAuthorizer is used to perform capability checks for incoming
 	// tenant requests. Capability checks are only performed when running on a KV
 	// node; the TenantRPCAuthorizer no-ops on secondary tenants.
@@ -283,9 +283,9 @@ func (a tenantAuthorizer) authGossipSubscription(
 // authTenant checks if the given tenantID matches the one the
 // authorizer was initialized with. This authorizer is used for
 // endpoints that should remain within a single tenant's pods.
-func (a tenantAuthorizer) authTenant(id roachpb.TenantID) error {
-	if a.tenantID != id {
-		return authErrorf("request from tenant %s not permitted on tenant %s", id, a.tenantID)
+func (a tenantAuthorizer) authTenant(id roachpb.TenantIdentifier) error {
+	if !a.tenant.IsEqual(id) {
+		return authErrorf("request from tenant %s not permitted on tenant %s", id, a.tenant)
 	}
 	return nil
 }

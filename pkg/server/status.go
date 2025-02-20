@@ -585,8 +585,8 @@ func newStatusServer(
 	knobs *TestingKnobs,
 ) *statusServer {
 	ambient.AddLogTag("status", nil)
-	if !rpcCtx.TenantID.IsSystem() {
-		ambient.AddLogTag("tenant", rpcCtx.TenantID)
+	if !rpcCtx.Tenant.IsSystem() {
+		ambient.AddLogTag("tenant", rpcCtx.Tenant)
 	}
 
 	server := &statusServer{
@@ -1361,8 +1361,8 @@ func (s *statusServer) LogFile(
 	// to view logs that pertain to their own tenant. Set the filter
 	// accordingly.
 	tenantIDFilter := ""
-	if s.rpcCtx.TenantID != roachpb.SystemTenantID {
-		tenantIDFilter = s.rpcCtx.TenantID.String()
+	if s.rpcCtx.Tenant != roachpb.SystemTenantID {
+		tenantIDFilter = s.rpcCtx.Tenant.String()
 	}
 	for {
 		var entry logpb.Entry
@@ -1495,8 +1495,8 @@ func (s *statusServer) Logs(
 	// to view logs that pertain to their own tenant. Set the filter
 	// accordingly.
 	tenantIDFilter := ""
-	if s.rpcCtx.TenantID != roachpb.SystemTenantID {
-		tenantIDFilter = s.rpcCtx.TenantID.String()
+	if s.rpcCtx.Tenant != roachpb.SystemTenantID {
+		tenantIDFilter = s.rpcCtx.Tenant.String()
 	}
 	for _, e := range entries {
 		if tenantIDFilter != "" && e.TenantID != tenantIDFilter {

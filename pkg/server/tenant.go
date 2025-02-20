@@ -290,27 +290,27 @@ func newTenantServer(
 	// We call it here as we need a valid tenant information below.
 	if sqlCfg.DelayedSetTenantName != nil || sqlCfg.DelayedSetTenantID != nil {
 		var cfgLocality roachpb.Locality
-    var err error
-    cfgTenantID, cfgTenantName := sqlCfg.TenantID, sqlCfg.TenantName
+		var err error
+		cfgTenantID, cfgTenantName := sqlCfg.TenantID, sqlCfg.TenantName
 
 		if sqlCfg.DelayedSetTenantName != nil {
-      cfgTenantName, cfgLocality, err = sqlCfg.DelayedSetTenantName(ctx)
+			cfgTenantName, cfgLocality, err = sqlCfg.DelayedSetTenantName(ctx)
 			if err != nil {
 				return nil, err
 			}
-	    log.Ops.Infof(ctx, "server starting for tenant %q", redact.Safe(sqlCfg.TenantName))
+			log.Ops.Infof(ctx, "server starting for tenant %q", redact.Safe(sqlCfg.TenantName))
 		} else if sqlCfg.DelayedSetTenantID != nil {
 			cfgTenantID, cfgLocality, err = sqlCfg.DelayedSetTenantID(ctx)
 			if err != nil {
 				return nil, err
 			}
-	    log.Ops.Infof(ctx, "server starting for tenant %q", redact.Safe(sqlCfg.TenantID))
+			log.Ops.Infof(ctx, "server starting for tenant %q", redact.Safe(sqlCfg.TenantID))
 		}
 
 		// We need to update sqlCfg and baseCfg here explicitly since copies
 		// were passed into newTenantServer instead of the original serverCfg
 		// object.
-    sqlCfg.TenantID = cfgTenantID
+		sqlCfg.TenantID = cfgTenantID
 		sqlCfg.TenantName = cfgTenantName
 		baseCfg.Locality = cfgLocality
 	}
@@ -843,7 +843,7 @@ func (s *SQLServerWrapper) PreStart(ctx context.Context) error {
 			db:               s.db,
 		}), /* apiServer */
 		serverpb.FeatureFlags{
-			CanViewKvMetricDashboards: s.rpcContext.TenantID.Equal(roachpb.SystemTenantID) ||
+			CanViewKvMetricDashboards: s.rpcContext.Tenant.Equal(roachpb.SystemTenantID) ||
 				s.sqlServer.serviceMode == mtinfopb.ServiceModeShared,
 			DisableKvLevelAdvancedDebug: true,
 		},
@@ -907,7 +907,7 @@ func (s *SQLServerWrapper) PreStart(ctx context.Context) error {
 			"server_id": fmt.Sprintf("%s-%s", clusterID.Short(), instanceID.String()),
 			// TODO(jaylim-crl): Consider using tenant names here in the future
 			// as well. See discussions in https://github.com/cockroachdb/cockroach/pull/128602.
-			"tenant_id": s.rpcContext.TenantID.String(),
+			"tenant_id": s.rpcContext.Tenant.String(),
 		})
 	})
 
@@ -1132,7 +1132,7 @@ func makeTenantSQLServerArgs(
 	}
 
 	rpcCtxOpts := rpc.ServerContextOptionsFromBaseConfig(baseCfg.Config)
-	rpcCtxOpts.TenantID = sqlCfg.TenantID
+	rpcCtxOpts.Tenant = sqlCfg.TenantID
 	rpcCtxOpts.UseNodeAuth = sqlCfg.LocalKVServerInfo != nil
 	rpcCtxOpts.NodeID = baseCfg.IDContainer
 	rpcCtxOpts.StorageClusterID = baseCfg.ClusterIDContainer
@@ -1265,7 +1265,7 @@ func makeTenantSQLServerArgs(
 		return sqlServerArgs{}, err
 	}
 
-	sTS := ts.MakeTenantServer(baseCfg.AmbientCtx, tenantConnect, rpcContext.TenantID, registry)
+	sTS := ts.MakeTenantServer(baseCfg.AmbientCtx, tenantConnect, rpcContext.Tenant, registry)
 
 	systemConfigWatcher := systemconfigwatcher.NewWithAdditionalProvider(
 		keys.MakeSQLCodec(sqlCfg.TenantID), clock, rangeFeedFactory, &baseCfg.DefaultZoneConfig,

@@ -323,7 +323,7 @@ func NewServer(cfg Config, stopper *stop.Stopper) (serverctl.ServerStartupInterf
 	authorizer := tenantcapabilitiesauthorizer.New(cfg.Settings, tenantCapabilitiesTestingKnobs)
 	rpcCtxOpts := rpc.ServerContextOptionsFromBaseConfig(cfg.BaseConfig.Config)
 
-	rpcCtxOpts.TenantID = roachpb.SystemTenantID
+	rpcCtxOpts.Tenant = roachpb.SystemTenantID
 	rpcCtxOpts.UseNodeAuth = true
 	rpcCtxOpts.NodeID = nodeIDContainer
 	rpcCtxOpts.StorageClusterID = cfg.ClusterIDContainer
@@ -908,7 +908,7 @@ func NewServer(cfg Config, stopper *stop.Stopper) (serverctl.ServerStartupInterf
 	systemTenantNameContainer := roachpb.NewTenantNameContainer(catconstants.SystemTenantName)
 
 	recorder := status.NewMetricsRecorder(
-		rpcContext.TenantID,
+		rpcContext.Tenant,
 		systemTenantNameContainer,
 		nodeLiveness,
 		rpcContext.RemoteClocks,
@@ -2049,7 +2049,7 @@ func (s *topLevelServer) PreStart(ctx context.Context) error {
 			db:               s.db,
 		}), /* apiServer */
 		serverpb.FeatureFlags{
-			CanViewKvMetricDashboards:   s.rpcContext.TenantID.Equal(roachpb.SystemTenantID),
+			CanViewKvMetricDashboards:   s.rpcContext.Tenant.Equal(roachpb.SystemTenantID),
 			DisableKvLevelAdvancedDebug: false,
 		},
 	); err != nil {

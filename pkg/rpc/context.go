@@ -147,7 +147,7 @@ func NewServerEx(
 		a := kvAuth{
 			sv: &rpcCtx.Settings.SV,
 			tenant: tenantAuthorizer{
-				tenantID:               rpcCtx.tenID,
+				tenant:                 rpcCtx.tenant,
 				capabilitiesAuthorizer: rpcCtx.capabilitiesAuthorizer,
 			},
 		}
@@ -300,9 +300,9 @@ func (c *Context) StoreLivenessWithdrawalGracePeriod() time.Duration {
 }
 
 // ContextOptions are passed to NewContext to set up a new *Context.
-// All pointer fields and TenantID are required.
+// All pointer fields and Tenant are required.
 type ContextOptions struct {
-	TenantID roachpb.TenantID
+	Tenant roachpb.TenantIdentifier
 
 	Clock                  hlc.WallClock
 	ToleratedOffset        time.Duration
@@ -398,7 +398,7 @@ type ContextOptions struct {
 func DefaultContextOptions() ContextOptions {
 	return ContextOptions{
 		SSLCertsDir:             certnames.EmbeddedCertsDir,
-		TenantID:                roachpb.SystemTenantID,
+		Tenant:                  roachpb.SystemTenantID,
 		User:                    username.NodeUserName(),
 		HistogramWindowInterval: base.DefaultHistogramWindowInterval(),
 		RPCHeartbeatInterval:    base.PingInterval,
@@ -429,7 +429,7 @@ func ServerContextOptionsFromBaseConfig(cfg *base.Config) ContextOptions {
 }
 
 func (c ContextOptions) validate() error {
-	if c.TenantID == (roachpb.TenantID{}) {
+	if c.Tenant == (roachpb.TenantID{}) {
 		return errors.New("must specify TenantID")
 	}
 	if c.Clock == nil {
@@ -494,7 +494,7 @@ func NewContext(ctx context.Context, opts ContextOptions) *Context {
 	}
 
 	if opts.LogicalClusterID == nil {
-		if opts.TenantID.IsSystem() {
+		if opts.Tenant.IsSystem() {
 			// We currently expose the storage cluster ID as logical
 			// cluster ID in the system tenant so that someone with
 			// access to the system tenant can extract the storage cluster ID
@@ -511,9 +511,7 @@ func NewContext(ctx context.Context, opts ContextOptions) *Context {
 			// TODO(knz): Move this logic out of RPCContext.
 			logicalClusterID := &base.ClusterIDContainer{}
 			hasher := fnv.New64a()
-			var b [8]byte
-			binary.BigEndian.PutUint64(b[:], opts.TenantID.ToUint64())
-			_, _ = hasher.Write(b[:])
+			_, _ = hasher.Write(opts.Tenant.Bytes())
 			hashedTenantID := hasher.Sum64()
 
 			prevOnSet := opts.StorageClusterID.OnSet
@@ -540,7 +538,7 @@ func NewContext(ctx context.Context, opts ContextOptions) *Context {
 			DisableTLSForHTTP: opts.DisableTLSForHTTP,
 		},
 		security.ClusterTLSSettings(opts.Settings),
-		opts.TenantID,
+		opts.Tenant,
 		opts.TenantRPCAuthorizer,
 	)
 	secCtx.useNodeAuth = opts.UseNodeAuth
@@ -557,7 +555,7 @@ func NewContext(ctx context.Context, opts ContextOptions) *Context {
 	rpcCtx.dialbackMu.m = map[roachpb.NodeID]*Connection{}
 	rpcCtx.dialbackMu.Unlock()
 
-	if !opts.TenantID.IsSet() {
+	if !opts.Tenant.IsSet() {
 		panic("tenant ID not set")
 	}
 
@@ -565,8 +563,8 @@ func NewContext(ctx context.Context, opts ContextOptions) *Context {
 		panic("client username not set")
 	}
 
-	if !opts.TenantID.IsSystem() {
-		rpcCtx.clientCreds = newTenantClientCreds(opts.TenantID)
+	if !opts.Tenant.IsSystem() {
+		rpcCtx.clientCreds = newTenantClientCreds(opts.Tenant)
 	}
 
 	if opts.Knobs.NoLoopbackDialer {
@@ -657,10 +655,10 @@ func (rpcCtx *Context) GetLocalInternalClientForAddr(
 type internalClientAdapter struct {
 	server kvpb.InternalServer
 
-	// clientTenantID is the tenant ID for the client (caller) side
+	// clientTenant is the tenant ID for the client (caller) side
 	// of the call. (The server/callee side is
 	// always the KV layer / system tenant.)
-	clientTenantID roachpb.TenantID
+	clientTenant roachpb.TenantIdentifier
 
 	// separateTracer indicates that the client (caller)
 	// and server (callee) sides use different tracers.
@@ -691,7 +689,7 @@ var _ RestrictedInternalClient = internalClientAdapter{}
 // use a child tracing span directly.
 func makeInternalClientAdapter(
 	server kvpb.InternalServer,
-	clientTenantID roachpb.TenantID,
+	clientTenant roachpb.TenantIdentifier,
 	separateTracers bool,
 	clientUnaryInterceptors []grpc.UnaryClientInterceptor,
 	clientStreamInterceptors []grpc.StreamClientInterceptor,
@@ -738,7 +736,7 @@ func makeInternalClientAdapter(
 
 	return internalClientAdapter{
 		server:                   server,
-		clientTenantID:           clientTenantID,
+		clientTenant:             clientTenant,
 		separateTracers:          separateTracers,
 		clientStreamInterceptors: clientStreamInterceptors,
 		serverStreamInterceptors: serverStreamInterceptors,
@@ -765,7 +763,7 @@ func makeInternalClientAdapter(
 			// ends up performing another RPC to the local node. The inner RPC must
 			// carry the identity of the system tenant, not the one of the client of
 			// the outer RPC.
-			ctx = grpcutil.NewLocalRequestContext(ctx, clientTenantID)
+			ctx = grpcutil.NewLocalRequestContext(ctx, clientTenant)
 
 			// Clear any leftover gRPC incoming metadata, if this call
 			// is originating from a RPC handler function called as
@@ -996,7 +994,7 @@ func (a internalClientAdapter) MuxRangeFeed(
 	// ends up performing another RPC to the local node. The inner RPC must
 	// carry the identity of the system tenant, not the one of the client of
 	// the outer RPC.
-	serverCtx = grpcutil.NewLocalRequestContext(serverCtx, a.clientTenantID)
+	serverCtx = grpcutil.NewLocalRequestContext(serverCtx, a.clientTenant)
 
 	// Clear any leftover gRPC incoming metadata, if this call
 	// is originating from a RPC handler function called as
@@ -1315,9 +1313,9 @@ func (rpcCtx *Context) SetLocalInternalServer(
 	serverInterceptors ServerInterceptorInfo,
 	clientInterceptors ClientInterceptorInfo,
 ) {
-	clientTenantID := rpcCtx.TenantID
+	clientTenant := rpcCtx.Tenant
 	separateTracers := false
-	if !clientTenantID.IsSystem() {
+	if !clientTenant.IsSystem() {
 		// This is a secondary tenant server in the same process as the KV
 		// layer (shared-process multitenancy). In this case, the caller
 		// and the callee use separate tracers, so we can't mix and match
@@ -1326,7 +1324,7 @@ func (rpcCtx *Context) SetLocalInternalServer(
 	}
 	rpcCtx.localInternalClient = makeInternalClientAdapter(
 		internalServer,
-		clientTenantID,
+		clientTenant,
 		separateTracers,
 		clientInterceptors.UnaryInterceptors,
 		clientInterceptors.StreamInterceptors,
@@ -1469,11 +1467,11 @@ func (rpcCtx *Context) GetClientTLSConfig() (*tls.Config, error) {
 		tlsCfg, err := cm.GetClientTLSConfig(rpcCtx.User)
 		return tlsCfg, wrapError(err)
 
-	case rpcCtx.UseNodeAuth || rpcCtx.tenID.IsSystem():
+	case rpcCtx.UseNodeAuth || rpcCtx.tenant.IsSystem():
 		tlsCfg, err := cm.GetNodeClientTLSConfig()
 		return tlsCfg, wrapError(err)
 
-	case !rpcCtx.tenID.IsSystem():
+	case !rpcCtx.tenant.IsSystem():
 		// A SQL server running in a standalone server doesn't have access
 		// to the node certs, and thus must use the standalone tenant
 		// client cert.

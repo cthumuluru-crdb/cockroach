@@ -1374,7 +1374,7 @@ func newSQLServer(ctx context.Context, cfg sqlServerArgs) (*SQLServer, error) {
 		cfg.Settings,
 		cfg.rpcContext.StorageClusterID.Get,
 		clusterIDForSQL.Get,
-		cfg.rpcContext.TenantID,
+		cfg.rpcContext.Tenant,
 		cfg.nodeIDContainer.SQLInstanceID,
 		pgServer.SQLServer,
 		cfg.circularInternalExecutor,

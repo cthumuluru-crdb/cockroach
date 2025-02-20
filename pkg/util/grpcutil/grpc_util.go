@@ -31,8 +31,8 @@ var localRequestKey = ctxutil.RegisterFastValueKey()
 // (in-process) RPC requests performed by the InternalClientAdapter. The ctx
 // carries information about what tenant (if any) is the client of the RPC. The
 // auth interceptor uses this information to authorize the tenant.
-func NewLocalRequestContext(ctx context.Context, tenantID roachpb.TenantID) context.Context {
-	return ctxutil.WithFastValue(ctx, localRequestKey, tenantID)
+func NewLocalRequestContext(ctx context.Context, tenant roachpb.TenantIdentifier) context.Context {
+	return ctxutil.WithFastValue(ctx, localRequestKey, tenant)
 }
 
 // IsLocalRequestContext returns true if this context is marked for local (in-process) use.
