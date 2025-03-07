@@ -43,8 +43,8 @@ import (
 //   - client.node.crt    client certificate for the 'node' user. If it does not exist,
 //     fall back on 'node.crt'.
 type CertificateManager struct {
-	tenantIdentifier uint64
-	timeSource       timeutil.TimeSource
+	tenantID   uint64
+	timeSource timeutil.TimeSource
 	certnames.Locator
 
 	tlsSettings TLSSettings
@@ -95,19 +95,19 @@ func makeCertificateManager(
 	}
 
 	cm := &CertificateManager{
-		Locator:          certnames.MakeLocator(certsDir),
-		tenantIdentifier: o.tenantIdentifier,
-		timeSource:       o.timeSource,
-		tlsSettings:      tlsSettings,
+		Locator:     certnames.MakeLocator(certsDir),
+		tenantID:    o.tenantID,
+		timeSource:  o.timeSource,
+		tlsSettings: tlsSettings,
 	}
 	cm.certMetrics = createMetricsLocked(cm)
 	return cm
 }
 
 type cmOptions struct {
-	// tenantIdentifier, if set, specifies the tenant to use for loading tenant
+	// tenantID, if set, specifies the tenant ID to use for loading tenant
 	// client certs.
-	tenantIdentifier uint64
+	tenantID uint64
 
 	// timeSource, if set, specifies the time source with which the metrics are set.
 	timeSource timeutil.TimeSource
@@ -116,12 +116,12 @@ type cmOptions struct {
 // Option is an option to NewCertificateManager.
 type Option func(*cmOptions)
 
-// ForTenant is an option to NewCertificateManager which ties the manager to
-// the provided tenant. Without this option, tenant client certs are not
+// ForTenantID is an option to NewCertificateManager which ties the manager to
+// the provided tenantID. Without this option, tenant client certs are not
 // available.
-func ForTenant(tenantIdentifier uint64) Option {
+func ForTenantID(tenantID uint64) Option {
 	return func(opts *cmOptions) {
-		opts.tenantIdentifier = tenantIdentifier
+		opts.tenantID = tenantID
 	}
 }
 
@@ -159,7 +159,7 @@ func NewCertificateManagerFirstRun(
 // IsForTenant returns true iff this certificate manager is handling certs
 // for a SQL-only server process.
 func (cm *CertificateManager) IsForTenant() bool {
-	return cm.tenantIdentifier != 0
+	return cm.tenantID != 0
 }
 
 // Metrics returns the metrics struct.
@@ -314,7 +314,7 @@ func (cm *CertificateManager) LoadCertificates() error {
 			if err != nil {
 				return errors.Errorf("invalid tenant id %s", ci.Name)
 			}
-			if tenantID == cm.tenantIdentifier {
+			if tenantID == cm.tenantID {
 				tenantCert = ci
 			}
 		case TenantSigningPem:
@@ -325,7 +325,7 @@ func (cm *CertificateManager) LoadCertificates() error {
 			if err != nil {
 				return errors.Errorf("invalid tenant id %s", ci.Name)
 			}
-			if tenantID == cm.tenantIdentifier {
+			if tenantID == cm.tenantID {
 				tenantSigningCert = ci
 			}
 		case TenantCAPem:
@@ -374,8 +374,8 @@ func (cm *CertificateManager) LoadCertificates() error {
 		}
 	}
 
-	if tenantCert == nil && cm.tenantIdentifier != 0 {
-		return makeErrorf(errors.New("tenant client cert not found"), "for %d in %s", cm.tenantIdentifier, cm.CertsDir())
+	if tenantCert == nil && cm.tenantID != 0 {
+		return makeErrorf(errors.New("tenant client cert not found"), "for %d in %s", cm.tenantID, cm.CertsDir())
 	}
 
 	if nodeClientCert == nil && nodeCert != nil {

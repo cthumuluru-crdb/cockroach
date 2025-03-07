@@ -66,7 +66,7 @@ func TestMetricsValues(t *testing.T) {
 		certsDir,
 		security.CommandTLSSettings{},
 		security.WithTimeSource(timeutil.NewManualTime(now)),
-		security.ForTenant(1),
+		security.ForTenantID(1),
 	)
 	if err != nil {
 		t.Error(err)
@@ -126,7 +126,7 @@ func TestCertificateReload(t *testing.T) {
 		certsDir,
 		security.CommandTLSSettings{},
 		security.WithTimeSource(timeutil.NewManualTime(now)),
-		security.ForTenant(1),
+		security.ForTenantID(1),
 	)
 	if err != nil {
 		t.Error(err)

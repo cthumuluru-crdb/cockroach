@@ -108,7 +108,7 @@ func testTenantCertificatesInner(t *testing.T, embedded bool) {
 
 	// Make a new CertificateManager for the tenant. We could've used this one
 	// for the server as well, but this way it's closer to reality.
-	cm, err = security.NewCertificateManager(certsDir, security.CommandTLSSettings{}, security.ForTenant(tenant))
+	cm, err = security.NewCertificateManager(certsDir, security.CommandTLSSettings{}, security.ForTenantID(tenant))
 	require.NoError(t, err)
 
 	// The client in turn trusts the server CA and presents its tenant certs to the
