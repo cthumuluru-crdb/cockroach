@@ -477,6 +477,14 @@ type tenantClientCred struct {
 // use roachpb.ClientTenantFromContext() instead.
 const clientTIDMetadataHeaderKey = "client-tid"
 
+// clientTenantNameMetadataHeaderKey is the gRPC metadata key that indicates
+// which tenant name the client is intending to connect as (originating tenant
+// identity).
+//
+// This metadata item is meant to be used by tenant name resolver to resolve
+// tenant name to a tenant ID if tenant name is valid.
+const clientTenantNameMetadataHeaderKey = "client-tname"
+
 // newTenantClientCreds constructs a credentials.PerRPCCredentials
 // which injects the client tenant ID as extra gRPC metadata in each
 // RPC.
@@ -484,6 +492,17 @@ func newTenantClientCreds(tid roachpb.TenantID) credentials.PerRPCCredentials {
 	return &tenantClientCred{
 		md: map[string]string{
 			clientTIDMetadataHeaderKey: fmt.Sprint(tid),
+		},
+	}
+}
+
+// newTenantClientCreds constructs a credentials.PerRPCCredentials
+// which injects the client tenant name as extra gRPC metadata in each
+// RPC.
+func newTenantNameClientCreds(tname roachpb.TenantName) credentials.PerRPCCredentials {
+	return &tenantClientCred{
+		md: map[string]string{
+			clientTenantNameMetadataHeaderKey: string(tname),
 		},
 	}
 }
@@ -496,6 +515,18 @@ func tenantIDFromRPCMetadata(ctx context.Context) (roachpb.TenantID, error) {
 		return roachpb.TenantID{}, nil
 	}
 	return tenantIDFromString(val, "gRPC metadata")
+}
+
+func TenantNameFromRPCMetadata(ctx context.Context) (roachpb.TenantName, error) {
+	val, ok := grpcutil.FastFirstValueFromIncomingContext(ctx, clientTenantNameMetadataHeaderKey)
+	if !ok {
+		return roachpb.TenantName(""), nil
+	}
+	tenantName := roachpb.TenantName(val)
+	if err := tenantName.IsValid(); err != nil {
+		return roachpb.TenantName(""), err
+	}
+	return tenantName, nil
 }
 
 // GetRequestMetadata implements the (grpc)

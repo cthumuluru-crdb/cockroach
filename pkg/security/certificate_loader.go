@@ -196,7 +196,7 @@ func CertInfoFromFilename(filename string) (*CertInfo, error) {
 		name = strings.Join(parts[1:numParts-1], `.`)
 		if len(name) == 0 {
 			return nil, errors.Errorf("tenant certificate filename should match %s",
-				certnames.TenantCertFilename("<tenantid>"))
+				certnames.TenantCertFilename("<tenantidentifier>"))
 		}
 	case `tenant-signing`:
 		fileUsage = TenantSigningPem

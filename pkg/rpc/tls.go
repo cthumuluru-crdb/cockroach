@@ -77,6 +77,7 @@ type SecurityContext struct {
 	security.TLSSettings
 	config                 SecurityContextOptions
 	tenID                  roachpb.TenantID
+	tenantName             roachpb.TenantName
 	capabilitiesAuthorizer tenantcapabilities.Authorizer
 	lazy                   struct {
 		// The certificate manager. Must be accessed through GetCertificateManager.
@@ -94,6 +95,7 @@ func NewSecurityContext(
 	cfg SecurityContextOptions,
 	tlsSettings security.TLSSettings,
 	tenID roachpb.TenantID,
+	tenantName roachpb.TenantName,
 	capabilitiesAuthorizer tenantcapabilities.Authorizer,
 ) *SecurityContext {
 	if tenID.ToUint64() == 0 {
@@ -104,6 +106,7 @@ func NewSecurityContext(
 		TLSSettings:            tlsSettings,
 		config:                 cfg,
 		tenID:                  tenID,
+		tenantName:             tenantName,
 		capabilitiesAuthorizer: capabilitiesAuthorizer,
 	}
 }
@@ -114,8 +117,12 @@ func NewSecurityContext(
 func (ctx *SecurityContext) GetCertificateManager() (*security.CertificateManager, error) {
 	ctx.lazy.certificateManager.Do(func() {
 		var opts []security.Option
-		if !(ctx.useNodeAuth || ctx.tenID == roachpb.SystemTenantID) {
-			opts = append(opts, security.ForTenantID(ctx.tenID.ToUint64()))
+		if !(ctx.useNodeAuth || ctx.tenID == roachpb.SystemTenantID || ctx.tenantName == roachpb.TenantName(roachpb.SystemTenantID.String())) {
+			if ctx.tenID.IsSet() {
+				opts = append(opts, security.ForTenantID(ctx.tenID.ToUint64()))
+			} else {
+				opts = append(opts, security.ForTenantName(string(ctx.tenantName)))
+			}
 		}
 		ctx.lazy.certificateManager.cm, ctx.lazy.certificateManager.err =
 			security.NewCertificateManager(ctx.config.SSLCertsDir, ctx, opts...)

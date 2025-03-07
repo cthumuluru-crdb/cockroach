@@ -3950,6 +3950,9 @@ func (s *adminServer) ResolveTenantName(
 	if err != nil {
 		return nil, err
 	}
+	if err := tenantName.IsValid(); err != nil {
+		return nil, errors.AssertionFailedf("tenant name [%s] invalid", tenantName)
+	}
 
 	row, err := s.internalExecutor.QueryRow(ctx,
 		"get-tenant-info",
