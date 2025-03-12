@@ -164,7 +164,8 @@ func (a tenantAuthorizer) authorize(
 		"/cockroach.blobs.Blob/PutStream":
 		return a.capabilitiesAuthorizer.HasNodelocalStorageCapability(ctx, tenID)
 
-	case "/cockroach.server.serverpb.Admin/ReadFromTenantInfo":
+	case "/cockroach.server.serverpb.Admin/GetTenantInfo",
+		"/cockroach.server.serverpb.Admin/ReadFromTenantInfo":
 		// NB: we don't check anything here as every tenant, even those who do not
 		// have HasCrossTenantRead, will call this even if only to learn that they
 		// are not a reader tenant.

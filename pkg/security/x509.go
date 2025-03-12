@@ -196,7 +196,7 @@ func GenerateUIServerCert(
 
 // GenerateTenantCert generates a tenant client certificate and returns the cert bytes.
 // Takes in the CA cert and private key, the tenant client public key, the certificate lifetime,
-// and the tenant id.
+// and the tenant id or tenant name.
 //
 // Tenant client certificates add OU=Tenants in the subject field to prevent
 // using them as user certificates.
@@ -205,16 +205,15 @@ func GenerateTenantCert(
 	caPrivateKey crypto.PrivateKey,
 	clientPublicKey crypto.PublicKey,
 	lifetime time.Duration,
-	tenantID uint64,
+	tenantIdentity roachpb.TenantIdentity,
 	hosts []string,
 ) ([]byte, error) {
-
-	if tenantID == 0 {
-		return nil, errors.Errorf("tenantId %d is invalid (requires != 0)", tenantID)
+	if err := tenantIdentity.IsValid(); err != nil {
+		return nil, errors.Errorf("tenant identity %v is invalid ", tenantIdentity)
 	}
 
 	// Create template for user.
-	template, err := newTemplate(fmt.Sprintf("%d", tenantID), lifetime, TenantsOU)
+	template, err := newTemplate(tenantIdentity.String(), lifetime, TenantsOU)
 	if err != nil {
 		return nil, err
 	}

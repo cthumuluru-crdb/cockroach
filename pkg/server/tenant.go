@@ -8,6 +8,7 @@ package server
 import (
 	"context"
 	"fmt"
+	"math/rand"
 	"net"
 	"net/http"
 	"os"
@@ -79,6 +80,7 @@ import (
 	"github.com/cockroachdb/logtags"
 	"github.com/cockroachdb/redact"
 	sentry "github.com/getsentry/sentry-go"
+	"google.golang.org/grpc"
 )
 
 // SQLServerWrapper is a utility struct that encapsulates
@@ -284,21 +286,37 @@ func newTenantServer(
 		baseCfg.SQLAddrListener = sqlAddrListener
 	}
 
-	// The setting of tenant id may have not been done until now. If this is the
-	// case, DelayedSetTenantID will be set and should be used to populate
-	// TenantID in the config. We call it here as we need a valid TenantID below.
-	if sqlCfg.DelayedSetTenantID != nil {
-		cfgTenantID, cfgLocality, err := sqlCfg.DelayedSetTenantID(ctx)
-		if err != nil {
-			return nil, err
+	// The setting of tenant id or tenant name may have not been done until now.
+	// If this is the case, DelayedSetTenantID or DelayedSetTenantName will be
+	// set and should be used to populate TenantID or TenantName in the config.
+	// We call it here as we need a valid tenant information below.
+	if sqlCfg.DelayedSetTenantName != nil || sqlCfg.DelayedSetTenantID != nil {
+		var cfgLocality roachpb.Locality
+		var err error
+		cfgTenantID, cfgTenantName := sqlCfg.TenantID, sqlCfg.TenantName
+
+		if sqlCfg.DelayedSetTenantName != nil {
+			cfgTenantName, cfgLocality, err = sqlCfg.DelayedSetTenantName(ctx)
+			if err != nil {
+				return nil, err
+			}
+			log.Ops.Infof(ctx, "server starting for tenant %q", redact.Safe(sqlCfg.TenantName))
+		} else if sqlCfg.DelayedSetTenantID != nil {
+			cfgTenantID, cfgLocality, err = sqlCfg.DelayedSetTenantID(ctx)
+			if err != nil {
+				return nil, err
+			}
+			log.Ops.Infof(ctx, "server starting for tenant %q", redact.Safe(sqlCfg.TenantID))
 		}
+
 		// We need to update sqlCfg and baseCfg here explicitly since copies
 		// were passed into newTenantServer instead of the original serverCfg
 		// object.
 		sqlCfg.TenantID = cfgTenantID
+		sqlCfg.TenantName = cfgTenantName
 		baseCfg.Locality = cfgLocality
 	}
-	log.Ops.Infof(ctx, "server starting for tenant %q", redact.Safe(sqlCfg.TenantID))
+
 	// Inform the server identity provider that we're operating
 	// for a tenant server.
 	//
@@ -1127,6 +1145,44 @@ func makeTenantSQLServerArgs(
 	// RPCs; so it should refuse to serve SQL-to-KV RPCs completely.
 	rpcCtxOpts.TenantRPCAuthorizer = tenantcapabilitiesauthorizer.NewAllowNothingAuthorizer()
 	rpcCtxOpts.Locality = baseCfg.Locality
+
+	// In shared mode, we already have both tenant ID and tenant name. But in case of external
+	// mode, we have to resolve the tenant name to tenant ID. Resolve tenant name to tenant ID
+	// in case of external mode if required.
+	if len(sqlCfg.TenantKVAddrs) > 0 && sqlCfg.TenantName != "" {
+		// Create single use rpc context for resolving tenant name.
+		rpcContext := rpc.NewSingleUseContext(startupCtx, rpcCtxOpts, sqlCfg.TenantName)
+
+		// Randomly pick one of the KV addresses to resolve the tenant name.
+		addr := sqlCfg.TenantKVAddrs[rand.Intn(len(sqlCfg.TenantKVAddrs))]
+		dialOpts, err := rpcContext.GRPCDialOptions(startupCtx, addr, rpc.DefaultClass)
+		if err != nil {
+			return sqlServerArgs{}, err
+		}
+		conn, err := grpc.DialContext(startupCtx, addr, dialOpts...)
+		if err != nil {
+			return sqlServerArgs{}, err
+		}
+		defer func() {
+			_ = conn.Close() // nolint:grpcconnclose
+		}()
+
+		adminClient := serverpb.NewAdminClient(conn)
+		res, err := adminClient.ResolveTenantName(startupCtx, &serverpb.ResolveTenantNameRequest{})
+		if err != nil {
+			return sqlServerArgs{}, err
+		}
+		if !res.TenantId.IsSet() {
+			return sqlServerArgs{}, fmt.Errorf("failed to resolve tenant name [%s]", redact.Safe(sqlCfg.TenantName))
+		}
+
+		sqlCfg.TenantID = *res.TenantId
+		rpcContext.TenantID = *res.TenantId
+
+		// Inform the server identity provider that we're operating for a tenant server.
+		baseCfg.idProvider.SetTenantID(sqlCfg.TenantID)
+		baseCfg.idProvider.SetTenantName(sqlCfg.TenantName)
+	}
 
 	rpcContext := rpc.NewContext(startupCtx, rpcCtxOpts)
 

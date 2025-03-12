@@ -255,6 +255,9 @@ var certCtx struct {
 	// disableUsernameValidation removes the username syntax check on
 	// the input.
 	disableUsernameValidation bool
+	// tenantNameIdentifier is used to consider the tenant name as the tenant
+	// identifier, instead of the default tenant ID.
+	tenantNameIdentifier bool
 }
 
 func setCertContextDefaults() {

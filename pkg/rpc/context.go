@@ -453,6 +453,40 @@ func (c ContextOptions) validate() error {
 	return nil
 }
 
+func NewSingleUseContext(ctx context.Context, opts ContextOptions, tenantName roachpb.TenantName) *Context {
+	masterCtx, _ := opts.Stopper.WithCancelOnQuiesce(ctx)
+
+	secCtx := NewSecurityContext(
+		SecurityContextOptions{
+			SSLCertsDir:       opts.SSLCertsDir,
+			Insecure:          opts.Insecure,
+			AdvertiseAddrH:    opts.AdvertiseAddrH,
+			SQLAdvertiseAddrH: opts.SQLAdvertiseAddrH,
+			DisableTLSForHTTP: opts.DisableTLSForHTTP,
+		},
+		security.ClusterTLSSettings(opts.Settings),
+		roachpb.TenantID{},
+		tenantName,
+		nil, /* tenant authorizer */
+	)
+	secCtx.useNodeAuth = opts.UseNodeAuth
+
+	rpcCtx := &Context{
+		ContextOptions:  opts,
+		SecurityContext: secCtx,
+		rpcCompression:  enableRPCCompression,
+		MasterCtx:       masterCtx,
+		metrics:         newMetrics(opts.Locality),
+	}
+
+	if opts.ClientOnly && opts.User.Undefined() {
+		panic("client username not set")
+	}
+	rpcCtx.clientCreds = newTenantNameClientCreds(tenantName)
+
+	return rpcCtx
+}
+
 // NewContext creates an rpc.Context with the supplied values.
 func NewContext(ctx context.Context, opts ContextOptions) *Context {
 	if err := opts.validate(); err != nil {
@@ -542,6 +576,7 @@ func NewContext(ctx context.Context, opts ContextOptions) *Context {
 		},
 		security.ClusterTLSSettings(opts.Settings),
 		opts.TenantID,
+		"",
 		opts.TenantRPCAuthorizer,
 	)
 	secCtx.useNodeAuth = opts.UseNodeAuth

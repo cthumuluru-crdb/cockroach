@@ -42,7 +42,7 @@ func makeTenantCerts(t *testing.T, tenant uint64) (certsDir string) {
 
 	// That dedicated service can make client certs for a tenant as follows:
 	tenantCerts, err := security.CreateTenantPair(
-		certsDir, tenantCAKey, testKeySize, 48*time.Hour, tenant, []string{"127.0.0.1"},
+		certsDir, tenantCAKey, testKeySize, 48*time.Hour, tenant, "", []string{"127.0.0.1"},
 	)
 	require.NoError(t, err)
 	// We write the certs to disk, though in production this would not necessarily
@@ -108,7 +108,7 @@ func testTenantCertificatesInner(t *testing.T, embedded bool) {
 
 	// Make a new CertificateManager for the tenant. We could've used this one
 	// for the server as well, but this way it's closer to reality.
-	cm, err = security.NewCertificateManager(certsDir, security.CommandTLSSettings{}, security.ForTenant(tenant))
+	cm, err = security.NewCertificateManager(certsDir, security.CommandTLSSettings{}, security.ForTenantID(tenant))
 	require.NoError(t, err)
 
 	// The client in turn trusts the server CA and presents its tenant certs to the

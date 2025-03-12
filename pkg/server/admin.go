@@ -3942,6 +3942,45 @@ func (s *adminServer) SetTraceRecordingType(
 	return &serverpb.SetTraceRecordingTypeResponse{}, nil
 }
 
+func (s *adminServer) ResolveTenantName(
+	ctx context.Context, req *serverpb.ResolveTenantNameRequest,
+) (*serverpb.ResolveTenantNameResponse, error) {
+	ctx = s.AnnotateCtx(ctx)
+	tenantName, err := rpc.TenantNameFromRPCMetadata(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if err := tenantName.IsValid(); err != nil {
+		return nil, errors.AssertionFailedf("tenant name [%s] invalid", tenantName)
+	}
+
+	row, err := s.internalExecutor.QueryRow(ctx,
+		"get-tenant-info",
+		nil, /* txn */
+		"SELECT id FROM system.tenants WHERE data_state = $1 AND name = $2",
+		mtinfopb.DataStateReady,
+		tenantName)
+	if err != nil {
+		return nil, err
+	}
+	if len(row) == 0 {
+		return &serverpb.ResolveTenantNameResponse{
+			TenantId: &roachpb.TenantID{},
+		}, nil
+	}
+
+	tenantID, ok := tree.AsDInt(row[0])
+	if !ok {
+		return nil, errors.AssertionFailedf("expected tenant ID to be an int, got %T", row[0])
+	}
+
+	return &serverpb.ResolveTenantNameResponse{
+		TenantId: &roachpb.TenantID{
+			InternalValue: uint64(tenantID),
+		},
+	}, nil
+}
+
 // ListTenants returns a list of tenants that are served
 // by shared-process services in this server.
 func (s *systemAdminServer) ListTenants(

@@ -452,7 +452,7 @@ func CreateTenantPair(
 	certsDir, caKeyPath string,
 	keySize int,
 	lifetime time.Duration,
-	tenantIdentifier uint64,
+	tenantIdentity roachpb.TenantIdentity,
 	hosts []string,
 ) (*TenantPair, error) {
 	if len(caKeyPath) == 0 {
@@ -488,7 +488,7 @@ func CreateTenantPair(
 	}
 
 	clientCert, err := GenerateTenantCert(
-		caCert, caPrivateKey, clientKey.Public(), lifetime, tenantIdentifier, hosts,
+		caCert, caPrivateKey, clientKey.Public(), lifetime, tenantIdentity, hosts,
 	)
 	if err != nil {
 		return nil, errors.Wrap(err, "error creating tenant certificate and key")

@@ -223,3 +223,41 @@ func (c *TenantNameContainer) Get() TenantName {
 func (c *TenantNameContainer) String() string {
 	return (*syncutil.AtomicString)(c).Get()
 }
+
+type TenantIdentity interface {
+	IsSet() bool
+	IsValid() error
+	IsSystem() bool
+	IsEqual(o TenantIdentity) bool
+	String() string
+}
+
+func (t TenantID) IsValid() error {
+	if t.InternalValue < MinTenantID.ToUint64() || t.InternalValue > MaxTenantID.ToUint64() {
+		return errors.Newf("invalid tenant ID %d", t.InternalValue)
+	}
+	return nil
+}
+
+func (t TenantID) IsEqual(o TenantIdentity) bool {
+	return t.Equal(o)
+}
+
+func (t TenantName) IsSet() bool {
+	return t.IsValid() == nil
+}
+
+func (t TenantName) IsSystem() bool {
+	return IsSystemTenantName(t)
+}
+
+func (t TenantName) IsEqual(o TenantIdentity) bool {
+	return t.Equal(o.(TenantName))
+}
+
+func (t TenantName) String() string {
+	return string(t)
+}
+
+var _ TenantIdentity = &TenantID{}
+var _ TenantIdentity = TenantName("")

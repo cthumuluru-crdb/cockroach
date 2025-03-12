@@ -10,6 +10,7 @@ import (
 	"strconv"
 
 	"github.com/cockroachdb/cockroach/pkg/cli/clierrorplus"
+	"github.com/cockroachdb/cockroach/pkg/roachpb"
 	"github.com/cockroachdb/cockroach/pkg/security"
 	"github.com/cockroachdb/errors"
 	"github.com/spf13/cobra"
@@ -61,7 +62,7 @@ If no server addresses are passed, then a default list containing 127.0.0.1, ::1
 	Args: cobra.MinimumNArgs(1),
 	RunE: clierrorplus.MaybeDecorateError(
 		func(cmd *cobra.Command, args []string) error {
-			tenantIDs := args[0]
+			tenantIdentifier := args[0]
 
 			var hostAddrs []string
 			if len(args) > 1 {
@@ -83,16 +84,29 @@ If no server addresses are passed, then a default list containing 127.0.0.1, ::1
 				fmt.Fprintf(stderr, "Warning: no server address specified. Using %+v.\n", hostAddrs)
 			}
 
-			tenantID, err := strconv.ParseUint(tenantIDs, 10, 64)
-			if err != nil {
-				return errors.Wrapf(err, "%s is invalid uint64", tenantIDs)
+			var tenantIdentity roachpb.TenantIdentity
+			if !certCtx.tenantNameIdentifier {
+				tenantID, err := strconv.ParseUint(tenantIdentifier, 10, 64)
+				if err != nil {
+					return errors.Wrapf(err, "%s is invalid uint64", tenantIdentifier)
+				}
+				tenantIdentity, err = roachpb.MakeTenantID(tenantID)
+				if err != nil {
+					return errors.Wrapf(err, "%s is invalid tenant ID", tenantIdentifier)
+				}
+			} else {
+				tenantIdentifier := roachpb.TenantName(tenantIdentifier)
+				if err := tenantIdentifier.IsValid(); err != nil {
+					return errors.Wrapf(err, "%s is invalid tenant name", tenantIdentifier)
+				}
 			}
+
 			cp, err := security.CreateTenantPair(
 				certCtx.certsDir,
 				certCtx.caKey,
 				certCtx.keySize,
 				certCtx.certificateLifetime,
-				tenantID,
+				tenantIdentity,
 				hostAddrs,
 			)
 			if err != nil {

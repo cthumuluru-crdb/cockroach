@@ -1309,9 +1309,18 @@ service Admin {
     };
   }
 
+  // ResolveTenantName resolves tenant name to a tenant ID if it is valid and in active.
+  rpc ResolveTenantName(ResolveTenantNameRequest) returns (ResolveTenantNameResponse) {}
+
   // ReadFromTenantInfo returns the tenant from which the requesting tenant
   // should read, if any.
   rpc ReadFromTenantInfo(ReadFromTenantInfoRequest) returns (ReadFromTenantInfoResponse) {}
+}
+
+message ResolveTenantNameRequest {}
+
+message ResolveTenantNameResponse {
+  roachpb.TenantID tenant_id = 1;
 }
 
 message ListTenantsRequest{}

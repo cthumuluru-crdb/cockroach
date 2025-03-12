@@ -273,28 +273,46 @@ func (a kvAuth) authenticateNetworkRequest(ctx context.Context) (authnResult, er
 		return nil, err
 	}
 
-	tenantIDFromMetadata, err := tenantIDFromRPCMetadata(ctx)
-	if err != nil {
-		return nil, authErrorf("client provided invalid tenant ID: %v", err)
-	}
+	tenantFromMetadata, tenantType := tenantFromRPCMetadata(ctx)
 
 	// Did the client peer use a tenant client cert?
 	if security.IsTenantCertificate(clientCert) {
 		// If the peer is using a client tenant cert, in any case we
-		// validate the tenant ID stored in the CN for correctness.
-		tlsID, err := tenantIDFromString(clientCert.Subject.CommonName, "Common Name (CN)")
-		if err != nil {
-			return nil, err
+		// validate the tenant identity stored in the CN for correctness.
+		switch tenantType {
+		case tenantID:
+			tlsID, err := tenantIDFromString(clientCert.Subject.CommonName, "Common Name (CN)")
+			if err != nil {
+				return nil, err
+			}
+			tenantID, err := tenantIDFromString(tenantFromMetadata, "gRPC metadata")
+			if err != nil {
+				return nil, err
+			}
+			// If the peer is using a TenantCertificate and also
+			// provided a tenant ID via gRPC metadata, they must
+			// match.
+			if tenantID.IsSet() && tenantID != tlsID {
+				return nil, authErrorf(
+					"client wants to authenticate as tenant %v, but is using TLS cert for tenant %v",
+					tenantID, tlsID)
+			}
+		case tenantName:
+			tname := roachpb.TenantName(tenantFromMetadata)
+			if err := tname.IsValid(); err != nil {
+				return nil, authErrorf("invalid tenant name %v: %v", tname, err)
+			}
+
+			// If the peer is using a TenantCertificate and also provided a
+			// tenant name via gRPC metadata, they must match.
+			if string(tname) != clientCert.Subject.CommonName {
+				return nil, authErrorf(
+					"client wants to authenticate as tenant %v, but is using TLS cert for tenant %v",
+					tname, clientCert.Subject.CommonName)
+			}
 		}
-		// If the peer is using a TenantCertificate and also
-		// provided a tenant ID via gRPC metadata, they must
-		// match.
-		if tenantIDFromMetadata.IsSet() && tenantIDFromMetadata != tlsID {
-			return nil, authErrorf(
-				"client wants to authenticate as tenant %v, but is using TLS cert for tenant %v",
-				tenantIDFromMetadata, tlsID)
-		}
-		return authnSuccessPeerIsTenantServer(tlsID), nil
+
+		return authnSuccessPeerIsTenantServer(roachpb.TenantID{}), nil
 	}
 
 	// We are using TLS, but the peer is not using a client tenant cert.
@@ -329,8 +347,8 @@ func (a kvAuth) authenticateNetworkRequest(ctx context.Context) (authnResult, er
 		}
 	}
 
-	if tenantIDFromMetadata.IsSet() {
-		return authnSuccessPeerIsTenantServer(tenantIDFromMetadata), nil
+	if tenantType != tenantIdentifierMissing {
+		return authnSuccessPeerIsTenantServer(roachpb.TenantID{}), nil
 	}
 	return authnSuccessPeerIsPrivileged{}, nil
 }
@@ -477,6 +495,14 @@ type tenantClientCred struct {
 // use roachpb.ClientTenantFromContext() instead.
 const clientTIDMetadataHeaderKey = "client-tid"
 
+// clientTenantNameMetadataHeaderKey is the gRPC metadata key that indicates
+// which tenant name the client is intending to connect as (originating tenant
+// identity).
+//
+// This metadata item is meant to be used by tenant name resolver to resolve
+// tenant name to a tenant ID if tenant name is valid.
+const clientTenantNameMetadataHeaderKey = "client-tname"
+
 // newTenantClientCreds constructs a credentials.PerRPCCredentials
 // which injects the client tenant ID as extra gRPC metadata in each
 // RPC.
@@ -484,6 +510,17 @@ func newTenantClientCreds(tid roachpb.TenantID) credentials.PerRPCCredentials {
 	return &tenantClientCred{
 		md: map[string]string{
 			clientTIDMetadataHeaderKey: fmt.Sprint(tid),
+		},
+	}
+}
+
+// newTenantClientCreds constructs a credentials.PerRPCCredentials
+// which injects the client tenant name as extra gRPC metadata in each
+// RPC.
+func newTenantNameClientCreds(tname roachpb.TenantName) credentials.PerRPCCredentials {
+	return &tenantClientCred{
+		md: map[string]string{
+			clientTenantNameMetadataHeaderKey: string(tname),
 		},
 	}
 }
@@ -496,6 +533,40 @@ func tenantIDFromRPCMetadata(ctx context.Context) (roachpb.TenantID, error) {
 		return roachpb.TenantID{}, nil
 	}
 	return tenantIDFromString(val, "gRPC metadata")
+}
+
+type tenantIdentityType int
+
+const (
+	tenantIdentifierMissing tenantIdentityType = iota
+	tenantName
+	tenantID
+)
+
+// tenantFromRPCMetadata checks if there is a tenant ID or tenantName in the
+// incoming gRPC metadata.
+func tenantFromRPCMetadata(ctx context.Context) (string, tenantIdentityType) {
+	val, ok := grpcutil.FastFirstValueFromIncomingContext(ctx, clientTIDMetadataHeaderKey)
+	if ok {
+		return val, tenantID
+	}
+	val, ok = grpcutil.FastFirstValueFromIncomingContext(ctx, clientTenantNameMetadataHeaderKey)
+	if ok {
+		return val, tenantName
+	}
+	return "", tenantIdentifierMissing
+}
+
+func TenantNameFromRPCMetadata(ctx context.Context) (roachpb.TenantName, error) {
+	val, ok := grpcutil.FastFirstValueFromIncomingContext(ctx, clientTenantNameMetadataHeaderKey)
+	if !ok {
+		return roachpb.TenantName(""), nil
+	}
+	tenantName := roachpb.TenantName(val)
+	if err := tenantName.IsValid(); err != nil {
+		return roachpb.TenantName(""), err
+	}
+	return tenantName, nil
 }
 
 // GetRequestMetadata implements the (grpc)
