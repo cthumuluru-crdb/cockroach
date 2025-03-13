@@ -43,6 +43,7 @@ import (
 //   - client.node.crt    client certificate for the 'node' user. If it does not exist,
 //     fall back on 'node.crt'.
 type CertificateManager struct {
+	// tenantIdentity is the tenant identifier this certificate manager is tied to.
 	tenantIdentity roachpb.TenantIdentity
 	timeSource     timeutil.TimeSource
 	certnames.Locator

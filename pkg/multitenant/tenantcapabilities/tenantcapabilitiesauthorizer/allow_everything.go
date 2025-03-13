@@ -26,14 +26,14 @@ func NewAllowEverythingAuthorizer() *AllowEverythingAuthorizer {
 
 // HasCrossTenantRead returns true if a tenant can read from other tenants.
 func (n *AllowEverythingAuthorizer) HasCrossTenantRead(
-	ctx context.Context, tenID roachpb.TenantID,
+	ctx context.Context, tenID roachpb.TenantIdentity,
 ) bool {
 	return true
 }
 
 // HasCapabilityForBatch implements the tenantcapabilities.Authorizer interface.
 func (n *AllowEverythingAuthorizer) HasCapabilityForBatch(
-	context.Context, roachpb.TenantID, *kvpb.BatchRequest,
+	context.Context, roachpb.TenantIdentity, *kvpb.BatchRequest,
 ) error {
 	return nil
 }
@@ -43,42 +43,42 @@ func (n *AllowEverythingAuthorizer) BindReader(tenantcapabilities.Reader) {}
 
 // HasNodeStatusCapability implements the tenantcapabilities.Authorizer interface.
 func (n *AllowEverythingAuthorizer) HasNodeStatusCapability(
-	ctx context.Context, tenID roachpb.TenantID,
+	ctx context.Context, tenID roachpb.TenantIdentity,
 ) error {
 	return nil
 }
 
 // HasTSDBQueryCapability implements the tenantcapabilities.Authorizer interface.
 func (n *AllowEverythingAuthorizer) HasTSDBQueryCapability(
-	ctx context.Context, tenID roachpb.TenantID,
+	ctx context.Context, tenID roachpb.TenantIdentity,
 ) error {
 	return nil
 }
 
 // HasNodelocalStorageCapability implements the tenantcapabilities.Authorizer interface.
 func (n *AllowEverythingAuthorizer) HasNodelocalStorageCapability(
-	ctx context.Context, tenID roachpb.TenantID,
+	ctx context.Context, tenID roachpb.TenantIdentity,
 ) error {
 	return nil
 }
 
 // IsExemptFromRateLimiting implements the tenantcapabilities.Authorizer interface.
 func (n *AllowEverythingAuthorizer) IsExemptFromRateLimiting(
-	context.Context, roachpb.TenantID,
+	context.Context, roachpb.TenantIdentity,
 ) bool {
 	return true
 }
 
 // HasProcessDebugCapability implements the tenantcapabilities.Authorizer interface.
 func (n *AllowEverythingAuthorizer) HasProcessDebugCapability(
-	ctx context.Context, tenID roachpb.TenantID,
+	ctx context.Context, tenID roachpb.TenantIdentity,
 ) error {
 	return nil
 }
 
 // HasTSDBAllMetricsCapability implements the tenantcapabilities.Authorizer interface.
 func (n *AllowEverythingAuthorizer) HasTSDBAllMetricsCapability(
-	ctx context.Context, tenID roachpb.TenantID,
+	ctx context.Context, tenID roachpb.TenantIdentity,
 ) error {
 	return nil
 }

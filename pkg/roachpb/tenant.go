@@ -124,9 +124,9 @@ type tenantKey struct{}
 // tenant client information from the context.
 //
 // An empty tenID clears the respective key from the context.
-func ContextWithClientTenant(ctx context.Context, tenID TenantID) context.Context {
+func ContextWithClientTenant(ctx context.Context, tenID TenantIdentity) context.Context {
 	if !tenID.IsSet() {
-		panic("programming error: missing tenant ID")
+		panic("programming error: missing tenant identity")
 	}
 
 	ctxTenantID, _ := ClientTenantFromContext(ctx)

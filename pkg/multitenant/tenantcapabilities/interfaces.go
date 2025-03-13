@@ -37,12 +37,12 @@ type Reader interface {
 // usage pattern over a timespan.
 type Authorizer interface {
 	// HasCrossTenantRead returns true if a tenant can read other tenant spans.
-	HasCrossTenantRead(ctx context.Context, tenID roachpb.TenantID) bool
+	HasCrossTenantRead(ctx context.Context, tenID roachpb.TenantIdentity) bool
 
 	// HasCapabilityForBatch returns an error if a tenant, referenced by its ID,
 	// is not allowed to execute the supplied batch request given the capabilities
 	// it possesses.
-	HasCapabilityForBatch(context.Context, roachpb.TenantID, *kvpb.BatchRequest) error
+	HasCapabilityForBatch(context.Context, roachpb.TenantIdentity, *kvpb.BatchRequest) error
 
 	// BindReader is a mechanism by which the caller can bind a Reader[1] to the
 	// Authorizer post-creation. The Authorizer uses the Reader to consult the
@@ -60,28 +60,28 @@ type Authorizer interface {
 
 	// HasNodeStatusCapability returns an error if a tenant, referenced by its ID,
 	// is not allowed to access cluster-level node metadata and liveness.
-	HasNodeStatusCapability(ctx context.Context, tenID roachpb.TenantID) error
+	HasNodeStatusCapability(ctx context.Context, tenID roachpb.TenantIdentity) error
 
 	// HasNodelocalStorageCapability returns an error if a tenant,
 	// referenced by its ID, is not allowed to use the nodelocal
 	// storage service.
-	HasNodelocalStorageCapability(ctx context.Context, tenID roachpb.TenantID) error
+	HasNodelocalStorageCapability(ctx context.Context, tenID roachpb.TenantIdentity) error
 
 	// HasTSDBQueryCapability returns an error if a tenant, referenced by its ID,
 	// is not allowed to query the TSDB for metrics.
-	HasTSDBQueryCapability(ctx context.Context, tenID roachpb.TenantID) error
+	HasTSDBQueryCapability(ctx context.Context, tenID roachpb.TenantIdentity) error
 
 	// IsExemptFromRateLimiting returns true of the tenant should
 	// not be subject to rate limiting.
-	IsExemptFromRateLimiting(ctx context.Context, tenID roachpb.TenantID) bool
+	IsExemptFromRateLimiting(ctx context.Context, tenID roachpb.TenantIdentity) bool
 
 	// HasProcessDebugCapability returns an error if a tenant, referenced by its ID,
 	// is not allowed to debug the running process.
-	HasProcessDebugCapability(ctx context.Context, tenID roachpb.TenantID) error
+	HasProcessDebugCapability(ctx context.Context, tenID roachpb.TenantIdentity) error
 
 	// HasTSDBAllMetricsCapability returns an error if a tenant, referenced by its ID,
 	// is not allowed to query all metrics from the host.
-	HasTSDBAllMetricsCapability(ctx context.Context, tenID roachpb.TenantID) error
+	HasTSDBAllMetricsCapability(ctx context.Context, tenID roachpb.TenantIdentity) error
 }
 
 // Entry ties together a tenantID with its capabilities.

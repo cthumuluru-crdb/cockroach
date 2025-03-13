@@ -27,14 +27,14 @@ func NewAllowNothingAuthorizer() *AllowNothingAuthorizer {
 
 // HasCrossTenantRead returns true if a tenant can read from other tenants.
 func (n *AllowNothingAuthorizer) HasCrossTenantRead(
-	ctx context.Context, tenID roachpb.TenantID,
+	ctx context.Context, tenID roachpb.TenantIdentity,
 ) bool {
 	return false
 }
 
 // HasCapabilityForBatch implements the tenantcapabilities.Authorizer interface.
 func (n *AllowNothingAuthorizer) HasCapabilityForBatch(
-	context.Context, roachpb.TenantID, *kvpb.BatchRequest,
+	context.Context, roachpb.TenantIdentity, *kvpb.BatchRequest,
 ) error {
 	return errors.New("operation blocked")
 }
@@ -44,27 +44,29 @@ func (n *AllowNothingAuthorizer) BindReader(tenantcapabilities.Reader) {}
 
 // HasNodeStatusCapability implements the tenantcapabilities.Authorizer interface.
 func (n *AllowNothingAuthorizer) HasNodeStatusCapability(
-	ctx context.Context, tenID roachpb.TenantID,
+	ctx context.Context, tenID roachpb.TenantIdentity,
 ) error {
 	return errors.New("operation blocked")
 }
 
 // HasTSDBQueryCapability implements the tenantcapabilities.Authorizer interface.
 func (n *AllowNothingAuthorizer) HasTSDBQueryCapability(
-	ctx context.Context, tenID roachpb.TenantID,
+	ctx context.Context, tenID roachpb.TenantIdentity,
 ) error {
 	return errors.New("operation blocked")
 }
 
 // HasNodelocalStorageCapability implements the tenantcapabilities.Authorizer interface.
 func (n *AllowNothingAuthorizer) HasNodelocalStorageCapability(
-	ctx context.Context, tenID roachpb.TenantID,
+	ctx context.Context, tenID roachpb.TenantIdentity,
 ) error {
 	return errors.New("operation blocked")
 }
 
 // IsExemptFromRateLimiting implements the tenantcapabilities.Authorizer interface.
-func (n *AllowNothingAuthorizer) IsExemptFromRateLimiting(context.Context, roachpb.TenantID) bool {
+func (n *AllowNothingAuthorizer) IsExemptFromRateLimiting(
+	context.Context, roachpb.TenantIdentity,
+) bool {
 	return false
 }
 
@@ -77,7 +79,7 @@ func (n *AllowNothingAuthorizer) HasProcessDebugCapability(
 
 // HasTSDBAllMetricsCapability implements the tenantcapabilities.Authorizer interface.
 func (n *AllowNothingAuthorizer) HasTSDBAllMetricsCapability(
-	ctx context.Context, tenID roachpb.TenantID,
+	ctx context.Context, tenID roachpb.TenantIdentity,
 ) error {
 	return errors.New("operation blocked")
 }

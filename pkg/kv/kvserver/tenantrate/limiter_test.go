@@ -785,34 +785,44 @@ type fakeAuthorizer struct{}
 
 var _ tenantcapabilities.Authorizer = &fakeAuthorizer{}
 
-func (fakeAuthorizer) HasCrossTenantRead(ctx context.Context, tenID roachpb.TenantID) bool {
+func (fakeAuthorizer) HasCrossTenantRead(ctx context.Context, tenID roachpb.TenantIdentity) bool {
 	return false
 }
 
-func (fakeAuthorizer) HasNodeStatusCapability(_ context.Context, tenID roachpb.TenantID) error {
-	return nil
-}
-func (fakeAuthorizer) HasTSDBQueryCapability(_ context.Context, tenID roachpb.TenantID) error {
-	return nil
-}
-func (fakeAuthorizer) HasTSDBAllMetricsCapability(_ context.Context, tenID roachpb.TenantID) error {
-	return nil
-}
-func (fakeAuthorizer) HasNodelocalStorageCapability(
-	_ context.Context, tenID roachpb.TenantID,
+func (fakeAuthorizer) HasNodeStatusCapability(
+	_ context.Context, tenID roachpb.TenantIdentity,
 ) error {
 	return nil
 }
-func (fakeAuthorizer) IsExemptFromRateLimiting(_ context.Context, tenID roachpb.TenantID) bool {
+func (fakeAuthorizer) HasTSDBQueryCapability(
+	_ context.Context, tenID roachpb.TenantIdentity,
+) error {
+	return nil
+}
+func (fakeAuthorizer) HasTSDBAllMetricsCapability(
+	_ context.Context, tenID roachpb.TenantIdentity,
+) error {
+	return nil
+}
+func (fakeAuthorizer) HasNodelocalStorageCapability(
+	_ context.Context, tenID roachpb.TenantIdentity,
+) error {
+	return nil
+}
+func (fakeAuthorizer) IsExemptFromRateLimiting(
+	_ context.Context, tenID roachpb.TenantIdentity,
+) bool {
 	return false
 }
 func (fakeAuthorizer) HasCapabilityForBatch(
-	_ context.Context, tenID roachpb.TenantID, _ *kvpb.BatchRequest,
+	_ context.Context, tenID roachpb.TenantIdentity, _ *kvpb.BatchRequest,
 ) error {
 	return nil
 }
 func (fakeAuthorizer) BindReader(tenantcapabilities.Reader) {}
 
-func (fakeAuthorizer) HasProcessDebugCapability(ctx context.Context, tenID roachpb.TenantID) error {
+func (fakeAuthorizer) HasProcessDebugCapability(
+	ctx context.Context, tenID roachpb.TenantIdentity,
+) error {
 	return nil
 }
