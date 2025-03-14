@@ -252,7 +252,7 @@ func (t TenantID) ToString() string {
 }
 
 func (t TenantID) IsEqual(o TenantIdentity) bool {
-	if _, ok := o.(*TenantID); !ok {
+	if _, ok := o.(TenantID); !ok {
 		return false
 	}
 	return t.Equal(o)
@@ -267,7 +267,7 @@ func (t TenantName) IsSystem() bool {
 }
 
 func (t TenantName) IsEqual(o TenantIdentity) bool {
-	if _, ok := o.(*TenantID); !ok {
+	if _, ok := o.(TenantName); !ok {
 		return false
 	}
 	return t.Equal(o.(TenantName))
