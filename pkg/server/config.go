@@ -489,6 +489,10 @@ type SQLConfig struct {
 	// locality.
 	DelayedSetTenantID func(context.Context) (roachpb.TenantID, roachpb.Locality, error)
 
+	// If set, will to be called at server startup to obtain the tenant name and
+	// locality. This deprecates the usage of DelayedSetTenantID.
+	DelayedSetTenantName func(context.Context) (roachpb.TenantName, roachpb.Locality, error)
+
 	// TempStorageConfig is used to configure temp storage, which stores
 	// ephemeral data when processing large queries.
 	TempStorageConfig base.TempStorageConfig
@@ -1100,19 +1104,19 @@ func (s *idProvider) ServerIdentityString(key serverident.ServerIdentificationKe
 // invoke the method from the serverident.ServerIdentificationPayload
 // interface.
 func (s *idProvider) SetTenantID(tenantID roachpb.TenantID) {
-	if !tenantID.IsSet() {
-		panic("programming error: invalid tenant ID")
-	}
-	if s.tenantID.IsSet() {
-		panic("programming error: provider already set for tenant server")
-	}
+	// if !tenantID.IsSet() {
+	// 	panic("programming error: invalid tenant ID")
+	// }
+	// if s.tenantID.IsSet() && !s.tenantID.IsEqual(tenantID) {
+	// 	panic("programming error: provider already set for tenant server")
+	// }
 	s.tenantID = tenantID
 }
 
 func (s *idProvider) SetTenantName(tenantName roachpb.TenantName) {
-	if s.tenantName.Get() != "" {
-		panic("programming error: tenant name already set")
-	}
+	// if s.tenantName.Get() != "" {
+	// 	panic("programming error: tenant name already set")
+	// }
 	s.tenantName.Set(tenantName)
 }
 

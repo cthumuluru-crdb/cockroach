@@ -36,7 +36,7 @@ func TestingNewWrappedServerStream(
 func TestingAuthenticateTenant(
 	ctx context.Context, serverTenantID roachpb.TenantID, sv *settings.Values,
 ) (roachpb.TenantID, error) {
-	kvAuthObject := kvAuth{sv: sv, tenant: tenantAuthorizer{tenantID: serverTenantID}}
+	kvAuthObject := kvAuth{sv: sv, tenant: tenantAuthorizer{tenantIdentity: serverTenantID}}
 	_, authz, err := kvAuthObject.authenticateAndSelectAuthzRule(ctx)
 	if err != nil {
 		return roachpb.TenantID{}, err
@@ -60,7 +60,7 @@ func TestingAuthorizeTenantRequest(
 	authorizer tenantcapabilities.Authorizer,
 ) error {
 	return tenantAuthorizer{
-		tenantID:               tenID,
+		tenantIdentity:         tenID,
 		capabilitiesAuthorizer: authorizer,
 	}.authorize(ctx, sv, tenID, method, request)
 }

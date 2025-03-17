@@ -207,7 +207,7 @@ func TestGetCertificateUserScope(t *testing.T) {
 		} else {
 			require.Equal(t, 1, len(userScopes))
 			require.Equal(t, "foo", userScopes[0].Username)
-			require.Equal(t, roachpb.MustMakeTenantID(123), userScopes[0].TenantID)
+			require.Equal(t, roachpb.MustMakeTenantID(123), userScopes[0].TenantIdentity)
 			require.False(t, userScopes[0].Global)
 		}
 	})
@@ -220,7 +220,7 @@ func TestGetCertificateUserScope(t *testing.T) {
 		} else {
 			require.Equal(t, 1, len(userScopes))
 			require.Equal(t, "foo", userScopes[0].Username)
-			require.Equal(t, roachpb.MustMakeTenantID(123), userScopes[0].TenantID)
+			require.Equal(t, roachpb.MustMakeTenantID(123), userScopes[0].TenantIdentity)
 			require.False(t, userScopes[0].Global)
 		}
 	})
@@ -284,7 +284,7 @@ func TestGetCertificateUserScope(t *testing.T) {
 			require.False(t, userScopes[0].Global)
 
 			require.Equal(t, "foo", userScopes[1].Username)
-			require.Equal(t, roachpb.MustMakeTenantID(123), userScopes[1].TenantID)
+			require.Equal(t, roachpb.MustMakeTenantID(123), userScopes[1].TenantIdentity)
 			require.False(t, userScopes[1].Global)
 		}
 	})
