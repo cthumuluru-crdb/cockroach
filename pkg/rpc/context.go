@@ -153,7 +153,7 @@ func NewServerEx(
 		a := kvAuth{
 			sv: &rpcCtx.Settings.SV,
 			tenant: tenantAuthorizer{
-				tenantID:               rpcCtx.tenID,
+				tenantIdentity:         rpcCtx.TenantIdentity,
 				capabilitiesAuthorizer: rpcCtx.capabilitiesAuthorizer,
 			},
 		}
@@ -457,6 +457,44 @@ func (c ContextOptions) validate() error {
 	_, _ = c.OnOutgoingPing, c.OnIncomingPing
 
 	return nil
+}
+
+// NewSingleUserContext is used to create a shallow RPC context for single use
+// to resolve tenant name to tenant ID. All other use cases should use RPC
+// context constructed using NewContext().
+func NewSingleUseContext(
+	ctx context.Context, opts ContextOptions, tenantName roachpb.TenantName,
+) *Context {
+	masterCtx, _ := opts.Stopper.WithCancelOnQuiesce(ctx)
+
+	secCtx := NewSecurityContext(
+		SecurityContextOptions{
+			SSLCertsDir:       opts.SSLCertsDir,
+			Insecure:          opts.Insecure,
+			AdvertiseAddrH:    opts.AdvertiseAddrH,
+			SQLAdvertiseAddrH: opts.SQLAdvertiseAddrH,
+			DisableTLSForHTTP: opts.DisableTLSForHTTP,
+		},
+		security.ClusterTLSSettings(opts.Settings),
+		tenantName,
+		nil, /* tenant authorizer */
+	)
+	secCtx.useNodeAuth = opts.UseNodeAuth
+
+	rpcCtx := &Context{
+		ContextOptions:  opts,
+		SecurityContext: secCtx,
+		rpcCompression:  enableRPCCompression,
+		MasterCtx:       masterCtx,
+		metrics:         newMetrics(opts.Locality),
+	}
+
+	if opts.ClientOnly && opts.User.Undefined() {
+		panic("client username not set")
+	}
+	rpcCtx.clientCreds = newTenantClientCreds(tenantName)
+
+	return rpcCtx
 }
 
 // NewContext creates an rpc.Context with the supplied values.
@@ -1476,11 +1514,11 @@ func (rpcCtx *Context) GetClientTLSConfig() (*tls.Config, error) {
 		tlsCfg, err := cm.GetClientTLSConfig(rpcCtx.User)
 		return tlsCfg, wrapError(err)
 
-	case rpcCtx.UseNodeAuth || rpcCtx.tenID.IsSystem():
+	case rpcCtx.UseNodeAuth || rpcCtx.TenantIdentity.IsSystem():
 		tlsCfg, err := cm.GetNodeClientTLSConfig()
 		return tlsCfg, wrapError(err)
 
-	case !rpcCtx.tenID.IsSystem():
+	case !rpcCtx.TenantIdentity.IsSystem():
 		// A SQL server running in a standalone server doesn't have access
 		// to the node certs, and thus must use the standalone tenant
 		// client cert.

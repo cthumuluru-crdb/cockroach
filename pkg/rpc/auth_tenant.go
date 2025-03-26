@@ -25,9 +25,9 @@ import (
 // server, that is, it ensures that the request only accesses resources
 // available to the tenant.
 type tenantAuthorizer struct {
-	// tenantID is the tenant ID for the current node.
+	// tenantIdentity of the current node.
 	// Equals SystemTenantID when running a KV node.
-	tenantID roachpb.TenantID
+	tenantIdentity roachpb.TenantIdentity
 	// capabilitiesAuthorizer is used to perform capability checks for incoming
 	// tenant requests. Capability checks are only performed when running on a KV
 	// node; the TenantRPCAuthorizer no-ops on secondary tenants.
@@ -164,6 +164,11 @@ func (a tenantAuthorizer) authorize(
 		"/cockroach.blobs.Blob/PutStream":
 		return a.capabilitiesAuthorizer.HasNodelocalStorageCapability(ctx, tenID)
 
+	case "/cockroach.server.serverpb.Admin/ResolveTenantName":
+		// NB: we don't check anything here as every tenant is allowed to
+		// resolve its own tenant name to its corresponding tenantID.
+		return nil
+
 	case "/cockroach.server.serverpb.Admin/ReadFromTenantInfo":
 		// NB: we don't check anything here as every tenant, even those who do not
 		// have HasCrossTenantRead, will call this even if only to learn that they
@@ -283,12 +288,12 @@ func (a tenantAuthorizer) authGossipSubscription(
 	return nil
 }
 
-// authTenant checks if the given tenantID matches the one the
-// authorizer was initialized with. This authorizer is used for
-// endpoints that should remain within a single tenant's pods.
-func (a tenantAuthorizer) authTenant(id roachpb.TenantID) error {
-	if a.tenantID != id {
-		return authErrorf("request from tenant %s not permitted on tenant %s", id, a.tenantID)
+// authTenant checks if the given tenant identity matches the one the
+// authorizer was initialized with. This authorizer is used for endpoints that
+// should remain within a single tenant's pods.
+func (a tenantAuthorizer) authTenant(id roachpb.TenantIdentity) error {
+	if !a.tenantIdentity.IsEqual(id) {
+		return authErrorf("request from tenant %s not permitted on tenant %s", id, a.tenantIdentity)
 	}
 	return nil
 }
