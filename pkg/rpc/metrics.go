@@ -75,6 +75,13 @@ var (
 		Unit:        metric.Unit_COUNT,
 	}
 
+	metaDrpcConnPoolSize = metric.Metadata{
+		Name:        "rpc.drpc.pool_size",
+		Help:        "Number of connections in the DRPC connection pool",
+		Measurement: "Connections",
+		Unit:        metric.Unit_COUNT,
+	}
+
 	metaConnectionHealthyNanos = metric.Metadata{
 		Name: "rpc.connection.healthy_nanos",
 		Help: `Gauge of nanoseconds of healthy connection time
@@ -217,6 +224,7 @@ func newMetrics(locality roachpb.Locality) *Metrics {
 		ConnectionsDrpcActive:         aggmetric.NewGauge(metaDrpcActiveConnections, childLabels...),
 		ConnectionDrpcOpen:            aggmetric.NewCounter(metaDrpcDialOpenConnection, childLabels...),
 		ConnectionDrpcClose:           aggmetric.NewCounter(metaDrpcDialCloseConnection, childLabels...),
+		DrpcConnPoolSize:              aggmetric.NewGauge(metaDrpcConnPoolSize, childLabels...),
 		ConnectionConnected:           aggmetric.NewGauge(metaConnectionConnected, localityLabels...),
 		ConnectionBytesSent:           aggmetric.NewCounter(metaNetworkBytesEgress, localityLabels...),
 		ConnectionBytesRecv:           aggmetric.NewCounter(metaNetworkBytesIngress, localityLabels...),
@@ -265,6 +273,7 @@ type Metrics struct {
 	ConnectionDrpcOpen            *aggmetric.AggCounter
 	ConnectionDrpcClose           *aggmetric.AggCounter
 	ConnectionConnected           *aggmetric.AggGauge
+	DrpcConnPoolSize              *aggmetric.AggGauge
 	ConnectionBytesSent           *aggmetric.AggCounter
 	ConnectionBytesRecv           *aggmetric.AggCounter
 	ConnectionAvgRoundTripLatency *aggmetric.AggGauge
@@ -331,6 +340,7 @@ type peerMetrics struct {
 	ConnectionsDrpcActive *aggmetric.Gauge
 	ConnectionDrpcOpen    *aggmetric.Counter
 	ConnectionDrpcClose   *aggmetric.Counter
+	DrpcConnPoolSize      *aggmetric.Gauge
 }
 
 type localityMetrics struct {
@@ -357,6 +367,7 @@ func (m *Metrics) acquire(k peerKey, l roachpb.Locality) (peerMetrics, localityM
 			ConnectionsDrpcActive:  m.ConnectionsDrpcActive.AddChild(labelVals...),
 			ConnectionDrpcOpen:     m.ConnectionDrpcOpen.AddChild(labelVals...),
 			ConnectionDrpcClose:    m.ConnectionDrpcClose.AddChild(labelVals...),
+			DrpcConnPoolSize:       m.DrpcConnPoolSize.AddChild(labelVals...),
 			AvgRoundTripLatency:    m.ConnectionAvgRoundTripLatency.AddChild(labelVals...),
 			// We use a SimpleEWMA which uses the zero value to mean "uninitialized"
 			// and operates on a ~60s decay rate.

@@ -97,6 +97,28 @@ type drpcConnWrapper struct {
 	net.Conn
 }
 
+type drpcPoolWrapper[K comparable, V drpcpool.Conn] struct {
+	pm   *peerMetrics
+	pool *drpcpool.Pool[K, V]
+}
+
+func (p *drpcPoolWrapper[K, V]) Take(key K) (V, bool) {
+	v, ok := p.pool.Take(key)
+	if ok {
+		p.pm.DrpcConnPoolSize.Dec(1)
+	}
+	return v, ok
+}
+
+func (p *drpcPoolWrapper[K, V]) Close() error {
+	return p.pool.Close()
+}
+
+func (p *drpcPoolWrapper[K, V]) Put(key K, val V) {
+	p.pool.Put(key, val)
+	p.pm.DrpcConnPoolSize.Inc(1)
+}
+
 func dialDRPC(
 	rpcCtx *Context, pm *peerMetrics,
 ) func(ctx context.Context, target string) (drpcpool.Conn, error) {
