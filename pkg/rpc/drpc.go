@@ -11,7 +11,6 @@ import (
 	"math"
 	"net"
 
-	"github.com/cockroachdb/cockroach/pkg/util/debugutil"
 	"github.com/cockroachdb/cockroach/pkg/util/log"
 	"github.com/cockroachdb/errors"
 	"storj.io/drpc"
@@ -55,12 +54,16 @@ func newDRPCServer(ctx context.Context, rpcCtx *Context) (*DRPCServer, error) {
 		mux := drpcmux.New()
 		dsrv = drpcserver.NewWithOptions(mux, drpcserver.Options{
 			Log: func(err error) {
-				log.Ops.Infof(context.Background(), "%s", string(debugutil.Stack()))
 				log.Warningf(context.Background(), "drpc server error %v", err)
 			},
 			// The reader's max buffer size defaults to 4mb, and if it is exceeded (such
 			// as happens with AddSSTable) the RPCs fail.
-			Manager: drpcmanager.Options{Reader: drpcwire.ReaderOptions{MaximumBufferSize: math.MaxInt}},
+			Manager: drpcmanager.Options{
+				Reader: drpcwire.ReaderOptions{
+					MaximumBufferSize: math.MaxInt,
+				},
+				SoftCancel: true,
+			},
 		})
 		dmux = mux
 
@@ -97,28 +100,6 @@ type drpcConnWrapper struct {
 	net.Conn
 }
 
-type drpcPoolWrapper[K comparable, V drpcpool.Conn] struct {
-	pm   *peerMetrics
-	pool *drpcpool.Pool[K, V]
-}
-
-func (p *drpcPoolWrapper[K, V]) Take(key K) (V, bool) {
-	v, ok := p.pool.Take(key)
-	if ok {
-		p.pm.DrpcConnPoolSize.Dec(1)
-	}
-	return v, ok
-}
-
-func (p *drpcPoolWrapper[K, V]) Close() error {
-	return p.pool.Close()
-}
-
-func (p *drpcPoolWrapper[K, V]) Put(key K, val V) {
-	p.pool.Put(key, val)
-	p.pm.DrpcConnPoolSize.Inc(1)
-}
-
 func dialDRPC(
 	rpcCtx *Context, pm *peerMetrics,
 ) func(ctx context.Context, target string) (drpcpool.Conn, error) {
@@ -147,6 +128,7 @@ func dialDRPC(
 					Stream: drpcstream.Options{
 						MaximumBufferSize: 0, // unlimited
 					},
+					SoftCancel: true,
 				},
 			}
 			var conn *drpcconn.Conn
