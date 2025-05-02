@@ -54,6 +54,34 @@ var (
 		Unit:        metric.Unit_COUNT,
 	}
 
+	metaConnectionDRPCOpen = metric.Metadata{
+		Name:        "rpc.drpc.connection.open",
+		Help:        "Number of new connections created by DRPC",
+		Measurement: "Open DRPC Connections",
+		Unit:        metric.Unit_COUNT,
+	}
+
+	metaConnectionDRPCClose = metric.Metadata{
+		Name:        "rpc.drpc.connection.close",
+		Help:        "Number of connections closed by DRPC",
+		Measurement: "Closed DRPC Connections",
+		Unit:        metric.Unit_COUNT,
+	}
+
+	metaStreamOpen = metric.Metadata{
+		Name:        "rpc.stream.open",
+		Help:        "Number of streams opened",
+		Measurement: "Open Streams",
+		Unit:        metric.Unit_COUNT,
+	}
+
+	metaStreamClose = metric.Metadata{
+		Name:        "rpc.stream.close",
+		Help:        "Number of streams closed",
+		Measurement: "Closed Streams",
+		Unit:        metric.Unit_COUNT,
+	}
+
 	metaConnectionHealthyNanos = metric.Metadata{
 		Name: "rpc.connection.healthy_nanos",
 		Help: `Gauge of nanoseconds of healthy connection time
@@ -193,6 +221,10 @@ func newMetrics(locality roachpb.Locality) *Metrics {
 		ConnectionUnhealthyFor:        aggmetric.NewGauge(metaConnectionUnhealthyNanos, childLabels...),
 		ConnectionHeartbeats:          aggmetric.NewCounter(metaConnectionHeartbeats, childLabels...),
 		ConnectionFailures:            aggmetric.NewCounter(metaConnectionFailures, childLabels...),
+		ConnectionDRPCOpen:            aggmetric.NewCounter(metaConnectionDRPCOpen, childLabels...),
+		ConnectionDRPCClose:           aggmetric.NewCounter(metaConnectionDRPCClose, childLabels...),
+		StreamOpen:                    aggmetric.NewCounter(metaStreamOpen, childLabels...),
+		StreamClose:                   aggmetric.NewCounter(metaStreamClose, childLabels...),
 		ConnectionConnected:           aggmetric.NewGauge(metaConnectionConnected, localityLabels...),
 		ConnectionBytesSent:           aggmetric.NewCounter(metaNetworkBytesEgress, localityLabels...),
 		ConnectionBytesRecv:           aggmetric.NewCounter(metaNetworkBytesIngress, localityLabels...),
@@ -237,6 +269,10 @@ type Metrics struct {
 	ConnectionUnhealthyFor        *aggmetric.AggGauge
 	ConnectionHeartbeats          *aggmetric.AggCounter
 	ConnectionFailures            *aggmetric.AggCounter
+	ConnectionDRPCOpen            *aggmetric.AggCounter
+	ConnectionDRPCClose           *aggmetric.AggCounter
+	StreamOpen                    *aggmetric.AggCounter
+	StreamClose                   *aggmetric.AggCounter
 	ConnectionConnected           *aggmetric.AggGauge
 	ConnectionBytesSent           *aggmetric.AggCounter
 	ConnectionBytesRecv           *aggmetric.AggCounter
@@ -300,6 +336,14 @@ type peerMetrics struct {
 	ConnectionHeartbeats *aggmetric.Counter
 	// Updated before each loop around in breakerProbe.run.
 	ConnectionFailures *aggmetric.Counter
+	// Incremented after each successful DRPC connection open.
+	ConnectionDRPCOpen *aggmetric.Counter
+	// Incremented after each successful DRPC connection close.
+	ConnectionDRPCClose *aggmetric.Counter
+	// Incremented after each successful stream open.
+	StreamOpen *aggmetric.Counter
+	// Incremented after each successful stream close.
+	StreamClose *aggmetric.Counter
 }
 
 type localityMetrics struct {
@@ -323,6 +367,10 @@ func (m *Metrics) acquire(k peerKey, l roachpb.Locality) (peerMetrics, localityM
 			ConnectionUnhealthyFor: m.ConnectionUnhealthyFor.AddChild(labelVals...),
 			ConnectionHeartbeats:   m.ConnectionHeartbeats.AddChild(labelVals...),
 			ConnectionFailures:     m.ConnectionFailures.AddChild(labelVals...),
+			ConnectionDRPCOpen:     m.ConnectionDRPCOpen.AddChild(labelVals...),
+			ConnectionDRPCClose:    m.ConnectionDRPCClose.AddChild(labelVals...),
+			StreamOpen:             m.StreamOpen.AddChild(labelVals...),
+			StreamClose:            m.StreamClose.AddChild(labelVals...),
 			AvgRoundTripLatency:    m.ConnectionAvgRoundTripLatency.AddChild(labelVals...),
 			// We use a SimpleEWMA which uses the zero value to mean "uninitialized"
 			// and operates on a ~60s decay rate.

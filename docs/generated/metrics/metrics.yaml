@@ -6390,6 +6390,22 @@ layers:
       unit: NANOSECONDS
       aggregation: AVG
       derivative: NONE
+    - name: rpc.drpc.connection.close
+      exported_name: rpc_drpc_connection_close
+      description: Number of connections closed by DRPC
+      y_axis_label: Closed DRPC Connections
+      type: COUNTER
+      unit: COUNT
+      aggregation: AVG
+      derivative: NON_NEGATIVE_DERIVATIVE
+    - name: rpc.drpc.connection.open
+      exported_name: rpc_drpc_connection_open
+      description: Number of new connections created by DRPC
+      y_axis_label: Open DRPC Connections
+      type: COUNTER
+      unit: COUNT
+      aggregation: AVG
+      derivative: NON_NEGATIVE_DERIVATIVE
     - name: rpc.server.request.duration.nanos
       exported_name: rpc_server_request_duration_nanos
       description: Duration of an grpc request in nanoseconds.
@@ -6398,6 +6414,22 @@ layers:
       unit: NANOSECONDS
       aggregation: AVG
       derivative: NONE
+    - name: rpc.stream.close
+      exported_name: rpc_stream_close
+      description: Number of streams closed
+      y_axis_label: Closed Streams
+      type: COUNTER
+      unit: COUNT
+      aggregation: AVG
+      derivative: NON_NEGATIVE_DERIVATIVE
+    - name: rpc.stream.open
+      exported_name: rpc_stream_open
+      description: Number of streams opened
+      y_axis_label: Open Streams
+      type: COUNTER
+      unit: COUNT
+      aggregation: AVG
+      derivative: NON_NEGATIVE_DERIVATIVE
     - name: schedules.BACKUP.failed
       exported_name: schedules_BACKUP_failed
       description: Number of BACKUP jobs failed

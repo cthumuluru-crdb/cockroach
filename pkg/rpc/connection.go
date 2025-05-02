@@ -47,7 +47,7 @@ type Connection struct {
 // newConnectionToNodeID makes a Connection for the given node, class, and nontrivial Signal
 // that should be queried in Connect().
 func newConnectionToNodeID(
-	opts *ContextOptions, k peerKey, breakerSignal func() circuit.Signal,
+	opts *ContextOptions, pm *peerMetrics, k peerKey, breakerSignal func() circuit.Signal,
 ) *Connection {
 	c := &Connection{
 		breakerSignalFn: breakerSignal,
@@ -55,8 +55,8 @@ func newConnectionToNodeID(
 		connFuture: connFuture{
 			ready: make(chan struct{}),
 		},
-		batchStreamPool:     makeStreamPool(opts.Stopper, newBatchStream),
-		drpcBatchStreamPool: makeStreamPool(opts.Stopper, newDRPCBatchStream),
+		batchStreamPool:     makeStreamPool(opts.Stopper, pm, newBatchStream),
+		drpcBatchStreamPool: makeStreamPool(opts.Stopper, pm, newDRPCBatchStream),
 	}
 	return c
 }

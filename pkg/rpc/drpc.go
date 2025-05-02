@@ -11,7 +11,6 @@ import (
 	"math"
 	"net"
 
-	"github.com/cockroachdb/cockroach/pkg/util/log"
 	"github.com/cockroachdb/errors"
 	"storj.io/drpc"
 	"storj.io/drpc/drpcconn"
@@ -53,12 +52,13 @@ func newDRPCServer(_ context.Context, rpcCtx *Context) (*DRPCServer, error) {
 	if ExperimentalDRPCEnabled.Get(&rpcCtx.Settings.SV) {
 		mux := drpcmux.New()
 		dsrv = drpcserver.NewWithOptions(mux, drpcserver.Options{
-			Log: func(err error) {
-				log.Warningf(context.Background(), "drpc server error %v", err)
-			},
 			// The reader's max buffer size defaults to 4mb, and if it is exceeded (such
 			// as happens with AddSSTable) the RPCs fail.
-			Manager: drpcmanager.Options{Reader: drpcwire.ReaderOptions{MaximumBufferSize: math.MaxInt}},
+			Manager: drpcmanager.Options{
+				Reader: drpcwire.ReaderOptions{
+					MaximumBufferSize: math.MaxInt,
+				},
+			},
 		})
 		dmux = mux
 
@@ -90,8 +90,19 @@ func newDRPCServer(_ context.Context, rpcCtx *Context) (*DRPCServer, error) {
 	}, nil
 }
 
-func dialDRPC(rpcCtx *Context) func(ctx context.Context, target string) (drpcpool.Conn, error) {
-	return func(ctx context.Context, target string) (drpcpool.Conn, error) {
+type drpcConnWrapper struct {
+	pm *peerMetrics
+	drpcpool.Conn
+}
+
+func (c *drpcConnWrapper) Close() error {
+	err := c.Conn.Close()
+	c.pm.ConnectionDRPCClose.Inc(1)
+	return err
+}
+
+func dialDRPC(rpcCtx *Context) func(ctx context.Context, target string, pm *peerMetrics) (drpcpool.Conn, error) {
+	return func(ctx context.Context, target string, pm *peerMetrics) (drpcpool.Conn, error) {
 		// TODO(server): could use connection class instead of empty key here.
 		pool := drpcpool.New[struct{}, drpcpool.Conn](drpcpool.Options{})
 		pooledConn := pool.Get(ctx /* unused */, struct{}{}, func(ctx context.Context,
@@ -110,9 +121,10 @@ func dialDRPC(rpcCtx *Context) func(ctx context.Context, target string) (drpcpoo
 					Stream: drpcstream.Options{
 						MaximumBufferSize: 0, // unlimited
 					},
+					SoftCancel: true,
 				},
 			}
-			var conn *drpcconn.Conn
+			var conn drpcpool.Conn
 			if rpcCtx.ContextOptions.Insecure {
 				conn = drpcconn.NewWithOptions(netConn, opts)
 			} else {
@@ -128,6 +140,11 @@ func dialDRPC(rpcCtx *Context) func(ctx context.Context, target string) (drpcpoo
 				tlsConn := tls.Client(netConn, tlsConfig)
 				conn = drpcconn.NewWithOptions(tlsConn, opts)
 			}
+			conn = &drpcConnWrapper{
+				Conn: conn,
+				pm:   pm,
+			}
+			pm.ConnectionDRPCOpen.Inc(1)
 
 			return conn, nil
 		})

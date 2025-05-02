@@ -126,7 +126,7 @@ type peer struct {
 	heartbeatInterval time.Duration
 	heartbeatTimeout  time.Duration
 	dial              func(ctx context.Context, target string, class ConnectionClass) (*grpc.ClientConn, error)
-	dialDRPC          func(ctx context.Context, target string) (drpcpool.Conn, error)
+	dialDRPC          func(ctx context.Context, target string, pm *peerMetrics) (drpcpool.Conn, error)
 	// b maintains connection health. This breaker's async probe is always
 	// active - it is the heartbeat loop and manages `mu.c.` (including
 	// recreating it after the connection fails and has to be redialed).
@@ -263,7 +263,7 @@ func (rpcCtx *Context) newPeer(k peerKey, locality roachpb.Locality) *peer {
 		},
 	})
 	p.b = b
-	c := newConnectionToNodeID(p.opts, k, b.Signal)
+	c := newConnectionToNodeID(p.opts, &p.peerMetrics, k, b.Signal)
 	p.mu.PeerSnap = PeerSnap{c: c}
 
 	return p
@@ -363,7 +363,7 @@ func (p *peer) run(ctx context.Context, report func(error), done func()) {
 		func() {
 			p.mu.Lock()
 			defer p.mu.Unlock()
-			p.mu.c = newConnectionToNodeID(p.opts, p.k, p.mu.c.breakerSignalFn)
+			p.mu.c = newConnectionToNodeID(p.opts, &p.peerMetrics, p.k, p.mu.c.breakerSignalFn)
 		}()
 
 		if p.snap().deleteAfter != 0 {
@@ -383,7 +383,7 @@ func (p *peer) runOnce(ctx context.Context, report func(error)) error {
 	defer func() {
 		_ = cc.Close() // nolint:grpcconnclose
 	}()
-	dc, err := p.dialDRPC(ctx, p.k.TargetAddr)
+	dc, err := p.dialDRPC(ctx, p.k.TargetAddr, &p.peerMetrics)
 	if err != nil {
 		return err
 	}

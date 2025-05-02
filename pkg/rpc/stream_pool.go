@@ -94,7 +94,10 @@ func newPooledStream[Req, Resp any, Conn comparable](
 }
 
 func (s *pooledStream[Req, Resp, Conn]) run(ctx context.Context) {
-	defer s.close()
+	defer func() {
+		s.close()
+		s.pool.pm.StreamClose.Inc(1)
+	}()
 	for s.runOnce(ctx) {
 	}
 }
@@ -192,6 +195,7 @@ func (s *pooledStream[Req, Resp, Conn]) Send(ctx context.Context, req Req) (Resp
 // create a new stream and throw it away for each request (see grpc.invoke).
 type streamPool[Req, Resp any, Conn comparable] struct {
 	stopper     *stop.Stopper
+	pm          *peerMetrics
 	idleTimeout time.Duration
 	newStream   streamConstructor[Req, Resp, Conn]
 
@@ -207,10 +211,11 @@ type streamPool[Req, Resp any, Conn comparable] struct {
 }
 
 func makeStreamPool[Req, Resp any, Conn comparable](
-	stopper *stop.Stopper, newStream streamConstructor[Req, Resp, Conn],
+	stopper *stop.Stopper, pm *peerMetrics, newStream streamConstructor[Req, Resp, Conn],
 ) streamPool[Req, Resp, Conn] {
 	return streamPool[Req, Resp, Conn]{
 		stopper:     stopper,
+		pm:          pm,
 		idleTimeout: defaultPooledStreamIdleTimeout,
 		newStream:   newStream,
 	}
@@ -272,7 +277,7 @@ func (p *streamPool[Req, Resp, Conn]) remove(s *pooledStream[Req, Resp, Conn]) b
 	if i == -1 {
 		return false
 	}
-	copy(p.streams.s[i:], p.streams.s[i+1:])
+	p.streams.s[i], p.streams.s[len(p.streams.s)-1] = p.streams.s[len(p.streams.s)-1], p.streams.s[i]
 	p.streams.s[len(p.streams.s)-1] = nil
 	p.streams.s = p.streams.s[:len(p.streams.s)-1]
 	return true
@@ -295,6 +300,7 @@ func (p *streamPool[Req, Resp, Conn]) newPooledStream() (*pooledStream[Req, Resp
 	if err != nil {
 		return nil, err
 	}
+	p.pm.StreamOpen.Inc(1)
 
 	s := newPooledStream(p, stream, ctx, cancel)
 	if err := p.stopper.RunAsyncTask(ctx, "pooled gRPC stream", s.run); err != nil {
