@@ -150,7 +150,8 @@ type peer struct {
 
 // PeerSnap is the state of a peer.
 type PeerSnap struct {
-	c *Connection // never nil, only mutated in the breaker probe
+	// TODO(chandrat): PeerSnap must be a template.
+	c *Connection[*grpc.ClientConn] // never nil, only mutated in the breaker probe
 
 	// Timestamp of latest successful initial heartbeat on `c`. This
 	// is never cleared: it only ever moves forward. If the peer is
@@ -263,7 +264,8 @@ func (rpcCtx *Context) newPeer(k peerKey, locality roachpb.Locality) *peer {
 		},
 	})
 	p.b = b
-	c := newConnectionToNodeID(p.opts, k, b.Signal)
+	// TODO(chandrat) newPeer should be a template.
+	c := newConnectionToNodeID[*grpc.ClientConn](p.opts, k, b.Signal)
 	p.mu.PeerSnap = PeerSnap{c: c}
 
 	return p
@@ -363,7 +365,8 @@ func (p *peer) run(ctx context.Context, report func(error), done func()) {
 		func() {
 			p.mu.Lock()
 			defer p.mu.Unlock()
-			p.mu.c = newConnectionToNodeID(p.opts, p.k, p.mu.c.breakerSignalFn)
+			// TODO(chandrat) run method must be a template.
+			p.mu.c = newConnectionToNodeID[*grpc.ClientConn](p.opts, p.k, p.mu.c.breakerSignalFn)
 		}()
 
 		if p.snap().deleteAfter != 0 {
@@ -594,11 +597,10 @@ func (p *peer) onInitialHeartbeatSucceeded(
 	// ahead of signaling the connFuture, so that the stream pool is ready for use
 	// by the time the connFuture is resolved.
 	p.mu.c.batchStreamPool.Bind(ctx, cc)
-	p.mu.c.drpcBatchStreamPool.Bind(ctx, dc)
 
 	// Close the channel last which is helpful for unit tests that
 	// first waitOrDefault for a healthy conn to then check metrics.
-	p.mu.c.connFuture.Resolve(cc, dc, nil /* err */)
+	p.mu.c.connFuture.Resolve(cc, nil /* err */)
 
 	logOnHealthy(ctx, p.mu.disconnected, now)
 }
@@ -715,7 +717,7 @@ func (p *peer) onHeartbeatFailed(
 		// someone might be waiting on it in ConnectNoBreaker who is not paying
 		// attention to the circuit breaker.
 		err = &netutil.InitialHeartbeatFailedError{WrappedErr: err}
-		ls.c.connFuture.Resolve(nil /* cc */, nil /* dc */, err)
+		ls.c.connFuture.Resolve(nil /* cc */, err)
 	}
 
 	// Close down the stream pool that was bound to this connection.
@@ -755,7 +757,7 @@ func (p *peer) onQuiesce(report func(error)) {
 	// NB: it's important that connFuture is resolved, or a caller sitting on
 	// `c.ConnectNoBreaker` would never be unblocked; after all, the probe won't
 	// start again in the future.
-	p.snap().c.connFuture.Resolve(nil, nil, errQuiescing)
+	p.snap().c.connFuture.Resolve(nil, errQuiescing)
 }
 
 func (p PeerSnap) deletable(now time.Time) bool {

@@ -91,10 +91,10 @@ func (m *MockDialbacker) EXPECT() *MockDialbackerMockRecorder {
 }
 
 // GRPCDialNode mocks base method.
-func (m *MockDialbacker) GRPCDialNode(arg0 string, arg1 roachpb.NodeID, arg2 roachpb.Locality, arg3 rpcpb.ConnectionClass) *Connection {
+func (m *MockDialbacker) GRPCDialNode(arg0 string, arg1 roachpb.NodeID, arg2 roachpb.Locality, arg3 rpcpb.ConnectionClass) *Connection[*grpc.ClientConn] {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GRPCDialNode", arg0, arg1, arg2, arg3)
-	ret0, _ := ret[0].(*Connection)
+	ret0, _ := ret[0].(*Connection[*grpc.ClientConn])
 	return ret0
 }
 
@@ -105,10 +105,10 @@ func (mr *MockDialbackerMockRecorder) GRPCDialNode(arg0, arg1, arg2, arg3 interf
 }
 
 // GRPCUnvalidatedDial mocks base method.
-func (m *MockDialbacker) GRPCUnvalidatedDial(arg0 string, arg1 roachpb.Locality) *Connection {
+func (m *MockDialbacker) GRPCUnvalidatedDial(arg0 string, arg1 roachpb.Locality) *Connection[*grpc.ClientConn] {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GRPCUnvalidatedDial", arg0, arg1)
-	ret0, _ := ret[0].(*Connection)
+	ret0, _ := ret[0].(*Connection[*grpc.ClientConn])
 	return ret0
 }
 

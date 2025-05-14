@@ -8,15 +8,15 @@ package rpc
 import (
 	"context"
 
+	"github.com/cockroachdb/cockroach/pkg/kv/kvpb"
 	"github.com/cockroachdb/cockroach/pkg/util/circuit"
 	"github.com/cockroachdb/errors"
 	"google.golang.org/grpc"
-	"storj.io/drpc/drpcpool"
 )
 
 // Connection is a wrapper around grpc.ClientConn. It prevents the underlying
 // connection from being used until it has been validated via heartbeat.
-type Connection struct {
+type Connection[T comparable] struct {
 	// Fields in this struct are only ever mutated from the circuit breaker probe,
 	// but they may be read widely (many callers hold a *Connection).
 
@@ -34,29 +34,30 @@ type Connection struct {
 	//
 	// It always has to be signaled eventually, regardless of the stopper
 	// draining, etc, since callers might be blocking on it.
-	connFuture connFuture
+	connFuture connFuture[T]
+
+	// TODO(chandrat): Batch stream pool doesn't belong here.
+	//
 	// batchStreamPool holds a pool of BatchStreamClient streams established on
 	// the connection. The pool can be used to avoid the overhead of unary Batch
 	// RPCs.
 	//
 	// The pool is only initialized once the ClientConn is resolved.
-	batchStreamPool     BatchStreamPool
-	drpcBatchStreamPool DRPCBatchStreamPool
+	batchStreamPool streamPool[*kvpb.BatchRequest, *kvpb.BatchResponse, T]
 }
 
 // newConnectionToNodeID makes a Connection for the given node, class, and nontrivial Signal
 // that should be queried in Connect().
-func newConnectionToNodeID(
+func newConnectionToNodeID[T comparable](
 	opts *ContextOptions, k peerKey, breakerSignal func() circuit.Signal,
-) *Connection {
-	c := &Connection{
+) *Connection[*grpc.ClientConn] {
+	c := &Connection[*grpc.ClientConn]{
 		breakerSignalFn: breakerSignal,
 		k:               k,
-		connFuture: connFuture{
+		connFuture: connFuture[*grpc.ClientConn]{
 			ready: make(chan struct{}),
 		},
-		batchStreamPool:     makeStreamPool(opts.Stopper, newBatchStream),
-		drpcBatchStreamPool: makeStreamPool(opts.Stopper, newDRPCBatchStream),
+		batchStreamPool: makeStreamPool(opts.Stopper, newBatchStream),
 	}
 	return c
 }
@@ -66,16 +67,17 @@ func newConnectionToNodeID(
 // will short-circuit the waiting process. The signal may be nil in which case
 // it is ignored. If a non-nil defErr is provided, waitOrDefault will never
 // block but fall back to defErr in this case.
-func (c *Connection) waitOrDefault(
+func (c *Connection[T]) waitOrDefault(
 	ctx context.Context, defErr error, sig circuit.Signal,
-) (*grpc.ClientConn, drpcpool.Conn, error) {
+) (T, error) {
 	// Check the circuit breaker first. If it is already tripped now, we
 	// want it to take precedence over connFuture below (which is closed in
 	// the common case of a connection going bad after having been healthy
 	// for a while).
+	var cc T
 	select {
 	case <-sig.C():
-		return nil, nil, sig.Err()
+		return cc, sig.Err()
 	default:
 	}
 
@@ -86,26 +88,26 @@ func (c *Connection) waitOrDefault(
 		select {
 		case <-c.connFuture.C():
 		case <-sig.C():
-			return nil, nil, sig.Err()
+			return cc, sig.Err()
 		case <-ctx.Done():
-			return nil, nil, errors.Wrapf(ctx.Err(), "while connecting to n%d at %s", c.k.NodeID, c.k.TargetAddr)
+			return cc, errors.Wrapf(ctx.Err(), "while connecting to n%d at %s", c.k.NodeID, c.k.TargetAddr)
 		}
 	} else {
 		select {
 		case <-c.connFuture.C():
 		case <-sig.C():
-			return nil, nil, sig.Err()
+			return cc, sig.Err()
 		case <-ctx.Done():
-			return nil, nil, errors.Wrapf(ctx.Err(), "while connecting to n%d at %s", c.k.NodeID, c.k.TargetAddr)
+			return cc, errors.Wrapf(ctx.Err(), "while connecting to n%d at %s", c.k.NodeID, c.k.TargetAddr)
 		default:
-			return nil, nil, defErr
+			return cc, defErr
 		}
 	}
 
 	// Done waiting, c.connFuture has resolved, return the result. Note that this
 	// conn could be unhealthy (or there may not even be a conn, i.e. Err() !=
 	// nil), if that's what the caller wanted (ConnectNoBreaker).
-	return c.connFuture.Conn(), c.connFuture.DRPCConn(), c.connFuture.Err()
+	return c.connFuture.Conn(), c.connFuture.Err()
 }
 
 // Connect returns the underlying grpc.ClientConn after it has been validated,
@@ -114,14 +116,14 @@ func (c *Connection) waitOrDefault(
 // tripped (which happens when a heartbeat fails), Connect will fail-fast with
 // an error. In rare cases, this behavior is undesired and ConnectNoBreaker may
 // be used instead.
-func (c *Connection) Connect(ctx context.Context) (*grpc.ClientConn, error) {
-	cc, _, err := c.waitOrDefault(ctx, nil /* defErr */, c.breakerSignalFn())
+func (c *Connection[T]) Connect(ctx context.Context) (T, error) {
+	cc, err := c.waitOrDefault(ctx, nil /* defErr */, c.breakerSignalFn())
 	return cc, err
 }
 
 // ConnectEx is similar to Connect but it addition to gRPC connection, it also
 // returns underlying drpc connection after it has been validated.
-func (c *Connection) ConnectEx(ctx context.Context) (*grpc.ClientConn, drpcpool.Conn, error) {
+func (c *Connection[T]) ConnectEx(ctx context.Context) (T, error) {
 	return c.waitOrDefault(ctx, nil /* defErr */, c.breakerSignalFn())
 }
 
@@ -143,9 +145,9 @@ func (s *neverTripSignal) IsTripped() bool {
 // that it will latch onto (or start) an existing connection attempt even if
 // previous attempts have not succeeded. This may be preferable to Connect
 // if the caller is already certain that a peer is available.
-func (c *Connection) ConnectNoBreaker(
+func (c *Connection[T]) ConnectNoBreaker(
 	ctx context.Context,
-) (*grpc.ClientConn, drpcpool.Conn, error) {
+) (T, error) {
 	// For ConnectNoBreaker we don't use the default Signal but pass a dummy one
 	// that never trips. (The probe tears down the Conn on quiesce so we don't rely
 	// on the Signal for that).
@@ -168,68 +170,53 @@ func (c *Connection) ConnectNoBreaker(
 // Health returns an error indicating the success or failure of the connection's
 // latest heartbeat. Returns ErrNotHeartbeated if the peer was just contacted for
 // the first time and the first heartbeat has not occurred yet.
-func (c *Connection) Health() error {
-	_, _, err := c.waitOrDefault(context.Background(), ErrNotHeartbeated, c.breakerSignalFn())
+func (c *Connection[T]) Health() error {
+	_, err := c.waitOrDefault(context.Background(), ErrNotHeartbeated, c.breakerSignalFn())
 	return err
 }
 
-func (c *Connection) Signal() circuit.Signal {
+func (c *Connection[T]) Signal() circuit.Signal {
 	return c.breakerSignalFn()
 }
 
-func (c *Connection) BatchStreamPool() *BatchStreamPool {
+func (c *Connection[T]) BatchStreamPool() *streamPool[*kvpb.BatchRequest, *kvpb.BatchResponse, T] {
 	if !c.connFuture.Resolved() {
 		panic("BatchStreamPool called on unresolved connection")
 	}
 	return &c.batchStreamPool
 }
 
-func (c *Connection) DRPCBatchStreamPool() *DRPCBatchStreamPool {
-	if !c.connFuture.Resolved() {
-		panic("DRPCBatchStreamPool called on unresolved connection")
-	}
-	return &c.drpcBatchStreamPool
-}
-
-type connFuture struct {
+type connFuture[T any] struct {
 	ready chan struct{}
-	cc    *grpc.ClientConn
-	dc    drpcpool.Conn
+	cc    T // TODO(chandrat) add type constraints
 	err   error
 }
 
-var _ circuit.Signal = (*connFuture)(nil)
+var _ circuit.Signal = (*connFuture[struct{}])(nil)
 
-func (s *connFuture) C() <-chan struct{} {
+func (s *connFuture[T]) C() <-chan struct{} {
 	return s.ready
 }
 
 // Err must only be called after C() has been closed.
-func (s *connFuture) Err() error {
+func (s *connFuture[T]) Err() error {
 	return s.err
 }
 
-func (s *connFuture) IsTripped() bool {
+func (s *connFuture[T]) IsTripped() bool {
 	return s.Resolved()
 }
 
 // Conn must only be called after C() has been closed.
-func (s *connFuture) Conn() *grpc.ClientConn {
+func (s *connFuture[T]) Conn() T {
+	var cc T
 	if s.err != nil {
-		return nil
+		return cc
 	}
 	return s.cc
 }
 
-// DRPCConn must only be called after C() has been closed.
-func (s *connFuture) DRPCConn() drpcpool.Conn {
-	if s.err != nil {
-		return nil
-	}
-	return s.dc
-}
-
-func (s *connFuture) Resolved() bool {
+func (s *connFuture[T]) Resolved() bool {
 	select {
 	case <-s.ready:
 		return true
@@ -240,12 +227,12 @@ func (s *connFuture) Resolved() bool {
 
 // Resolve is idempotent. Only the first call has any effect.
 // Not thread safe.
-func (s *connFuture) Resolve(cc *grpc.ClientConn, dc drpcpool.Conn, err error) {
+func (s *connFuture[T]) Resolve(cc T, err error) {
 	select {
 	case <-s.ready:
 		// Already resolved, noop.
 	default:
-		s.cc, s.dc, s.err = cc, dc, err
+		s.cc, s.err = cc, err
 		close(s.ready)
 	}
 }

@@ -20,6 +20,7 @@ import (
 	"github.com/cockroachdb/cockroach/pkg/util/stop"
 	"github.com/cockroachdb/cockroach/pkg/util/timeutil"
 	"github.com/cockroachdb/errors"
+	grpc "google.golang.org/grpc"
 )
 
 // client is a client-side RPC connection to a gossip peer node.
@@ -103,7 +104,7 @@ func (c *client) startLocked(
 			// asynchronous from the caller's perspective, so the only effect of
 			// `WithBlock` here is blocking shutdown - at the time of this writing,
 			// that ends ups up making `kv` tests take twice as long.
-			var connection *rpc.Connection
+			var connection *rpc.Connection[*grpc.ClientConn]
 			if c.peerID != 0 {
 				connection = rpcCtx.GRPCDialNode(c.addr.String(), c.peerID, c.locality, rpc.SystemClass)
 			} else {

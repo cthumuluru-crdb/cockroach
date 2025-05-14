@@ -232,7 +232,7 @@ type Context struct {
 	// verified for dialback due to failing a health check.
 	dialbackMu struct {
 		syncutil.Mutex
-		m map[roachpb.NodeID]*Connection
+		m map[roachpb.NodeID]*Connection[*grpc.ClientConn]
 	}
 
 	metrics *Metrics
@@ -561,7 +561,7 @@ func NewContext(ctx context.Context, opts ContextOptions) *Context {
 	}
 
 	rpcCtx.dialbackMu.Lock()
-	rpcCtx.dialbackMu.m = map[roachpb.NodeID]*Connection{}
+	rpcCtx.dialbackMu.m = map[roachpb.NodeID]*Connection[*grpc.ClientConn]{}
 	rpcCtx.dialbackMu.Unlock()
 
 	if !opts.TenantID.IsSet() {
@@ -1988,7 +1988,7 @@ func (rpcCtx *Context) grpcDialRaw(
 // node ID between client and server. This function should only be
 // used with the gossip client and CLI commands which can talk to any
 // node. This method implies a SystemClass.
-func (rpcCtx *Context) GRPCUnvalidatedDial(target string, locality roachpb.Locality) *Connection {
+func (rpcCtx *Context) GRPCUnvalidatedDial(target string, locality roachpb.Locality) *Connection[*grpc.ClientConn] {
 	return rpcCtx.grpcDialNodeInternal(target, 0, locality, SystemClass)
 }
 
@@ -2004,7 +2004,7 @@ func (rpcCtx *Context) GRPCDialNode(
 	remoteNodeID roachpb.NodeID,
 	remoteLocality roachpb.Locality,
 	class ConnectionClass,
-) *Connection {
+) *Connection[*grpc.ClientConn] { // TODO(chandrat) this cannot be a template
 	if remoteNodeID == 0 && !rpcCtx.TestingAllowNamedRPCToAnonymousServer {
 		log.Fatalf(
 			rpcCtx.makeDialCtx(target, remoteNodeID, class),
@@ -2025,7 +2025,7 @@ func (rpcCtx *Context) GRPCDialPod(
 	remoteInstanceID base.SQLInstanceID,
 	remoteLocality roachpb.Locality,
 	class ConnectionClass,
-) *Connection {
+) *Connection[*grpc.ClientConn] {
 	return rpcCtx.GRPCDialNode(target, roachpb.NodeID(remoteInstanceID), remoteLocality, class)
 }
 
@@ -2036,7 +2036,7 @@ func (rpcCtx *Context) grpcDialNodeInternal(
 	remoteNodeID roachpb.NodeID,
 	remoteLocality roachpb.Locality,
 	class ConnectionClass,
-) *Connection {
+) *Connection[*grpc.ClientConn] {
 	k := peerKey{TargetAddr: target, NodeID: remoteNodeID, Class: class}
 	if p, ok := rpcCtx.peers.get(k); ok {
 		// There's a cached peer, so we have a cached connection, use it.
@@ -2097,8 +2097,8 @@ func (rpcCtx *Context) NewHeartbeatService() *HeartbeatService {
 //go:generate mockgen -destination=mocks_generated_test.go --package=. Dialbacker
 
 type Dialbacker interface {
-	GRPCUnvalidatedDial(string, roachpb.Locality) *Connection
-	GRPCDialNode(string, roachpb.NodeID, roachpb.Locality, ConnectionClass) *Connection
+	GRPCUnvalidatedDial(string, roachpb.Locality) *Connection[*grpc.ClientConn]
+	GRPCDialNode(string, roachpb.NodeID, roachpb.Locality, ConnectionClass) *Connection[*grpc.ClientConn]
 	grpcDialRaw(
 		context.Context, string, ConnectionClass, ...grpc.DialOption,
 	) (*grpc.ClientConn, error)
