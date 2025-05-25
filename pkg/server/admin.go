@@ -1329,7 +1329,7 @@ func (s *adminServer) statsForSpan(
 					func(ctx context.Context) error {
 						conn, err := s.serverIterator.dialNode(ctx, serverID(nodeID))
 						if err == nil {
-							client := serverpb.NewStatusClient(conn)
+							client := serverpb.NewRPCStatusClient(conn)
 							req := roachpb.SpanStatsRequest{
 								Spans:  []roachpb.Span{span},
 								NodeID: nodeID.String(),

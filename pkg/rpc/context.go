@@ -50,6 +50,7 @@ import (
 	"google.golang.org/grpc/encoding"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/stats"
+	"storj.io/drpc"
 )
 
 // NewServer sets up an RPC server. Depending on the ServerOptions, the Server
@@ -228,7 +229,8 @@ type Context struct {
 
 	localInternalClient RestrictedInternalClient
 
-	peers peerMap[*grpc.ClientConn]
+	peers     peerMap[*grpc.ClientConn]
+	drpcPeers peerMap[drpc.Conn]
 
 	// dialbackMap is a map of currently executing dialback connections. This map
 	// is typically empty or close to empty. It only holds entries that are being
@@ -2015,6 +2017,7 @@ func (rpcCtx *Context) GRPCDialNode(
 			rpcCtx.makeDialCtx(target, remoteNodeID, class),
 			"%v", errors.AssertionFailedf("invalid node ID 0 in GRPCDialNode()"))
 	}
+
 	return rpcCtx.grpcDialNodeInternal(target, remoteNodeID, remoteLocality, class)
 }
 
@@ -2064,7 +2067,56 @@ func (rpcCtx *Context) grpcDialNodeInternal(
 		conns.mu.m = map[peerKey]*peer[*grpc.ClientConn]{}
 	}
 
-	p := rpcCtx.newPeer(k, remoteLocality)
+	p := newPeer[*grpc.ClientConn](rpcCtx, k, newGRPCPeerOptions(rpcCtx, k, remoteLocality))
+	// (Asynchronously) Start the probe (= heartbeat loop). The breaker is healthy
+	// right now (it was just created) but the call to `.Probe` will launch the
+	// probe[1] regardless.
+	//
+	// [1]: see (*peer).launch.
+	p.b.Probe()
+
+	// NB: we used to also insert into `peerKey{target, 0, class}` so that
+	// callers that may pass a zero NodeID could coalesce onto the connection
+	// with the "real" NodeID. This caused issues over the years[^1][^2] and
+	// was never necessary anyway, so we don't do it anymore.
+	//
+	// [^1]: https://github.com/cockroachdb/cockroach/issues/37200
+	// [^2]: https://github.com/cockroachdb/cockroach/pull/89539
+
+	conns.mu.m[k] = p
+	return p.snap().c
+}
+
+// TODO(chandrat)
+func (rpcCtx *Context) drpcDialNodeInternal(
+	target string,
+	remoteNodeID roachpb.NodeID,
+	remoteLocality roachpb.Locality,
+	class ConnectionClass,
+) *DRPCConnection {
+	k := peerKey{TargetAddr: target, NodeID: remoteNodeID, Class: class}
+	if p, ok := rpcCtx.drpcPeers.get(k); ok {
+		// There's a cached peer, so we have a cached connection, use it.
+		return p.c
+	}
+
+	// Slow path. Race to create a peer.
+	conns := &rpcCtx.drpcPeers
+
+	conns.mu.Lock()
+	defer conns.mu.Unlock()
+
+	if p, lostRace := conns.getRLocked(k); lostRace {
+		return p.c
+	}
+
+	// Won race. Actually create a peer.
+
+	if conns.mu.m == nil {
+		conns.mu.m = map[peerKey]*peer[drpc.Conn]{}
+	}
+
+	p := newPeer[drpc.Conn](rpcCtx, k, newDRPCPeerOptions(rpcCtx, k, remoteLocality))
 	// (Asynchronously) Start the probe (= heartbeat loop). The breaker is healthy
 	// right now (it was just created) but the call to `.Probe` will launch the
 	// probe[1] regardless.

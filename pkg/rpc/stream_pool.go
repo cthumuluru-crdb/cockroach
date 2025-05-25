@@ -29,7 +29,7 @@ type streamClient[Req, Resp any] interface {
 
 // streamConstructor creates a new gRPC stream client over the provided client
 // connection, using the provided call options.
-type streamConstructor[Req, Resp any, Conn rpcConn] func(
+type streamConstructor[Req, Resp any, Conn RPCConn] func(
 	context.Context, Conn,
 ) (streamClient[Req, Resp], error)
 
@@ -45,7 +45,7 @@ const defaultPooledStreamIdleTimeout = 10 * time.Second
 
 // equalsFunc is a generic function type used to compare two RPC connections
 // for equivalence.
-type equalsFunc[Conn rpcConn] func(a, b Conn) bool
+type equalsFunc[Conn RPCConn] func(a, b Conn) bool
 
 // pooledStream is a wrapper around a grpc.ClientStream that is managed by a
 // streamPool. It is responsible for sending a single request and receiving a
@@ -71,7 +71,7 @@ type equalsFunc[Conn rpcConn] func(a, b Conn) bool
 //
 // A pooledStream must only be returned to the pool for reuse after a successful
 // Send call. If the Send call fails, the pooledStream must not be reused.
-type pooledStream[Req, Resp any, Conn rpcConn] struct {
+type pooledStream[Req, Resp any, Conn RPCConn] struct {
 	pool         *streamPool[Req, Resp, Conn]
 	stream       streamClient[Req, Resp]
 	streamCtx    context.Context
@@ -81,7 +81,7 @@ type pooledStream[Req, Resp any, Conn rpcConn] struct {
 	respC chan result[Resp]
 }
 
-func newPooledStream[Req, Resp any, Conn rpcConn](
+func newPooledStream[Req, Resp any, Conn RPCConn](
 	pool *streamPool[Req, Resp, Conn],
 	stream streamClient[Req, Resp],
 	streamCtx context.Context,
@@ -194,7 +194,7 @@ func (s *pooledStream[Req, Resp, Conn]) Send(ctx context.Context, req Req) (Resp
 // manner that mimics unary RPC invocation. Pooling these streams allows for
 // reuse of gRPC resources across calls, as opposed to native unary RPCs, which
 // create a new stream and throw it away for each request (see grpc.invoke).
-type streamPool[Req, Resp any, Conn rpcConn] struct {
+type streamPool[Req, Resp any, Conn RPCConn] struct {
 	stopper     *stop.Stopper
 	idleTimeout time.Duration
 	newStream   streamConstructor[Req, Resp, Conn]
@@ -211,7 +211,7 @@ type streamPool[Req, Resp any, Conn rpcConn] struct {
 	}
 }
 
-func makeStreamPool[Req, Resp any, Conn rpcConn](
+func makeStreamPool[Req, Resp any, Conn RPCConn](
 	stopper *stop.Stopper, newStream streamConstructor[Req, Resp, Conn], connEquals equalsFunc[Conn],
 ) streamPool[Req, Resp, Conn] {
 	return streamPool[Req, Resp, Conn]{
