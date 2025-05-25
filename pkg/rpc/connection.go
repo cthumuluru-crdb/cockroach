@@ -21,10 +21,13 @@ import (
 // must implement. It is used as a type constraint for rpc connections and allows
 // the Connection and Peer structs to work seamlessly with both gRPC and DRPC
 // connections.
-type rpcConn interface {
-	io.Closer
-	comparable
-}
+type rpcConn io.Closer
+
+// dialFunc is a generic function type used to establish an RPC connection.
+// It takes a context for cancellation/timeouts, a target string (e.g., address),
+// and a ConnectionClass to categorize the connection's purpose or priority.
+// It returns the established connection (of type Conn) or an error if dialing fails.
+type dialFunc[Conn rpcConn] func(ctx context.Context, target string, class ConnectionClass) (Conn, error)
 
 // rpcHeartbeatClient offers a unified Ping interface compatible with both
 // gRPC and DRPC.
@@ -47,6 +50,26 @@ type closeNotifier interface {
 // for a given rpc connection. This allows us to use different implementations of
 // closeNotifier for different types of connections (e.g., gRPC and DRPC).
 type closeNotifierConstructor[Conn rpcConn] func(*stop.Stopper, Conn) closeNotifier
+
+// ConnectionOptions allow for customization of connection behaviors such as:
+//   - Establishing a new connection.
+//   - Client constuctors for various clients (ex: heartbeats, batch streams)
+//   - Comparing two connections for equivalence.
+type ConnectionOptions[Conn rpcConn] struct {
+	// dial function to open a new connection.
+	dial dialFunc[Conn]
+	// connEquals defines the equivalence function for two RPC connections.
+	connEquals equalsFunc[Conn]
+	// newHeartbeatClient is a constructor function for creating a new
+	// heartbeat client associated with a specific RPC connection.
+	newHeartbeatClient heartbeatClientConstructor[Conn]
+	// newBatchStreamClient is a constructor function for creating a new batch
+	// stream client associated with a specific RPC connection.
+	newBatchStreamClient streamConstructor[*kvpb.BatchRequest, *kvpb.BatchResponse, Conn]
+	// newCloseNotifier is a constructor function for creating a new
+	// closeNotifier associated with a specific RPC connection.
+	newCloseNotifier closeNotifierConstructor[Conn]
+}
 
 // Connection is a wrapper around an rpc connection (ex: grpc.ClientConn or
 // drpc.Conn). It prevents the underlying rpc connection from being used until
@@ -87,7 +110,7 @@ func newConnectionToNodeID[Conn rpcConn](
 	opts *ContextOptions,
 	k peerKey,
 	breakerSignal func() circuit.Signal,
-	newBatchStreamClient streamConstructor[*kvpb.BatchRequest, *kvpb.BatchResponse, Conn],
+	connOptions *ConnectionOptions[Conn],
 ) *Connection[Conn] {
 	c := &Connection[Conn]{
 		breakerSignalFn: breakerSignal,
@@ -95,8 +118,7 @@ func newConnectionToNodeID[Conn rpcConn](
 		connFuture: connFuture[Conn]{
 			ready: make(chan struct{}),
 		},
-		batchStreamPool:     makeStreamPool(opts.Stopper, newBatchStreamClient),
-		drpcBatchStreamPool: makeStreamPool(opts.Stopper, newDRPCBatchStream),
+		batchStreamPool: makeStreamPool(opts.Stopper, connOptions.newBatchStreamClient, connOptions.connEquals),
 	}
 	return c
 }
