@@ -11519,11 +11519,9 @@ def go_deps():
         name = "io_storj_drpc",
         build_file_proto_mode = "disable_global",
         importpath = "storj.io/drpc",
-        sha256 = "60246f2907c40615808e4a5af2f6d58a5248802f57a4b7b55dfb03ee5b779b3b",
-        strip_prefix = "github.com/cockroachdb/drpc@v0.0.0-20250507084558-a793c5c40d3d",
-        urls = [
-            "https://storage.googleapis.com/cockroach-godeps/gomod/github.com/cockroachdb/drpc/com_github_cockroachdb_drpc-v0.0.0-20250507084558-a793c5c40d3d.zip",
-        ],
+        vcs = "git",
+        remote = "/Users/chandrat/go/src/github.com/sd/drpc",
+        commit = "23a74f106a388bf51503f15b4cc83fc93d65f06e",
     )
     go_repository(
         name = "io_vitess_vitess",
