@@ -231,14 +231,12 @@ func (m *Outbox) mainLoop(ctx context.Context, wg *sync.WaitGroup) (retErr error
 	}
 
 	if err := func() error {
-		conn, err := execinfra.GetConnForOutbox(
-			ctx, m.flowCtx.Cfg.SQLInstanceDialer, m.sqlInstanceID, SettingFlowStreamTimeout.Get(&m.flowCtx.Cfg.Settings.SV),
-		)
+		client, err := AsClientDialer(m.flowCtx.Cfg.SQLInstanceDialer).
+			DialDistSQLClient(ctx, m.sqlInstanceID, SettingFlowStreamTimeout.Get(&m.flowCtx.Cfg.Settings.SV))
 		if err != nil {
 			log.VWarningf(ctx, 1, "Outbox Dial connection error, distributed query will fail: %+v", err)
 			return err
 		}
-		client := execinfrapb.NewDistSQLClient(conn)
 		if log.V(2) {
 			log.Infof(ctx, "outbox: calling FlowStream")
 		}

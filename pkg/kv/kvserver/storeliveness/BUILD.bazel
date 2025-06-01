@@ -10,6 +10,7 @@ go_library(
         "node_manager.go",
         "persist.go",
         "requester_state.go",
+        "rpc_clients.go",
         "support_manager.go",
         "supporter_state.go",
         "testutils.go",

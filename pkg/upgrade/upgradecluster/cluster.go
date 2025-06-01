@@ -117,7 +117,7 @@ func (c *Cluster) NumNodesOrServers(ctx context.Context) (int, error) {
 
 // ForEveryNodeOrTenantPod is part of the upgrade.Cluster interface.
 func (c *Cluster) ForEveryNodeOrServer(
-	ctx context.Context, op string, fn func(context.Context, serverpb.MigrationClient) error,
+	ctx context.Context, op string, fn func(context.Context, serverpb.RPCMigrationClient) error,
 ) error {
 
 	live, _, err := NodesFromNodeLiveness(ctx, c.c.NodeLiveness)
@@ -139,11 +139,10 @@ func (c *Cluster) ForEveryNodeOrServer(
 		grp.GoCtx(func(ctx context.Context) error {
 			defer alloc.Release()
 
-			conn, err := c.c.Dialer.Dial(ctx, node.ID, rpc.DefaultClass)
+			client, err := AsClientDialer(c.c.Dialer).DialMigrationClient(ctx, node.ID, rpc.DefaultClass)
 			if err != nil {
 				return err
 			}
-			client := serverpb.NewMigrationClient(conn)
 			return fn(ctx, client)
 		})
 	}

@@ -5,6 +5,7 @@ go_library(
     srcs = [
         "inbox.go",
         "outbox.go",
+        "rpc_clients.go",
     ],
     importpath = "github.com/cockroachdb/cockroach/pkg/sql/colflow/colrpc",
     visibility = ["//visibility:public"],
@@ -12,6 +13,7 @@ go_library(
         "//pkg/base",
         "//pkg/col/coldata",
         "//pkg/col/colserde",
+        "//pkg/rpc/nodedialer",
         "//pkg/sql/colexec/colexecargs",
         "//pkg/sql/colexec/colexecutils",
         "//pkg/sql/colexecerror",

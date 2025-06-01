@@ -201,6 +201,7 @@ go_library(
         "revoke_role.go",
         "routine.go",
         "row_source_to_plan_node.go",
+        "rpc_clients.go",
         "save_table.go",
         "scan.go",
         "scatter.go",

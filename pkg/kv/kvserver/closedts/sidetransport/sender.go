@@ -723,7 +723,7 @@ type rpcConn struct {
 	nodeID       roachpb.NodeID
 	testingKnobs connTestingKnobs
 
-	stream   ctpb.SideTransport_PushUpdatesClient
+	stream   ctpb.RPCSideTransport_PushUpdatesClient
 	lastSent ctpb.SeqNum
 	// cancelStreamCtx cleans up the resources (goroutine) associated with stream.
 	// It needs to be called whenever stream is discarded.
@@ -789,12 +789,12 @@ func (r *rpcConn) maybeConnect(ctx context.Context, stopper *stop.Stopper) error
 		return nil
 	}
 
-	conn, err := r.dialer.Dial(ctx, r.nodeID, rpc.SystemClass)
+	client, err := AsClientDialer(r.dialer).DialSideTransportClient(ctx, r.nodeID, rpc.SystemClass)
 	if err != nil {
 		return err
 	}
 	streamCtx, cancel := context.WithCancel(ctx)
-	stream, err := ctpb.NewSideTransportClient(conn).PushUpdates(streamCtx)
+	stream, err := client.PushUpdates(streamCtx)
 	if err != nil {
 		cancel()
 		return err

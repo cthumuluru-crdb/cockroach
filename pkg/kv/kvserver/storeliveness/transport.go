@@ -283,13 +283,13 @@ func (t *Transport) startProcessNewQueue(
 			log.Fatalf(ctx, "queue for n%d does not exist", toNodeID)
 		}
 		defer cleanup()
-		conn, err := t.dialer.Dial(ctx, toNodeID, connClass)
+		client, err := AsClientDialer(t.dialer).DialStoreLivenessClient(
+			ctx, toNodeID, connClass,
+		)
 		if err != nil {
 			// DialNode already logs sufficiently, so just return.
 			return
 		}
-
-		client := slpb.NewStoreLivenessClient(conn)
 		streamCtx, cancel := context.WithCancel(ctx)
 		defer cancel()
 
@@ -320,7 +320,7 @@ func (t *Transport) startProcessNewQueue(
 // designated queue via that stream, exiting when an error is received or when
 // it idles out. All messages remaining in the queue at that point are lost and
 // a new instance of processQueue will be started by the next message to be sent.
-func (t *Transport) processQueue(q *sendQueue, stream slpb.StoreLiveness_StreamClient) (err error) {
+func (t *Transport) processQueue(q *sendQueue, stream slpb.RPCStoreLiveness_StreamClient) (err error) {
 	defer func() {
 		_, closeErr := stream.CloseAndRecv()
 		err = errors.Join(err, closeErr)
