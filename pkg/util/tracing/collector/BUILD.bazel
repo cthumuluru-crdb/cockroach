@@ -8,7 +8,7 @@ go_library(
     deps = [
         "//pkg/base",
         "//pkg/roachpb",
-        "//pkg/rpc",
+        "//pkg/rpc/base",
         "//pkg/rpc/nodedialer",
         "//pkg/sql/sqlinstance",
         "//pkg/util/log",

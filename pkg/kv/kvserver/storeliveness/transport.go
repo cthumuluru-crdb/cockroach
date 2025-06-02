@@ -12,7 +12,7 @@ import (
 
 	slpb "github.com/cockroachdb/cockroach/pkg/kv/kvserver/storeliveness/storelivenesspb"
 	"github.com/cockroachdb/cockroach/pkg/roachpb"
-	"github.com/cockroachdb/cockroach/pkg/rpc"
+	rpcbase "github.com/cockroachdb/cockroach/pkg/rpc/base"
 	"github.com/cockroachdb/cockroach/pkg/rpc/nodedialer"
 	"github.com/cockroachdb/cockroach/pkg/util/hlc"
 	"github.com/cockroachdb/cockroach/pkg/util/log"
@@ -36,7 +36,7 @@ const (
 	batchDuration = 10 * time.Millisecond
 
 	// connClass is the rpc ConnectionClass used by Store Liveness traffic.
-	connClass = rpc.SystemClass
+	connClass = rpcbase.SystemClass
 )
 
 var logQueueFullEvery = log.Every(1 * time.Second)

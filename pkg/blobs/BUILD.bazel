@@ -15,7 +15,7 @@ go_library(
         "//pkg/base",
         "//pkg/blobs/blobspb",
         "//pkg/roachpb",
-        "//pkg/rpc",
+        "//pkg/rpc/base",
         "//pkg/rpc/nodedialer",
         "//pkg/util/fileutil",
         "//pkg/util/grpcutil",

@@ -19,7 +19,7 @@ go_library(
         "//pkg/multitenant/tenantcapabilitiespb",
         "//pkg/raft/raftpb",
         "//pkg/roachpb",
-        "//pkg/rpc",
+        "//pkg/rpc/base",
         "//pkg/rpc/nodedialer",
         "//pkg/server",
         "//pkg/server/serverpb",

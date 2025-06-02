@@ -19,7 +19,7 @@ go_test(
         "//pkg/keys",
         "//pkg/kv/kvserver",
         "//pkg/roachpb",
-        "//pkg/rpc",
+        "//pkg/rpc/base",
         "//pkg/security/securityassets",
         "//pkg/security/securitytest",
         "//pkg/server",

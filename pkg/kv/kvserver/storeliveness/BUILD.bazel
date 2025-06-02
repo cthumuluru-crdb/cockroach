@@ -22,7 +22,7 @@ go_library(
         "//pkg/keys",
         "//pkg/kv/kvserver/storeliveness/storelivenesspb",
         "//pkg/roachpb",
-        "//pkg/rpc",
+        "//pkg/rpc/base",
         "//pkg/rpc/nodedialer",
         "//pkg/settings",
         "//pkg/settings/cluster",
