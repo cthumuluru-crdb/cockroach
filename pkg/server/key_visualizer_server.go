@@ -69,8 +69,10 @@ func (s *KeyVisualizerServer) getSamplesFromFanOut(
 	samplePeriod := keyvissettings.SampleInterval.Get(&s.settings.SV)
 
 	dialFn := func(ctx context.Context, nodeID roachpb.NodeID) (interface{}, error) {
-		conn, err := s.kvNodeDialer.Dial(ctx, nodeID, rpc.DefaultClass)
-		return keyvispb.NewKeyVisualizerClient(conn), err
+		client, err := AsClientDialer(s.kvNodeDialer).DialKeyVisualizerClient(
+			ctx, nodeID, rpc.DefaultClass,
+		)
+		return client, err
 	}
 
 	nodeFn := func(ctx context.Context, client interface{}, nodeID roachpb.NodeID) (interface{}, error) {

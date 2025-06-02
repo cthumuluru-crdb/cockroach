@@ -51,6 +51,7 @@ go_library(
         "rlimit_bsd.go",
         "rlimit_darwin.go",
         "rlimit_unix.go",
+        "rpc_clients.go",
         "serve_mode.go",
         "server.go",
         "server_controller.go",
