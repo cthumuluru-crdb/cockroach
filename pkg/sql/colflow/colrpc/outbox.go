@@ -179,13 +179,12 @@ func (o *Outbox) Run(
 
 	var stream execinfrapb.DistSQL_FlowStreamClient
 	if err := func() error {
-		conn, err := execinfra.GetConnForOutbox(ctx, dialer, sqlInstanceID, connectionTimeout)
+		client, err := AsClientDialer(dialer).DialDistSQLClient(ctx, sqlInstanceID, connectionTimeout)
 		if err != nil {
 			log.VWarningf(ctx, 1, "Outbox Dial connection error, distributed query will fail: %+v", err)
 			return err
 		}
 
-		client := execinfrapb.NewDistSQLClient(conn)
 		// We use the flow context for the RPC so that when outbox context is
 		// canceled in case of a graceful shutdown, the gRPC stream keeps on
 		// running. If, however, the flow context is canceled, then the
