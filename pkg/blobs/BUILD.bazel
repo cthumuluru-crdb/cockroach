@@ -5,6 +5,7 @@ go_library(
     srcs = [
         "client.go",
         "local_storage.go",
+        "rpc_clients.go",
         "service.go",
         "stream.go",
         "testutils.go",
