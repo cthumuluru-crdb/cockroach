@@ -2,7 +2,10 @@ load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
 
 go_library(
     name = "collector",
-    srcs = ["collector.go"],
+    srcs = [
+        "collector.go",
+        "rpc_clients.go",
+    ],
     importpath = "github.com/cockroachdb/cockroach/pkg/util/tracing/collector",
     visibility = ["//visibility:public"],
     deps = [
