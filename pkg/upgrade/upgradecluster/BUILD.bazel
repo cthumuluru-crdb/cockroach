@@ -5,6 +5,7 @@ go_library(
     srcs = [
         "cluster.go",
         "nodes.go",
+        "rpc_clients.go",
         "tenant_cluster.go",
     ],
     importpath = "github.com/cockroachdb/cockroach/pkg/upgrade/upgradecluster",
@@ -15,6 +16,7 @@ go_library(
         "//pkg/kv/kvserver/liveness/livenesspb",
         "//pkg/roachpb",
         "//pkg/rpc",
+        "//pkg/rpc/nodedialer",
         "//pkg/server/serverpb",
         "//pkg/sql/sqlinstance",
         "//pkg/sql/sqlinstance/instancestorage",
