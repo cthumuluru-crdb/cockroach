@@ -8,6 +8,7 @@ package rpcbase
 import (
 	"context"
 
+	"github.com/cockroachdb/cockroach/pkg/base"
 	"github.com/cockroachdb/cockroach/pkg/roachpb"
 	"google.golang.org/grpc"
 )
@@ -51,4 +52,10 @@ func NewDefaultDialOptions() *dialOptions {
 // node IDs.
 type NodeDialer interface {
 	Dial(context.Context, roachpb.NodeID, ConnectionClass, ...DialOption) (_ *grpc.ClientConn, err error)
+}
+
+// SQLInstanceDialer interface defines methods for dialing SQL instances using
+// their SQL instance IDs.
+type SQLInstanceDialer interface {
+	Dial(context.Context, base.SQLInstanceID, ...DialOption) (_ *grpc.ClientConn, err error)
 }
