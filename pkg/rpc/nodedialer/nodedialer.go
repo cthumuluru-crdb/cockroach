@@ -88,21 +88,30 @@ var _ = (*Dialer).Stopper
 // Dial returns a grpc connection to the given node. It logs whenever the
 // node first becomes unreachable or reachable.
 func (n *Dialer) Dial(
-	ctx context.Context, nodeID roachpb.NodeID, class rpcbase.ConnectionClass,
+	ctx context.Context, nodeID roachpb.NodeID, class rpcbase.ConnectionClass, dialOpts ...rpcbase.DialOption,
 ) (_ *grpc.ClientConn, err error) {
 	if n == nil || n.resolver == nil {
 		return nil, errors.New("no node dialer configured")
 	}
-	// Don't trip the breaker if we're already canceled.
-	if ctxErr := ctx.Err(); ctxErr != nil {
-		return nil, errors.Wrap(ctxErr, "dial")
+
+	opts := rpcbase.NewDefaultDialOptions()
+	for _, opt := range dialOpts {
+		opt(opts)
 	}
+
+	// Don't trip the breaker if we're already canceled.
+	if opts.UseBreaker {
+		if ctxErr := ctx.Err(); ctxErr != nil {
+			return nil, errors.Wrap(ctxErr, "dial")
+		}
+	}
+
 	addr, locality, err := n.resolver(nodeID)
 	if err != nil {
 		err = errors.Wrapf(err, "failed to resolve n%d", nodeID)
 		return nil, err
 	}
-	conn, _, _, _, err := n.dial(ctx, nodeID, addr, locality, true, class)
+	conn, _, _, _, err := n.dial(ctx, nodeID, addr, locality, opts.UseBreaker, class)
 	return conn, err
 }
 
@@ -112,15 +121,7 @@ func (n *Dialer) Dial(
 func (n *Dialer) DialNoBreaker(
 	ctx context.Context, nodeID roachpb.NodeID, class rpcbase.ConnectionClass,
 ) (_ *grpc.ClientConn, err error) {
-	if n == nil || n.resolver == nil {
-		return nil, errors.New("no node dialer configured")
-	}
-	addr, locality, err := n.resolver(nodeID)
-	if err != nil {
-		return nil, err
-	}
-	conn, _, _, _, err := n.dial(ctx, nodeID, addr, locality, false, class)
-	return conn, err
+	return n.Dial(ctx, nodeID, class, rpcbase.WithNoBreaker())
 }
 
 // DialInternalClient is a specialization of DialClass for callers that
@@ -135,6 +136,8 @@ func (n *Dialer) DialInternalClient(
 	if n == nil || n.resolver == nil {
 		return nil, errors.New("no node dialer configured")
 	}
+
+	// TODO(server): extend this optimization to other RPCs client too.
 	{
 		// If we're dialing the local node, don't go through gRPC.
 		localClient := n.rpcContext.GetLocalInternalClientForAddr(nodeID)

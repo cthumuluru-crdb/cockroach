@@ -73,7 +73,7 @@ func TestDialNoBreaker(t *testing.T) {
 	// Test that DialNoBreaker is successful normally.
 	conn := rpcCtx.GRPCDialNode(ln.Addr().String(), staticNodeID, roachpb.Locality{}, rpcbase.DefaultClass)
 	require.NoError(t, conn.Signal().Err())
-	_, err = nd.DialNoBreaker(ctx, staticNodeID, rpcbase.DefaultClass)
+	_, err = nd.Dial(ctx, staticNodeID, rpcbase.DefaultClass, rpcbase.WithNoBreaker())
 	require.NoError(t, err)
 	// Ditto regular dial.
 	_, err = nd.Dial(ctx, staticNodeID, rpcbase.DefaultClass)
@@ -94,7 +94,7 @@ func TestDialNoBreaker(t *testing.T) {
 	_, err = nd.Dial(ctx, staticNodeID, rpcbase.DefaultClass)
 	require.True(t, errors.Is(err, injErr), "%+v", err)
 
-	_, err = nd.DialNoBreaker(ctx, staticNodeID, rpcbase.DefaultClass)
+	_, err = nd.Dial(ctx, staticNodeID, rpcbase.DefaultClass, rpcbase.WithNoBreaker())
 	require.NoError(t, err)
 }
 
@@ -153,7 +153,7 @@ func TestConnHealth(t *testing.T) {
 		//
 		// See: https://github.com/cockroachdb/cockroach/issues/91798
 		require.Eventually(t, func() bool {
-			_, err := nd.DialNoBreaker(ctx, staticNodeID, rpcbase.DefaultClass)
+			_, err := nd.Dial(ctx, staticNodeID, rpcbase.DefaultClass, rpcbase.WithNoBreaker())
 			return err == nil
 		}, 10*time.Second, time.Millisecond)
 		require.Eventually(t, func() bool {
