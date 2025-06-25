@@ -68,7 +68,8 @@ func runInit(cmd *cobra.Command, args []string) error {
 	if _, err = c.Bootstrap(ctx, &serverpb.BootstrapRequest{
 		InitType: typ,
 	}); err != nil {
-		return err
+		panic(err)
+		// return err
 	}
 
 	fmt.Fprintln(os.Stdout, "Cluster successfully initialized")

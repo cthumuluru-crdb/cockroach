@@ -1366,6 +1366,19 @@ func (rpcCtx *Context) ConnHealth(
 	return ErrNotHeartbeated
 }
 
+func (rpcCtx *Context) DRPCConnHealth(
+	target string, nodeID roachpb.NodeID, class rpcbase.ConnectionClass,
+) error {
+	// The local client is always considered healthy.
+	if rpcCtx.GetLocalInternalClientForAddr(nodeID) != nil {
+		return nil
+	}
+	if p, ok := rpcCtx.drpcPeers.get(peerKey{target, nodeID, class}); ok {
+		return p.c.Health()
+	}
+	return ErrNotHeartbeated
+}
+
 type transportType bool
 
 const (
@@ -1456,6 +1469,23 @@ func (rpcCtx *Context) GetBreakerForAddr(
 	rpcCtx.peers.mu.RLock()
 	defer rpcCtx.peers.mu.RUnlock()
 	p, ok := rpcCtx.peers.mu.m[peerKey{
+		TargetAddr: sAddr,
+		NodeID:     nodeID,
+		Class:      class,
+	}]
+	if !ok {
+		return nil, false
+	}
+	return p.b, true
+}
+
+func (rpcCtx *Context) DRPCGetBreakerForAddr(
+	nodeID roachpb.NodeID, class rpcbase.ConnectionClass, addr net.Addr,
+) (*circuitbreaker.Breaker, bool) {
+	sAddr := addr.String()
+	rpcCtx.drpcPeers.mu.RLock()
+	defer rpcCtx.drpcPeers.mu.RUnlock()
+	p, ok := rpcCtx.drpcPeers.mu.m[peerKey{
 		TargetAddr: sAddr,
 		NodeID:     nodeID,
 		Class:      class,

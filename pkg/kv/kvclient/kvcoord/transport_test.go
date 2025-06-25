@@ -29,7 +29,7 @@ func TestTransportMoveToFront(t *testing.T) {
 	rd3 := roachpb.ReplicaDescriptor{NodeID: 3, StoreID: 3, ReplicaID: 3}
 	rd3Incoming := roachpb.ReplicaDescriptor{NodeID: 3, StoreID: 3, ReplicaID: 3,
 		Type: roachpb.VOTER_INCOMING}
-	gt := grpcTransport{replicas: []roachpb.ReplicaDescriptor{rd1, rd2, rd3}}
+	gt := rpcTransport{replicas: []roachpb.ReplicaDescriptor{rd1, rd2, rd3}}
 
 	verifyOrder := func(replicas []roachpb.ReplicaDescriptor) {
 		file, line, _ := caller.Lookup(1)
@@ -107,7 +107,7 @@ func TestTransportReset(t *testing.T) {
 	rd1 := roachpb.ReplicaDescriptor{NodeID: 1, StoreID: 1, ReplicaID: 1}
 	rd2 := roachpb.ReplicaDescriptor{NodeID: 2, StoreID: 2, ReplicaID: 2}
 	rd3 := roachpb.ReplicaDescriptor{NodeID: 3, StoreID: 3, ReplicaID: 3}
-	gt := grpcTransport{replicas: []roachpb.ReplicaDescriptor{rd1, rd2, rd3}}
+	gt := rpcTransport{replicas: []roachpb.ReplicaDescriptor{rd1, rd2, rd3}}
 
 	// Reset should be a noop when positioned at start.
 	require.Equal(t, rd1, gt.NextReplica())
@@ -151,7 +151,7 @@ func TestSpanImport(t *testing.T) {
 	defer log.Scope(t).Close(t)
 	ctx := context.Background()
 	metrics := MakeDistSenderMetrics(roachpb.Locality{})
-	gt := grpcTransport{
+	gt := rpcTransport{
 		opts: SendOptions{
 			metrics: &metrics,
 		},
@@ -185,7 +185,7 @@ func TestResponseVerifyFailure(t *testing.T) {
 	defer log.Scope(t).Close(t)
 	ctx := context.Background()
 	metrics := MakeDistSenderMetrics(roachpb.Locality{})
-	gt := grpcTransport{
+	gt := rpcTransport{
 		opts: SendOptions{
 			metrics: &metrics,
 		},

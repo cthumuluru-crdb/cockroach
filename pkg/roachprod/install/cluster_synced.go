@@ -852,6 +852,7 @@ func (c *SyncedCluster) runCmdOnSingleNode(
 			nodeCmd = fmt.Sprintf("cd %s; %s", c.localVMDir(node), nodeCmd)
 		}
 	}
+	l.Printf("cmd: %s", nodeCmd)
 
 	// This default can be overridden by the caller, and is hence specified first
 	sessionOpts := []remoteSessionOption{withDebugName(GenFilenameFromArgs(20, expandedCmd))}

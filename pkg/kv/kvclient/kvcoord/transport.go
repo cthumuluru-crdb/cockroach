@@ -97,15 +97,15 @@ const (
 	healthHealthy
 )
 
-// grpcTransportFactoryImpl is the default TransportFactory, using GRPC.
-// Do not use this directly - use grpcTransportFactory instead.
+// rpcTransportFactoryImpl is the default TransportFactory, using GRPC or DRPC.
+// Do not use this directly - use rpcTransportFactory instead.
 //
 // During race builds, we wrap this to hold on to and read all obtained
 // requests in a tight loop, exposing data races; see transport_race.go.
-func grpcTransportFactoryImpl(
+func rpcTransportFactoryImpl(
 	opts SendOptions, nodeDialer *nodedialer.Dialer, rs ReplicaSlice,
 ) Transport {
-	transport := grpcTransportPool.Get().(*grpcTransport)
+	transport := rpcTransportPool.Get().(*rpcTransport)
 	// Grab the saved slice memory from grpcTransport.
 	replicas := transport.replicas
 
@@ -128,7 +128,7 @@ func grpcTransportFactoryImpl(
 		}
 	}
 
-	*transport = grpcTransport{
+	*transport = rpcTransport{
 		opts:          opts,
 		nodeDialer:    nodeDialer,
 		class:         opts.class,
@@ -145,7 +145,7 @@ func grpcTransportFactoryImpl(
 	return transport
 }
 
-type grpcTransport struct {
+type rpcTransport struct {
 	opts       SendOptions
 	nodeDialer *nodedialer.Dialer
 	class      rpcbase.ConnectionClass
@@ -159,26 +159,26 @@ type grpcTransport struct {
 	nextReplicaIdx int
 }
 
-var grpcTransportPool = sync.Pool{
-	New: func() interface{} { return &grpcTransport{} },
+var rpcTransportPool = sync.Pool{
+	New: func() interface{} { return &rpcTransport{} },
 }
 
-func (gt *grpcTransport) Release() {
-	*gt = grpcTransport{
+func (gt *rpcTransport) Release() {
+	*gt = rpcTransport{
 		replicas: gt.replicas[0:],
 	}
-	grpcTransportPool.Put(gt)
+	rpcTransportPool.Put(gt)
 }
 
 // IsExhausted returns false if there are any untried replicas remaining.
-func (gt *grpcTransport) IsExhausted() bool {
+func (gt *rpcTransport) IsExhausted() bool {
 	return gt.nextReplicaIdx >= len(gt.replicas)
 }
 
 // SendNext invokes the specified RPC on the supplied client when the
 // client is ready. On success, the reply is sent on the channel;
 // otherwise an error is sent.
-func (gt *grpcTransport) SendNext(
+func (gt *rpcTransport) SendNext(
 	ctx context.Context, ba *kvpb.BatchRequest,
 ) (*kvpb.BatchResponse, error) {
 	r := gt.replicas[gt.nextReplicaIdx]
@@ -190,7 +190,7 @@ func (gt *grpcTransport) SendNext(
 }
 
 // NB: nodeID is unused, but accessible in stack traces.
-func (gt *grpcTransport) sendBatch(
+func (gt *rpcTransport) sendBatch(
 	ctx context.Context,
 	nodeID roachpb.NodeID,
 	iface rpc.RestrictedInternalClient,
@@ -258,7 +258,7 @@ func (gt *grpcTransport) sendBatch(
 
 // NextInternalClient returns the next InternalClient to use for performing
 // RPCs.
-func (gt *grpcTransport) NextInternalClient(
+func (gt *rpcTransport) NextInternalClient(
 	ctx context.Context,
 ) (rpc.RestrictedInternalClient, error) {
 	r := gt.replicas[gt.nextReplicaIdx]
@@ -266,7 +266,7 @@ func (gt *grpcTransport) NextInternalClient(
 	return gt.nodeDialer.DialInternalClient(ctx, r.NodeID, gt.class)
 }
 
-func (gt *grpcTransport) NextReplica() roachpb.ReplicaDescriptor {
+func (gt *rpcTransport) NextReplica() roachpb.ReplicaDescriptor {
 	if gt.IsExhausted() {
 		return roachpb.ReplicaDescriptor{}
 	}
@@ -274,14 +274,14 @@ func (gt *grpcTransport) NextReplica() roachpb.ReplicaDescriptor {
 }
 
 // SkipReplica is part of the Transport interface.
-func (gt *grpcTransport) SkipReplica() {
+func (gt *rpcTransport) SkipReplica() {
 	if gt.IsExhausted() {
 		return
 	}
 	gt.nextReplicaIdx++
 }
 
-func (gt *grpcTransport) MoveToFront(replica roachpb.ReplicaDescriptor) bool {
+func (gt *rpcTransport) MoveToFront(replica roachpb.ReplicaDescriptor) bool {
 	for i := range gt.replicas {
 		if gt.replicas[i].IsSame(replica) {
 			// If we've already processed the replica, decrement the current
@@ -297,7 +297,7 @@ func (gt *grpcTransport) MoveToFront(replica roachpb.ReplicaDescriptor) bool {
 	return false
 }
 
-func (gt *grpcTransport) Reset() {
+func (gt *rpcTransport) Reset() {
 	gt.nextReplicaIdx = 0
 }
 
@@ -305,12 +305,12 @@ func (gt *grpcTransport) Reset() {
 // and unhealthy replica, based on their connection state. Healthy replicas will
 // be rearranged first in the replicas slice, and unhealthy replicas will be
 // rearranged last. Within these two groups, the rearrangement will be stable.
-func (gt *grpcTransport) splitHealthy() {
+func (gt *rpcTransport) splitHealthy() {
 	sort.Stable((*byHealth)(gt))
 }
 
 // byHealth sorts a slice of replicas by their health with healthy first.
-type byHealth grpcTransport
+type byHealth rpcTransport
 
 func (h *byHealth) Len() int { return len(h.replicas) }
 func (h *byHealth) Swap(i, j int) {

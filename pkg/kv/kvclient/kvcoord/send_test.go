@@ -201,7 +201,7 @@ func TestSplitHealthy(t *testing.T) {
 					health.Set(i, healthUnhealthy)
 				}
 			}
-			gt := grpcTransport{
+			gt := rpcTransport{
 				replicas:      replicas,
 				replicaHealth: health,
 			}

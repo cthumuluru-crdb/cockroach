@@ -172,7 +172,7 @@ func (n *Dialer) DialInternalClient(
 
 	var client rpc.RestrictedInternalClient
 	useStreamPoolClient := shouldUseBatchStreamPoolClient(ctx, n.rpcContext.Settings)
-	if !rpc.ExperimentalDRPCEnabled.Get(&n.rpcContext.Settings.SV) {
+	if !rpcbase.TODODRPC {
 		gc, conn, err := dial(ctx, n.resolver, n.rpcContext.GRPCDialNode, nodeID, class, true /* checkBreaker */)
 		if err != nil {
 			return nil, errors.Wrapf(err, "gRPC")
@@ -253,7 +253,12 @@ func (n *Dialer) ConnHealth(nodeID roachpb.NodeID, class rpcbase.ConnectionClass
 	if err != nil {
 		return err
 	}
-	return n.rpcContext.ConnHealth(addr.String(), nodeID, class)
+
+	if !rpcbase.TODODRPC {
+		return n.rpcContext.ConnHealth(addr.String(), nodeID, class)
+	} else {
+		return n.rpcContext.DRPCConnHealth(addr.String(), nodeID, class)
+	}
 }
 
 // ConnHealthTryDial returns nil if we have an open connection of the request
@@ -282,9 +287,13 @@ func (n *Dialer) ConnHealthTryDial(nodeID roachpb.NodeID, class rpcbase.Connecti
 	if err != nil {
 		return err
 	}
-	// NB: This will always return `ErrNotHeartbeated` since the heartbeat will
-	// not be done by the time `Health` is called since GRPCDialNode is async.
-	return n.rpcContext.GRPCDialNode(addr.String(), nodeID, locality, class).Health()
+	if !rpcbase.TODODRPC {
+		// NB: This will always return `ErrNotHeartbeated` since the heartbeat will
+		// not be done by the time `Health` is called since GRPCDialNode is async.
+		return n.rpcContext.GRPCDialNode(addr.String(), nodeID, locality, class).Health()
+	} else {
+		return n.rpcContext.DRPCDialNode(addr.String(), nodeID, locality, class).Health()
+	}
 }
 
 // ConnHealthTryDialInstance returns nil if we have an open connection of the
@@ -295,11 +304,19 @@ func (n *Dialer) ConnHealthTryDialInstance(id base.SQLInstanceID, addr string) e
 	if n == nil {
 		return errors.New("no node dialer configured")
 	}
-	if err := n.rpcContext.ConnHealth(
-		addr, roachpb.NodeID(id), rpcbase.DefaultClass); err == nil {
-		return nil
+	if !rpcbase.TODODRPC {
+		if err := n.rpcContext.ConnHealth(
+			addr, roachpb.NodeID(id), rpcbase.DefaultClass); err == nil {
+			return nil
+		}
+		return n.rpcContext.GRPCDialPod(addr, id, roachpb.Locality{}, rpcbase.DefaultClass).Health()
+	} else {
+		if err := n.rpcContext.DRPCConnHealth(
+			addr, roachpb.NodeID(id), rpcbase.DefaultClass); err == nil {
+			return nil
+		}
+		return n.rpcContext.DRPCDialPod(addr, id, roachpb.Locality{}, rpcbase.DefaultClass).Health()
 	}
-	return n.rpcContext.GRPCDialPod(addr, id, roachpb.Locality{}, rpcbase.DefaultClass).Health()
 }
 
 // GetCircuitBreaker retrieves the circuit breaker for connections to the
@@ -312,7 +329,11 @@ func (n *Dialer) GetCircuitBreaker(
 	if err != nil {
 		return nil, false
 	}
-	return n.rpcContext.GetBreakerForAddr(nodeID, class, addr)
+	if !rpcbase.TODODRPC {
+		return n.rpcContext.GetBreakerForAddr(nodeID, class, addr)
+	} else {
+		return n.rpcContext.DRPCGetBreakerForAddr(nodeID, class, addr)
+	}
 }
 
 // Latency returns the exponentially weighted moving average latency to the

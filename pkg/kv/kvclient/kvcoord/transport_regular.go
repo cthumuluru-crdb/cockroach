@@ -12,6 +12,6 @@ import "github.com/cockroachdb/cockroach/pkg/rpc/nodedialer"
 // GRPCTransportFactory is the default TransportFactory, using GRPC.
 func GRPCTransportFactory(nodeDialer *nodedialer.Dialer) TransportFactory {
 	return func(options SendOptions, slice ReplicaSlice) Transport {
-		return grpcTransportFactoryImpl(options, nodeDialer, slice)
+		return rpcTransportFactoryImpl(options, nodeDialer, slice)
 	}
 }

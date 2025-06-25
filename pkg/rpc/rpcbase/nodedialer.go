@@ -15,7 +15,7 @@ import (
 
 // TODODRPC is a marker to identify each RPC client creation site that needs to
 // be updated to support DRPC.
-const TODODRPC = false
+const TODODRPC = true
 
 // NodeDialer interface defines methods for dialing peer nodes using their
 // node IDs.
