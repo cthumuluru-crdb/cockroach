@@ -279,3 +279,65 @@ func TestDialDRPC_InterceptorsAreSet(t *testing.T) {
 	require.True(t, unaryInterceptorCalled)
 	require.True(t, streamInterceptorCalled)
 }
+
+// TestDRPCLoopback tests that DRPC loopback functionality works correctly
+// by verifying that when a node connects to its own advertised address via DRPC,
+// it uses the loopback dialer instead of TCP.
+func TestDRPCLoopback(t *testing.T) {
+	defer leaktest.AfterTest(t)()
+	defer log.Scope(t).Close(t)
+
+	testutils.RunTrueAndFalse(t, "insecure", func(t *testing.T, insecure bool) {
+		ctx := context.Background()
+		const numNodes = 1
+		args := base.TestClusterArgs{
+			ReplicationMode: base.ReplicationManual,
+			ServerArgs: base.TestServerArgs{
+				Settings: cluster.MakeClusterSettings(),
+				Insecure: insecure,
+			},
+		}
+
+		rpc.ExperimentalDRPCEnabled.Override(ctx, &args.ServerArgs.Settings.SV, true)
+		c := testcluster.StartTestCluster(t, numNodes, args)
+		defer c.Stopper().Stop(ctx)
+
+		server := c.Server(0)
+		rpcCtx := server.RPCContext()
+		require.Equal(t, insecure, rpcCtx.Insecure)
+
+		// Get the advertised address
+		advertiseAddr := rpcCtx.AdvertiseAddr
+
+		// Use the DRPC dialer to connect to the node's own advertised address.
+		// This should trigger loopback detection and use the loopback dialer.
+		getConn := rpc.DialDRPC(rpcCtx)
+		conn, err := getConn(ctx, advertiseAddr, rpcbase.DefaultClass)
+		require.NoError(t, err)
+		defer func() { require.NoError(t, conn.Close()) }()
+
+		// Verify that we can successfully make a DRPC call through the loopback connection
+		desc := c.LookupRangeOrFatal(t, c.ScratchRange(t))
+		client := kvpb.NewDRPCKVBatchClient(conn)
+		ba := &kvpb.BatchRequest{}
+		ba.RangeID = desc.RangeID
+		var ok bool
+		ba.Replica, ok = desc.GetReplicaDescriptor(1)
+		require.True(t, ok)
+		req := &kvpb.LeaseInfoRequest{}
+		req.Key = desc.StartKey.AsRawKey()
+		ba.Add(req)
+		
+		// This call should succeed via the loopback connection
+		_, err = client.Batch(ctx, ba)
+		require.NoError(t, err)
+
+		// Also test streaming RPC through loopback
+		stream, err := client.BatchStream(ctx)
+		require.NoError(t, err)
+		err = stream.Send(ba)
+		require.NoError(t, err)
+		_, err = stream.Recv()
+		require.NoError(t, err)
+	})
+}

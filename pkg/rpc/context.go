@@ -54,6 +54,7 @@ import (
 	"google.golang.org/grpc/stats"
 	"storj.io/drpc"
 	"storj.io/drpc/drpcclient"
+	"storj.io/drpc/drpcmigrate"
 )
 
 // NewServer sets up an RPC server. Depending on the ServerOptions, the Server
@@ -287,6 +288,12 @@ type Context struct {
 	// the gRPC protocol over an in-memory pipe.
 	loopbackDialFn func(context.Context) (net.Conn, error)
 
+	// drpcLoopbackDialFn, when non-nil, is used when the target of the DRPC dial
+	// is the same as the node's own advertised address. This is for efficiency
+	// and also supports deployments where the node's advertised address is not
+	// actually dialable from the node itself.
+	drpcLoopbackDialFn func(context.Context) (net.Conn, error)
+
 	// clientCreds is used to pass additional headers to called RPCs.
 	clientCreds credentials.PerRPCCredentials
 
@@ -304,6 +311,16 @@ func (c *Context) SetLoopbackDialer(loopbackDialFn func(context.Context) (net.Co
 		return
 	}
 	c.loopbackDialFn = loopbackDialFn
+}
+
+// SetDRPCLoopbackDialer configures the DRPC loopback dialer function.
+func (c *Context) SetDRPCLoopbackDialer(drpcLoopbackDialFn func(context.Context) (net.Conn, error)) {
+	if c.ContextOptions.Knobs.NoLoopbackDialer {
+		// A test has decided it is opting out of the special loopback
+		// dialing mechanism. Obey it.
+		return
+	}
+	c.drpcLoopbackDialFn = drpcLoopbackDialFn
 }
 
 // StoreLivenessGracePeriod computes the grace period after a store restarts before which it will
@@ -595,6 +612,10 @@ func NewContext(ctx context.Context, opts ContextOptions) *Context {
 		rpcCtx.loopbackDialFn = func(ctx context.Context) (net.Conn, error) {
 			d := onlyOnceDialer{}
 			return d.dial(ctx, opts.AdvertiseAddr)
+		}
+		rpcCtx.drpcLoopbackDialFn = func(ctx context.Context) (net.Conn, error) {
+			// Use DRPC dial with proper header for fallback case.
+			return drpcmigrate.DialWithHeader(ctx, "tcp", opts.AdvertiseAddr, drpcmigrate.DRPCHeader)
 		}
 	}
 

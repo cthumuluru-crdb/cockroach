@@ -53,7 +53,17 @@ func DialDRPC(
 		pooledConn := pool.Get(ctx /* unused */, struct{}{}, func(ctx context.Context,
 			_ struct{}) (drpcpool.Conn, error) {
 
-			netConn, err := drpcmigrate.DialWithHeader(ctx, "tcp", target, drpcmigrate.DRPCHeader)
+			var netConn net.Conn
+			var err error
+
+			// Check if this is a loopback connection (same logic as gRPC in grpcDialRaw).
+			if rpcCtx.ContextOptions.AdvertiseAddr == target && !rpcCtx.ClientOnly {
+				// Use DRPC loopback dialer for local connections.
+				netConn, err = rpcCtx.drpcLoopbackDialFn(ctx)
+			} else {
+				// Use TCP for remote connections.
+				netConn, err = drpcmigrate.DialWithHeader(ctx, "tcp", target, drpcmigrate.DRPCHeader)
+			}
 			if err != nil {
 				return nil, err
 			}
