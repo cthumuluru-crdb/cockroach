@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/cockroachdb/cockroach/pkg/gossip"
 	"github.com/cockroachdb/cockroach/pkg/keys"
 	"github.com/cockroachdb/cockroach/pkg/kv/kvserver/kvserverpb"
 	"github.com/cockroachdb/cockroach/pkg/kv/kvserver/raftlog"
@@ -138,6 +139,8 @@ func SprintMVCCKeyValue(kv storage.MVCCKeyValue, printKey bool) string {
 	// succeed parsing values that have a different "type", and print them in a
 	// misleading way. Make all these functions key-aware.
 	decoders := append(DebugSprintMVCCKeyValueDecoders,
+		tryStoreIdent,      // Must come before tryIntent since both can parse MVCCMetadata
+		tryGossipBootstrap, // Must come before tryIntent since both can parse MVCCMetadata
 		tryRangeIDKey,
 		tryRangeDescriptor,
 		tryMeta,
@@ -213,10 +216,73 @@ func tryRangeDescriptor(kv storage.MVCCKeyValue) (string, error) {
 	return descStr(desc), nil
 }
 
+// tryStoreIdent attempts to decode store identity keys.
+func tryStoreIdent(kv storage.MVCCKeyValue) (string, error) {
+	// Check if this is a store identity key
+	storeIdentKey := keys.StoreIdentKey()
+	if !bytes.Equal(kv.Key.Key, storeIdentKey) {
+		return "", errors.New("not a store ident key")
+	}
+
+	// StoreIdent is stored with MVCCMetadata wrapping
+	var meta enginepb.MVCCMetadata
+	if err := protoutil.Unmarshal(kv.Value, &meta); err != nil {
+		return "", errors.Wrap(err, "failed to unmarshal MVCCMetadata")
+	}
+
+	// The RawBytes contains a roachpb.Value, not the raw protobuf
+	value := roachpb.Value{RawBytes: meta.RawBytes}
+	var ident roachpb.StoreIdent
+	if err := value.GetProto(&ident); err != nil {
+		return "", errors.Wrap(err, "failed to unmarshal StoreIdent")
+	}
+
+	return fmt.Sprintf("storeID:%d nodeID:%d clusterID:%s",
+		ident.StoreID, ident.NodeID, ident.ClusterID), nil
+}
+
+// tryGossipBootstrap attempts to decode gossip bootstrap keys.
+func tryGossipBootstrap(kv storage.MVCCKeyValue) (string, error) {
+	// Check if this is a gossip bootstrap key
+	gossipKey := keys.StoreGossipKey()
+	if !bytes.Equal(kv.Key.Key, gossipKey) {
+		return "", errors.New("not a gossip bootstrap key")
+	}
+
+	// GossipBootstrap is stored with MVCCMetadata wrapping like StoreIdent
+	var meta enginepb.MVCCMetadata
+	if err := protoutil.Unmarshal(kv.Value, &meta); err != nil {
+		return "", errors.Wrap(err, "failed to unmarshal MVCCMetadata")
+	}
+
+	// The RawBytes contains a roachpb.Value, not the raw protobuf
+	value := roachpb.Value{RawBytes: meta.RawBytes}
+	var bootstrap gossip.BootstrapInfo
+	if err := value.GetProto(&bootstrap); err != nil {
+		return "", errors.Wrap(err, "failed to unmarshal BootstrapInfo")
+	}
+
+	// Format the addresses for display
+	var addrs []string
+	for _, addr := range bootstrap.Addresses {
+		addrs = append(addrs, addr.String())
+	}
+
+	return fmt.Sprintf("addresses:[%s] timestamp:%s",
+		strings.Join(addrs, ","), bootstrap.Timestamp), nil
+}
+
 // tryIntent does not look at the key.
 func tryIntent(kv storage.MVCCKeyValue) (string, error) {
 	if len(kv.Value) == 0 {
 		return "", errors.New("empty")
+	}
+	// Skip store identity and gossip bootstrap keys - they have specific decoders
+	if bytes.Equal(kv.Key.Key, keys.StoreIdentKey()) {
+		return "", errors.New("store ident key should be handled by tryStoreIdent")
+	}
+	if bytes.Equal(kv.Key.Key, keys.StoreGossipKey()) {
+		return "", errors.New("gossip bootstrap key should be handled by tryGossipBootstrap")
 	}
 	var meta enginepb.MVCCMetadata
 	if err := protoutil.Unmarshal(kv.Value, &meta); err != nil {
