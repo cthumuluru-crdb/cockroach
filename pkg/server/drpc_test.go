@@ -8,12 +8,15 @@ package server_test
 import (
 	"context"
 	"crypto/tls"
+	"net"
 	"testing"
+	"time"
 
 	"github.com/cockroachdb/cockroach/pkg/base"
 	"github.com/cockroachdb/cockroach/pkg/kv/kvpb"
 	"github.com/cockroachdb/cockroach/pkg/rpc"
 	"github.com/cockroachdb/cockroach/pkg/rpc/rpcbase"
+	"github.com/cockroachdb/cockroach/pkg/rpc/rpcpb"
 	"github.com/cockroachdb/cockroach/pkg/settings/cluster"
 	"github.com/cockroachdb/cockroach/pkg/testutils"
 	"github.com/cockroachdb/cockroach/pkg/testutils/serverutils"
@@ -27,6 +30,8 @@ import (
 	"storj.io/drpc/drpcconn"
 	"storj.io/drpc/drpcmanager"
 	"storj.io/drpc/drpcmigrate"
+	"storj.io/drpc/drpcmux"
+	"storj.io/drpc/drpcserver"
 )
 
 // TestDRPCBatchServer verifies that CRDB nodes can host a drpc server that
@@ -277,4 +282,103 @@ func TestDialDRPC_InterceptorsAreSet(t *testing.T) {
 	// assert that the interceptors were called
 	require.True(t, unaryInterceptorCalled)
 	require.True(t, streamInterceptorCalled)
+}
+
+type echoServer struct{}
+
+func (s *echoServer) Echo(ctx context.Context, req *rpcpb.EchoRequest) (*rpcpb.EchoResponse, error) {
+	return &rpcpb.EchoResponse{Message: req.Message}, nil
+}
+
+func TestSoftCancelHang(t *testing.T) {
+	ctx := context.Background()
+
+	streamOneCtx, streamOneCancel := context.WithCancel(ctx)
+	defer streamOneCancel()
+
+	streamTwoCtx, streamTwoCancel := context.WithCancel(ctx)
+	defer streamTwoCancel()
+
+	streamThreeCtx, streamThreeCancel := context.WithCancel(ctx)
+	defer streamThreeCancel()
+
+	mux := drpcmux.New()
+	_ = rpcpb.DRPCRegisterEcho(mux, &echoServer{})
+
+	server := drpcserver.NewWithOptions(mux, drpcserver.Options{
+		Manager: drpcmanager.Options{
+			SoftCancel: false,
+		},
+	})
+
+	rpcAddr := "127.0.0.1:9696"
+	l, err := net.Listen("tcp", rpcAddr)
+	require.NoError(t, err)
+	defer func() {
+		_ = l.Close()
+	}()
+
+	waitForServerShutdown := make(chan struct{})
+	go func() {
+		conn, err := l.Accept()
+		require.NoError(t, err)
+		defer conn.Close()
+
+		err = server.ServeOne(ctx, conn)
+		if err != nil {
+			t.Logf("server.ServeOne error: %v", err)
+		}
+		close(waitForServerShutdown)
+	}()
+
+	notifyOnClientStreamCreate := make(chan struct{})
+	// defer close(notifyOnClientStreamCreate)
+
+	resumeInvoke := make(chan struct{})
+	// defer close(resumeInvoke)
+
+	rawconn, err := (&net.Dialer{}).DialContext(ctx, "tcp", rpcAddr)
+	require.NoError(t, err)
+
+	conn := drpcconn.NewWithOptions(rawconn, drpcconn.Options{
+		Manager: drpcmanager.Options{
+			SoftCancel: true,
+		},
+		NotifyOnClientStreamCreate: notifyOnClientStreamCreate,
+		ResumeInvoke:               resumeInvoke,
+	})
+	defer func() { _ = conn.Close() }()
+
+	go func() {
+		for i := 0; i < 3; i++ {
+			<-notifyOnClientStreamCreate
+			if i == 1 {
+				streamTwoCancel()
+				// Give enough time for the manage stream to notice the context
+				// cancel and perform soft cancel.
+				time.Sleep(500 * time.Millisecond)
+			}
+			resumeInvoke <- struct{}{}
+		}
+	}()
+
+	client := rpcpb.NewDRPCEchoClient(conn)
+	for i := 0; i < 3; i++ {
+		var streamCtx context.Context
+		switch i {
+		case 0:
+			streamCtx = streamOneCtx
+		case 1:
+			streamCtx = streamTwoCtx
+		case 2:
+			streamCtx = streamThreeCtx
+		}
+
+		if _, err = client.Echo(streamCtx, &rpcpb.EchoRequest{
+			Message: "hello",
+		}); err != nil {
+			t.Logf("client.Echo %d error: %v", i, err)
+		}
+	}
+	<-waitForServerShutdown
 }
