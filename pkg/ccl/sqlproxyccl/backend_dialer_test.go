@@ -37,7 +37,9 @@ func TestBackendDialTLSInsecure(t *testing.T) {
 	ctx := context.Background()
 	startupMsg := &pgproto3.StartupMessage{ProtocolVersion: pgproto3.ProtocolVersionNumber}
 
-	sql := serverutils.StartServerOnly(t, base.TestServerArgs{Insecure: true})
+	sql := serverutils.StartServerOnly(t, base.TestServerArgs{
+			// TODO(drpc): re-enable DRPC once issues are fixed.
+			DefaultDRPCOption: base.TestDRPCDisabled,Insecure: true})
 	defer sql.Stopper().Stop(ctx)
 
 	conn, err := BackendDial(context.Background(), startupMsg, sql.ApplicationLayer().AdvSQLAddr(), &tls.Config{})

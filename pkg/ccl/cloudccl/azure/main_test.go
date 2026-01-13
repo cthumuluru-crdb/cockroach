@@ -10,6 +10,8 @@ import (
 	"testing"
 
 	"github.com/cockroachdb/cockroach/pkg/base"
+
+	"github.com/cockroachdb/cockroach/pkg/base"
 	"github.com/cockroachdb/cockroach/pkg/ccl"
 	_ "github.com/cockroachdb/cockroach/pkg/ccl/kvccl/kvtenantccl"
 	"github.com/cockroachdb/cockroach/pkg/security/securityassets"

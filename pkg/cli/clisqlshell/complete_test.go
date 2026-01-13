@@ -105,7 +105,9 @@ func TestCompletions(t *testing.T) {
 
 	datadriven.Walk(t, "testdata/complete", func(t *testing.T, path string) {
 		ctx := context.Background()
-		s, db, _ := serverutils.StartServer(t, base.TestServerArgs{})
+		s, db, _ := serverutils.StartServer(t, base.TestServerArgs{
+			// TODO(drpc): re-enable DRPC once issues are fixed.
+			DefaultDRPCOption: base.TestDRPCDisabled,})
 		defer s.Stopper().Stop(ctx)
 
 		datadriven.RunTest(t, path, func(t *testing.T, td *datadriven.TestData) string {

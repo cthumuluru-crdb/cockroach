@@ -6,6 +6,7 @@
 package cliccl_test
 
 import (
+	"github.com/cockroachdb/cockroach/pkg/base"
 	"os"
 	"testing"
 
@@ -21,7 +22,8 @@ func TestMain(m *testing.M) {
 	defer build.TestingOverrideVersion("v999.0.0")()
 
 	defer ccl.TestingEnableEnterprise()()
-	serverutils.InitTestServerFactory(server.TestServerFactory)
+	serverutils.InitTestServerFactory(server.TestServerFactory,
+		serverutils.WithDRPCOption(base.TestDRPCEnabledRandomly))
 	os.Exit(m.Run())
 }
 

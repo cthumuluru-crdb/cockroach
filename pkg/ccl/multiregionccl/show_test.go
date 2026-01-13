@@ -6,6 +6,7 @@
 package multiregionccl_test
 
 import (
+	"github.com/cockroachdb/cockroach/pkg/base"
 	"testing"
 
 	// Blank import partitionccl to install CreatePartitioning hook.

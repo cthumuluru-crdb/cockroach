@@ -41,6 +41,8 @@ func TestGCPKMSExternalConnection(t *testing.T) {
 	defer dirCleanupFn()
 
 	ts, db, _ := serverutils.StartServer(t, base.TestServerArgs{
+			// TODO(drpc): re-enable DRPC once issues are fixed.
+			DefaultDRPCOption: base.TestDRPCDisabled,
 		ExternalIODir: dir,
 	})
 	defer ts.Stopper().Stop(context.Background())

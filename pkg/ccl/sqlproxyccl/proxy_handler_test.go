@@ -480,6 +480,8 @@ func TestAllowedCIDRRangesACL(t *testing.T) {
 	defer te.Close()
 
 	sql, db, _ := serverutils.StartServer(t, base.TestServerArgs{
+			// TODO(drpc): re-enable DRPC once issues are fixed.
+			DefaultDRPCOption: base.TestDRPCDisabled,
 		DefaultTestTenant: base.TestRequiresExplicitSQLConnection,
 	})
 	defer sql.Stopper().Stop(ctx)
@@ -1267,6 +1269,8 @@ func TestDenylistUpdate(t *testing.T) {
 	require.NoError(t, err)
 
 	sql, sqlDB, _ := serverutils.StartServer(t, base.TestServerArgs{
+			// TODO(drpc): re-enable DRPC once issues are fixed.
+			DefaultDRPCOption: base.TestDRPCDisabled,
 		DefaultTestTenant: base.TestRequiresExplicitSQLConnection,
 	})
 	defer sql.Stopper().Stop(ctx)

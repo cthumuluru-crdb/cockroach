@@ -34,7 +34,9 @@ func TestSingleRoleAuditLogging(t *testing.T) {
 	cleanup := logtestutils.InstallLogFileSink(sc, t, logpb.Channel_SENSITIVE_ACCESS)
 	defer cleanup()
 
-	s, sqlDB, _ := serverutils.StartServer(t, base.TestServerArgs{})
+	s, sqlDB, _ := serverutils.StartServer(t, base.TestServerArgs{
+			// TODO(drpc): re-enable DRPC once issues are fixed.
+			DefaultDRPCOption: base.TestDRPCDisabled,})
 	rootRunner := sqlutils.MakeSQLRunner(sqlDB)
 	defer s.Stopper().Stop(context.Background())
 

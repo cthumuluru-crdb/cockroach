@@ -460,6 +460,8 @@ func TestUsageQuantization(t *testing.T) {
 
 	url := r.URL()
 	s, db, _ := serverutils.StartServer(t, base.TestServerArgs{
+			// TODO(drpc): re-enable DRPC once issues are fixed.
+			DefaultDRPCOption: base.TestDRPCDisabled,
 		Knobs: base.TestingKnobs{
 			Server: &server.TestingKnobs{
 				DiagnosticsTestingKnobs: diagnostics.TestingKnobs{

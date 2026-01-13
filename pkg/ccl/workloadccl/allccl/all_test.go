@@ -91,6 +91,8 @@ func TestAllRegisteredImportFixture(t *testing.T) {
 
 			ctx := context.Background()
 			s, db, _ := serverutils.StartServer(t, base.TestServerArgs{
+			// TODO(drpc): re-enable DRPC once issues are fixed.
+			DefaultDRPCOption: base.TestDRPCDisabled,
 				UseDatabase:       "d",
 				SQLMemoryPoolSize: sqlMemoryPoolSize,
 			})
@@ -156,6 +158,8 @@ func TestAllRegisteredSetup(t *testing.T) {
 			defer log.Scope(t).Close(t)
 			ctx := context.Background()
 			srv, db, _ := serverutils.StartServer(t, base.TestServerArgs{
+			// TODO(drpc): re-enable DRPC once issues are fixed.
+			DefaultDRPCOption: base.TestDRPCDisabled,
 				UseDatabase: "d",
 			})
 			defer srv.Stopper().Stop(ctx)

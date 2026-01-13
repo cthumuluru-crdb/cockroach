@@ -145,7 +145,9 @@ func TestExplainGist(t *testing.T) {
 	var gists []string
 
 	t.Run("main", func(t *testing.T) {
-		srv, sqlDB, _ := serverutils.StartServer(t, base.TestServerArgs{})
+		srv, sqlDB, _ := serverutils.StartServer(t, base.TestServerArgs{
+			// TODO(drpc): re-enable DRPC once issues are fixed.
+			DefaultDRPCOption: base.TestDRPCDisabled,})
 		defer srv.Stopper().Stop(ctx)
 		runner := sqlutils.MakeSQLRunner(sqlDB)
 

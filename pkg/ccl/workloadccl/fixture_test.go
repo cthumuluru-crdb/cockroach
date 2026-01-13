@@ -195,6 +195,8 @@ func TestImportFixture(t *testing.T) {
 	stats.AutomaticStatisticsClusterMode.Override(ctx, &st.SV, false)
 	stats.AutomaticStatisticsOnSystemTables.Override(ctx, &st.SV, false)
 	s, db, _ := serverutils.StartServer(t, base.TestServerArgs{
+			// TODO(drpc): re-enable DRPC once issues are fixed.
+			DefaultDRPCOption: base.TestDRPCDisabled,
 		Settings:          st,
 		DefaultTestTenant: base.TestIsForStuffThatShouldWorkWithSharedProcessModeButDoesntYet(base.TestTenantProbabilistic, 113916),
 	})

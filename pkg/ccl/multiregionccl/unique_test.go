@@ -28,7 +28,9 @@ func TestValidateUniqueConstraints(t *testing.T) {
 	defer leaktest.AfterTest(t)()
 	defer log.Scope(t).Close(t)
 
-	srv, db, kvDB := serverutils.StartServer(t, base.TestServerArgs{})
+	srv, db, kvDB := serverutils.StartServer(t, base.TestServerArgs{
+			// TODO(drpc): re-enable DRPC once issues are fixed.
+			DefaultDRPCOption: base.TestDRPCDisabled,})
 	defer srv.Stopper().Stop(context.Background())
 	s := srv.ApplicationLayer()
 	r := sqlutils.MakeSQLRunner(db)

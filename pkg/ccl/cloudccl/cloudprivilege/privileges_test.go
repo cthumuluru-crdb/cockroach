@@ -32,6 +32,8 @@ func TestURIRequiresAdminOrPrivilege(t *testing.T) {
 
 	ctx := context.Background()
 	tc := serverutils.StartCluster(t, nodes, base.TestClusterArgs{ServerArgs: base.TestServerArgs{
+			// TODO(drpc): re-enable DRPC once issues are fixed.
+			DefaultDRPCOption: base.TestDRPCDisabled,
 		SQLMemoryPoolSize: 256 << 20,
 	}})
 	defer tc.Stopper().Stop(ctx)

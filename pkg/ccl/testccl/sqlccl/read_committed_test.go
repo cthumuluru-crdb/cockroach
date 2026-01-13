@@ -187,7 +187,9 @@ func TestReadCommittedReadTimestampNotSteppedOnCommit(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	params := base.TestServerArgs{}
+	params := base.TestServerArgs{
+			// TODO(drpc): re-enable DRPC once issues are fixed.
+			DefaultDRPCOption: base.TestDRPCDisabled,}
 	params.Knobs.Store = &kvserver.StoreTestingKnobs{
 		// NOTE: we use a TestingResponseFilter and not a TestingRequestFilter to
 		// avoid potential flakiness from requests which are redirected or retried.
@@ -232,6 +234,8 @@ func TestReadCommittedVolatileUDF(t *testing.T) {
 	var tableID int
 	rcTxnBlocked, unblockRCTxn := make(chan struct{}, 1), make(chan struct{})
 	s, sqlDB, _ := serverutils.StartServer(t, base.TestServerArgs{
+			// TODO(drpc): re-enable DRPC once issues are fixed.
+			DefaultDRPCOption: base.TestDRPCDisabled,
 		Knobs: base.TestingKnobs{
 			SQLExecutor: &sql.ExecutorTestingKnobs{
 				OnReadCommittedStmtRetry: func(retryReason error) {

@@ -31,7 +31,9 @@ func TestLDAPFetchUser(t *testing.T) {
 		&NewLDAPUtil,
 		newMockLDAPUtil)()
 	ctx := context.Background()
-	s := serverutils.StartServerOnly(t, base.TestServerArgs{})
+	s := serverutils.StartServerOnly(t, base.TestServerArgs{
+			// TODO(drpc): re-enable DRPC once issues are fixed.
+			DefaultDRPCOption: base.TestDRPCDisabled,})
 	defer s.Stopper().Stop(ctx)
 	manager := ConfigureLDAPAuth(ctx, s.AmbientCtx(), s.ClusterSettings(), s.StorageClusterID())
 	hbaEntryBase := "host all all all ldap "

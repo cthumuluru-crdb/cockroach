@@ -1319,6 +1319,8 @@ func TestDrainStopsFollowerReads(t *testing.T) {
 	for i := 0; i < numNodes; i++ {
 		i := i
 		serverArgs[i] = base.TestServerArgs{
+			// TODO(drpc): re-enable DRPC once issues are fixed.
+			DefaultDRPCOption: base.TestDRPCDisabled,
 			Settings: settings,
 			Locality: localities[i],
 			Knobs: base.TestingKnobs{

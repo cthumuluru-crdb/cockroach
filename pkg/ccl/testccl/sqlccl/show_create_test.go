@@ -31,7 +31,9 @@ func TestShowCreateRedactableValues(t *testing.T) {
 	rng, seed := randutil.NewTestRand()
 	t.Log("seed:", seed)
 
-	s, sqlDB, _ := serverutils.StartServer(t, base.TestServerArgs{})
+	s, sqlDB, _ := serverutils.StartServer(t, base.TestServerArgs{
+			// TODO(drpc): re-enable DRPC once issues are fixed.
+			DefaultDRPCOption: base.TestDRPCDisabled,})
 	defer s.Stopper().Stop(ctx)
 
 	conn, err := sqlDB.Conn(ctx)

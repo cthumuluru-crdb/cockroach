@@ -6,6 +6,7 @@
 package sctestbackupccl
 
 import (
+	"github.com/cockroachdb/cockroach/pkg/base"
 	"os"
 	"testing"
 
@@ -25,7 +26,8 @@ func TestMain(m *testing.M) {
 	securityassets.SetLoader(securitytest.EmbeddedAssets)
 	randutil.SeedForTests()
 	serverutils.InitTestClusterFactory(testcluster.TestClusterFactory)
-	serverutils.InitTestServerFactory(server.TestServerFactory)
+	serverutils.InitTestServerFactory(server.TestServerFactory,
+		serverutils.WithDRPCOption(base.TestDRPCEnabledRandomly))
 	os.Exit(m.Run())
 }
 

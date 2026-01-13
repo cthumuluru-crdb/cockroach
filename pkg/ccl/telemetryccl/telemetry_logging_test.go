@@ -226,6 +226,8 @@ func TestBulkJobTelemetryLogging(t *testing.T) {
 
 	testCluster := serverutils.StartCluster(t, 1, base.TestClusterArgs{
 		ServerArgs: base.TestServerArgs{
+			// TODO(drpc): re-enable DRPC once issues are fixed.
+			DefaultDRPCOption: base.TestDRPCDisabled,
 			Knobs: base.TestingKnobs{
 				EventLog: &eventlog.EventLogTestingKnobs{
 					// The sampling checks below need to have a deterministic
