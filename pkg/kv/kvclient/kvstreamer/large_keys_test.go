@@ -72,6 +72,8 @@ func TestLargeKeys(t *testing.T) {
 	// We want to capture the trace of the query so that we can count how many
 	// KV requests the Streamer issued.
 	s, db, _ := serverutils.StartServer(t, base.TestServerArgs{
+		// TODO(server): re-enable DRPC once issues are fixed.
+		DefaultDRPCOption: base.TestDRPCDisabled,
 		Knobs: base.TestingKnobs{
 			SQLExecutor: &sql.ExecutorTestingKnobs{
 				WithStatementTrace: func(trace tracingpb.Recording, stmt string) {

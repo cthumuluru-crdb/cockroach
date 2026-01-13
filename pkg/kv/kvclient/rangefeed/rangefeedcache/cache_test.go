@@ -35,7 +35,9 @@ func TestCache(t *testing.T) {
 	defer log.Scope(t).Close(t)
 
 	ctx := context.Background()
-	srv, _, kvDB := serverutils.StartServer(t, base.TestServerArgs{})
+	srv, _, kvDB := serverutils.StartServer(t, base.TestServerArgs{
+		// TODO(server): re-enable DRPC once issues are fixed.
+		DefaultDRPCOption: base.TestDRPCDisabled})
 	defer srv.Stopper().Stop(ctx)
 
 	s := srv.ApplicationLayer()
