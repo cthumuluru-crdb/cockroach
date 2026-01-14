@@ -230,6 +230,8 @@ func TestStopServer(t *testing.T) {
 
 	tc := StartTestCluster(t, 3, base.TestClusterArgs{
 		ServerArgs: base.TestServerArgs{
+			// TODO(drpc): re-enable DRPC once issues are fixed.
+			DefaultDRPCOption: base.TestDRPCDisabled,
 			DefaultTestTenant: base.TestIsSpecificToStorageLayerAndNeedsASystemTenant,
 
 			// We use Insecure: true because the .GetAdminHTTPClient() API

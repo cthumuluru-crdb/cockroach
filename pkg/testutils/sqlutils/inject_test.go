@@ -42,7 +42,9 @@ func TestInjectDescriptors(t *testing.T) {
 
 	var descriptors []*descpb.Descriptor
 	{
-		s, db, _ := serverutils.StartServer(t, base.TestServerArgs{})
+		s, db, _ := serverutils.StartServer(t, base.TestServerArgs{
+			// TODO(drpc): re-enable DRPC once issues are fixed.
+			DefaultDRPCOption: base.TestDRPCDisabled,})
 		defer s.Stopper().Stop(context.Background())
 		tdb := sqlutils.MakeSQLRunner(db)
 		for _, stmt := range setupStmts {
