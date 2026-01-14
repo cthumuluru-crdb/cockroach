@@ -48,6 +48,8 @@ func TestSpanPooling(t *testing.T) {
 			MaintainAllocationCounters: true,
 		}))
 	s, db, _ := serverutils.StartServer(t, base.TestServerArgs{
+			// TODO(drpc): re-enable DRPC once issues are fixed.
+			DefaultDRPCOption: base.TestDRPCDisabled,
 		UseDatabase: "test",
 		Tracer:      tr,
 	})

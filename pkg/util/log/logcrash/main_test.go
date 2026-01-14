@@ -6,6 +6,7 @@
 package logcrash_test
 
 import (
+	"github.com/cockroachdb/cockroach/pkg/base"
 	"context"
 	"os"
 	"testing"
@@ -22,7 +23,8 @@ import (
 func TestMain(m *testing.M) {
 	randutil.SeedForTests()
 	securityassets.SetLoader(securitytest.EmbeddedAssets)
-	serverutils.InitTestServerFactory(server.TestServerFactory)
+	serverutils.InitTestServerFactory(server.TestServerFactory,
+		serverutils.WithDRPCOption(base.TestDRPCEnabledRandomly))
 	ctx := context.Background()
 
 	// MakeTestingClusterSettings initializes log.ReportingSettings to this
