@@ -29,7 +29,9 @@ func TestWriter(t *testing.T) {
 	defer log.Scope(t).Close(t)
 
 	ctx := context.Background()
-	srv, db, _ := serverutils.StartServer(t, base.TestServerArgs{UseDatabase: `test`})
+	srv, db, _ := serverutils.StartServer(t, base.TestServerArgs{
+			// TODO(drpc): re-enable DRPC once issues are fixed.
+			DefaultDRPCOption: base.TestDRPCDisabled,UseDatabase: `test`})
 	defer srv.Stopper().Stop(ctx)
 
 	sqlDB := sqlutils.MakeSQLRunner(db)

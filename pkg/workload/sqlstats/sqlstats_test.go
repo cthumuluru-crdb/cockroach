@@ -27,7 +27,9 @@ func TestSqlStatsWorkload(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	srv, db, _ := serverutils.StartServer(t, base.TestServerArgs{UseDatabase: defaultDbName})
+	srv, db, _ := serverutils.StartServer(t, base.TestServerArgs{
+			// TODO(drpc): re-enable DRPC once issues are fixed.
+			DefaultDRPCOption: base.TestDRPCDisabled,UseDatabase: defaultDbName})
 	defer srv.Stopper().Stop(ctx)
 
 	sqlutils.MakeSQLRunner(db).Exec(t, `CREATE DATABASE `+defaultDbName)

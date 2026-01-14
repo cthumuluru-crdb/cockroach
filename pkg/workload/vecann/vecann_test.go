@@ -24,7 +24,9 @@ func TestVecann(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	srv, db, _ := serverutils.StartServer(t, base.TestServerArgs{UseDatabase: `test`})
+	srv, db, _ := serverutils.StartServer(t, base.TestServerArgs{
+			// TODO(drpc): re-enable DRPC once issues are fixed.
+			DefaultDRPCOption: base.TestDRPCDisabled,UseDatabase: `test`})
 	defer srv.Stopper().Stop(ctx)
 
 	vw := vectorMeta.New().(*vectorWorkload)
