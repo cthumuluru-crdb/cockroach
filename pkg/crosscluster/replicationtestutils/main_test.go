@@ -6,6 +6,7 @@
 package replicationtestutils
 
 import (
+	"github.com/cockroachdb/cockroach/pkg/base"
 	"os"
 	"testing"
 

@@ -6,6 +6,7 @@
 package streamclient_test
 
 import (
+	"github.com/cockroachdb/cockroach/pkg/base"
 	"os"
 	"testing"
 
