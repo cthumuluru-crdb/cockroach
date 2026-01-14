@@ -35,7 +35,9 @@ func TestSetups(t *testing.T) {
 	for name, setup := range sqlsmith.Setups {
 		t.Run(name, func(t *testing.T) {
 			ctx := context.Background()
-			srv, sqlDB, _ := serverutils.StartServer(t, base.TestServerArgs{})
+			srv, sqlDB, _ := serverutils.StartServer(t, base.TestServerArgs{
+			// TODO(drpc): re-enable DRPC once issues are fixed.
+			DefaultDRPCOption: base.TestDRPCDisabled,})
 			defer srv.Stopper().Stop(ctx)
 
 			rnd, _ := randutil.NewTestRand()
