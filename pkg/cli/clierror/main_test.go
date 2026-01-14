@@ -6,6 +6,7 @@
 package clierror_test
 
 import (
+	"github.com/cockroachdb/cockroach/pkg/base"
 	"os"
 	"testing"
 
@@ -19,7 +20,8 @@ func TestMain(m *testing.M) {
 	// a version injected. Pretend to be a very up-to-date version.
 	defer build.TestingOverrideVersion("v999.0.0")()
 
-	serverutils.InitTestServerFactory(server.TestServerFactory)
+	serverutils.InitTestServerFactory(server.TestServerFactory,
+		serverutils.WithDRPCOption(base.TestDRPCEnabledRandomly))
 	os.Exit(m.Run())
 }
 

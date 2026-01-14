@@ -6,6 +6,7 @@
 package cli
 
 import (
+	"github.com/cockroachdb/cockroach/pkg/base"
 	"os"
 	"testing"
 
@@ -30,7 +31,8 @@ func TestMain(m *testing.M) {
 	// CLI tests are sensitive to the server version, but test binaries don't have
 	// a version injected. Pretend to be a very up-to-date version.
 	defer build.TestingOverrideVersion("v999.0.0")()
-	serverutils.InitTestServerFactory(server.TestServerFactory)
+	serverutils.InitTestServerFactory(server.TestServerFactory,
+		serverutils.WithDRPCOption(base.TestDRPCEnabledRandomly))
 	serverutils.InitTestClusterFactory(testcluster.TestClusterFactory)
 	kvtenant.InitTestConnectorFactory()
 	os.Exit(m.Run())
