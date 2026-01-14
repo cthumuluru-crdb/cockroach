@@ -86,6 +86,8 @@ func TestEndToEndGC(t *testing.T) {
 
 				manualClock := hlc.NewHybridManualClock()
 				s, appSqlDb, appKvDb := serverutils.StartServer(t, base.TestServerArgs{
+			// TODO(drpc): re-enable DRPC once issues are fixed.
+			DefaultDRPCOption: base.TestDRPCDisabled,
 					Settings: settings,
 					Knobs: base.TestingKnobs{
 						Store: &kvserver.StoreTestingKnobs{
