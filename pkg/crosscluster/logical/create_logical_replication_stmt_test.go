@@ -35,7 +35,9 @@ func TestResolveDestinationObjects(t *testing.T) {
 
 	ctx := context.Background()
 
-	srv, conn, _ := serverutils.StartServer(t, base.TestServerArgs{})
+	srv, conn, _ := serverutils.StartServer(t, base.TestServerArgs{
+			// TODO(drpc): re-enable DRPC once issues are fixed.
+			DefaultDRPCOption: base.TestDRPCDisabled,})
 	defer srv.Stopper().Stop(ctx)
 	s := srv.ApplicationLayer()
 

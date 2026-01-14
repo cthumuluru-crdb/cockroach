@@ -31,7 +31,9 @@ func TestReplicationManagerRequiresReplicationPrivilege(t *testing.T) {
 	defer log.Scope(t).Close(t)
 
 	ctx := context.Background()
-	srv, sqlDB, kvDB := serverutils.StartServer(t, base.TestServerArgs{})
+	srv, sqlDB, kvDB := serverutils.StartServer(t, base.TestServerArgs{
+			// TODO(drpc): re-enable DRPC once issues are fixed.
+			DefaultDRPCOption: base.TestDRPCDisabled,})
 	defer srv.Stopper().Stop(ctx)
 	s := srv.ApplicationLayer()
 

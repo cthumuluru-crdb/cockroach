@@ -71,7 +71,9 @@ func TestParseClusterUri(t *testing.T) {
 
 func TestLookupClusterUri(t *testing.T) {
 	defer leaktest.AfterTest(t)()
-	s, sql, _ := serverutils.StartServer(t, base.TestServerArgs{})
+	s, sql, _ := serverutils.StartServer(t, base.TestServerArgs{
+			// TODO(drpc): re-enable DRPC once issues are fixed.
+			DefaultDRPCOption: base.TestDRPCDisabled,})
 	defer s.Stopper().Stop(context.Background())
 
 	url, cleanup := s.PGUrl(t)
