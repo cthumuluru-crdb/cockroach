@@ -72,7 +72,9 @@ func TestSettingsRefresh(t *testing.T) {
 	defer leaktest.AfterTest(t)()
 	defer log.Scope(t).Close(t)
 
-	s, rawDB, _ := serverutils.StartServer(t, base.TestServerArgs{})
+	s, rawDB, _ := serverutils.StartServer(t, base.TestServerArgs{
+			// TODO(drpc): re-enable DRPC once issues are fixed.
+			DefaultDRPCOption: base.TestDRPCDisabled,})
 	defer s.Stopper().Stop(context.Background())
 
 	st := s.ApplicationLayer().ClusterSettings()
@@ -194,7 +196,9 @@ func TestSettingsRefresh(t *testing.T) {
 func TestSettingsSetAndShow(t *testing.T) {
 	defer leaktest.AfterTest(t)()
 	defer log.Scope(t).Close(t)
-	s, rawDB, _ := serverutils.StartServer(t, base.TestServerArgs{})
+	s, rawDB, _ := serverutils.StartServer(t, base.TestServerArgs{
+			// TODO(drpc): re-enable DRPC once issues are fixed.
+			DefaultDRPCOption: base.TestDRPCDisabled,})
 	defer s.Stopper().Stop(context.Background())
 	st := s.ApplicationLayer().ClusterSettings()
 	db := sqlutils.MakeSQLRunner(rawDB)
@@ -280,7 +284,9 @@ func TestSettingsShowAll(t *testing.T) {
 	defer leaktest.AfterTest(t)()
 	defer log.Scope(t).Close(t)
 
-	s, rawDB, _ := serverutils.StartServer(t, base.TestServerArgs{})
+	s, rawDB, _ := serverutils.StartServer(t, base.TestServerArgs{
+			// TODO(drpc): re-enable DRPC once issues are fixed.
+			DefaultDRPCOption: base.TestDRPCDisabled,})
 	defer s.Stopper().Stop(context.Background())
 
 	db := sqlutils.MakeSQLRunner(rawDB)
