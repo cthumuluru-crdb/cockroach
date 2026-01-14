@@ -6,6 +6,7 @@
 package reducesql_test
 
 import (
+	"github.com/cockroachdb/cockroach/pkg/base"
 	"os"
 	"testing"
 
@@ -14,7 +15,8 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	serverutils.InitTestServerFactory(server.TestServerFactory)
+	serverutils.InitTestServerFactory(server.TestServerFactory,
+		serverutils.WithDRPCOption(base.TestDRPCEnabledRandomly))
 	code := m.Run()
 	os.Exit(code)
 }
