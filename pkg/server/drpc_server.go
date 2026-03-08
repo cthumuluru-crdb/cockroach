@@ -7,7 +7,6 @@ package server
 
 import (
 	"context"
-	"crypto/tls"
 
 	"github.com/cockroachdb/cockroach/pkg/rpc"
 	"github.com/cockroachdb/cockroach/pkg/server/srverrors"
@@ -17,15 +16,14 @@ import (
 	"storj.io/drpc/drpcerr"
 )
 
-// drpcServer wraps a DRPCServer and manages its enabled state and TLS
-// configuration. It also tracks the current serving mode for health checks.
+// drpcServer wraps a DRPCServer and manages its enabled state. It also tracks
+// the current serving mode for health checks. TLS configuration is passed to
+// the underlying DRPC server via rpc.WithTLSConfig.
 type drpcServer struct {
 	// Embeds logic for managing server mode (initializing, draining, operational).
 	serveModeHandler
 	// Underlying DRPC server implementation.
 	rpc.DRPCServer
-	// TLS configuration for secure connections.
-	tlsCfg *tls.Config
 }
 
 // newDRPCServer creates and configures a new drpcServer instance. It enables
@@ -35,6 +33,11 @@ func newDRPCServer(
 ) (*drpcServer, error) {
 	drpcServer := &drpcServer{}
 	drpcServer.setMode(modeInitializing)
+
+	tlsCfg, err := rpcCtx.GetServerTLSConfig()
+	if err != nil {
+		return nil, err
+	}
 
 	d, err := rpc.NewDRPCServer(
 		ctx,
@@ -47,18 +50,14 @@ func newDRPCServer(
 			rpc.NewDRPCRequestMetricsInterceptor(requestMetrics, func(method string) bool {
 				return shouldRecordRequestDuration(rpcCtx.Settings, method)
 			}),
-		))
-	if err != nil {
-		return nil, err
-	}
-
-	tlsCfg, err := rpcCtx.GetServerTLSConfig()
+		),
+		rpc.WithTLSConfig(tlsCfg),
+	)
 	if err != nil {
 		return nil, err
 	}
 
 	drpcServer.DRPCServer = d
-	drpcServer.tlsCfg = tlsCfg
 
 	if err := rpc.DRPCRegisterHeartbeat(drpcServer, rpcCtx.NewHeartbeatService()); err != nil {
 		return nil, err

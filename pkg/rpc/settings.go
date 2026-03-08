@@ -7,6 +7,7 @@ package rpc
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
 	"net"
 	"sync"
@@ -125,6 +126,7 @@ type serverOpts struct {
 	interceptor                   func(fullMethod string) error
 	metricsInterceptor            RequestMetricsInterceptor
 	drpcRequestMetricsInterceptor DRPCRequestMetricsInterceptor
+	tlsConfig                     *tls.Config
 }
 
 // ServerOption is a configuration option passed to NewServer.
@@ -159,5 +161,14 @@ func WithMetricsServerInterceptor(interceptor RequestMetricsInterceptor) ServerO
 func WithDRPCMetricsServerInterceptor(interceptor DRPCRequestMetricsInterceptor) ServerOption {
 	return func(opts *serverOpts) {
 		opts.drpcRequestMetricsInterceptor = interceptor
+	}
+}
+
+// WithTLSConfig sets the TLS configuration for the DRPC server. When set, the
+// server wraps its listener with tls.NewListener in Serve() and performs the
+// TLS handshake explicitly in ServeOne before processing requests.
+func WithTLSConfig(cfg *tls.Config) ServerOption {
+	return func(opts *serverOpts) {
+		opts.tlsConfig = cfg
 	}
 }
