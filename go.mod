@@ -563,7 +563,7 @@ replace github.com/gogo/protobuf => github.com/cockroachdb/gogoproto v1.3.3-0.20
 
 // replace storj.io/drpc => github.com/cockroachdb/drpc v0.0.0-20260210055719-ba071c6f9395
 // replace storj.io/drpc => github.com/cthumuluru-crdb/drpc v0.0.0-20260306115954-297ed933f789
-replace storj.io/drpc => github.com/cthumuluru-crdb/drpc v0.0.0-20260308183414-6bf129048c31
+replace storj.io/drpc => github.com/cthumuluru-crdb/drpc v0.0.0-20260308192007-739c196a9691
 
 // Note: This forked dependency adds a commit that opens up some
 // private APIs to enable us to make some perf improvements to

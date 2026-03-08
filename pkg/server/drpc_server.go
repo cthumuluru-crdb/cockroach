@@ -7,8 +7,10 @@ package server
 
 import (
 	"context"
+	"net"
 
 	"github.com/cockroachdb/cockroach/pkg/rpc"
+	"github.com/cockroachdb/cockroach/pkg/security"
 	"github.com/cockroachdb/cockroach/pkg/server/srverrors"
 	"github.com/cockroachdb/errors"
 	"google.golang.org/grpc/codes"
@@ -52,6 +54,9 @@ func newDRPCServer(
 			}),
 		),
 		rpc.WithTLSConfig(tlsCfg),
+		rpc.WithTLSCipherRestrict(func(conn net.Conn) error {
+			return security.TLSCipherRestrict(conn)
+		}),
 	)
 	if err != nil {
 		return nil, err
