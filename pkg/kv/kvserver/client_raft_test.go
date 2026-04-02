@@ -1520,7 +1520,6 @@ func TestReceiveSnapshotLogging(t *testing.T) {
 
 		tc := testcluster.StartTestCluster(t, 3, base.TestClusterArgs{
 			ServerArgs: base.TestServerArgs{
-				DefaultDRPCOption: base.TestDRPCDisabled,
 				Knobs: base.TestingKnobs{
 					Store: &kvserver.StoreTestingKnobs{
 						DisableRaftSnapshotQueue: true,
@@ -1616,7 +1615,7 @@ func TestReceiveSnapshotLogging(t *testing.T) {
 			<-signals.receiveStartedCh
 			cancel()
 			<-signals.svrContextDone
-			time.Sleep(10 * time.Millisecond)
+			time.Sleep(100 * time.Millisecond)
 			signals.receiveErrCh <- errors.Errorf("header is bad")
 		}()
 		err := snapshotAndValidateLogs(t, ctx, tc, scratchRange, signals, false /* expectTraceOnSender */)

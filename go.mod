@@ -561,7 +561,9 @@ replace github.com/docker/docker => github.com/moby/moby v25.0.14+incompatible
 
 replace github.com/gogo/protobuf => github.com/cockroachdb/gogoproto v1.3.3-0.20241216150617-2358cdb156a1
 
-replace storj.io/drpc => github.com/cockroachdb/drpc v0.0.0-20260310153551-4b35ab889392
+replace storj.io/drpc => github.com/cthumuluru-crdb/drpc v0.0.0-20260402043656-e0c21f9056e6
+
+// replace storj.io/drpc => github.com/cthumuluru-crdb/drpc v0.0.0-20260306115954-297ed933f789
 
 // Note: This forked dependency adds a commit that opens up some
 // private APIs to enable us to make some perf improvements to
