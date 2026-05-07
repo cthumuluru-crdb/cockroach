@@ -480,13 +480,14 @@ func (q *RaBitQuantizer) quantizeHelper(
 
 		// computeProduct multiplies a unit vector element by the quantized form
 		// of that element. The quantized form is equal to 1/√D if the element
-		// is positive and -1/√D otherwise.
-		computeProduct := func(element, sqrtDimsInv float32) float32 {
+		// is positive and -1/√D otherwise. Returns float64 to preserve
+		// precision when accumulating across many dimensions.
+		computeProduct := func(element, sqrtDimsInv float32) float64 {
 			sign := float32(1 - 2*int32(getSignBit(element)))
-			return element * sign * sqrtDimsInv
+			return float64(element) * float64(sign) * float64(sqrtDimsInv)
 		}
 
-		var dotProduct float32
+		var dotProduct float64
 		var codeBits, codeCount uint64
 		tempUnitVector := tempUnitVectors.At(i)
 		code := qs.Codes.At(oldCount + i)
@@ -559,7 +560,7 @@ func (q *RaBitQuantizer) quantizeHelper(
 		// is equal to the centroid vector. That case is handled separately in
 		// EstimateDistances.
 		if dotProduct != 0 {
-			dotProducts[i] = 1.0 / dotProduct
+			dotProducts[i] = float32(1.0 / dotProduct)
 		} else {
 			dotProducts[i] = 0
 		}
