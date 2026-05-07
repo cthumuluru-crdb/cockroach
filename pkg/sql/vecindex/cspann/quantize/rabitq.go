@@ -7,7 +7,6 @@ package quantize
 
 import (
 	"math"
-	"math/bits"
 	"math/rand"
 
 	"github.com/ajroetker/go-highway/hwy/contrib/rabitq"
@@ -460,115 +459,31 @@ func (q *RaBitQuantizer) quantizeHelper(
 		}
 	}
 
-	// Calculate:
-	//   1. Dot products between the quantized vectors and unit vectors.
-	//   2. Quantization code for each vector.
-	//   3. Count of "1" bits in the quantization code.
+	// Use go-highway's SIMD-accelerated QuantizeVectors to compute:
+	//   1. Quantization codes (sign-bit extraction + bit packing)
+	//   2. Inverted dot products between unit vectors and their quantized form
+	//   3. Count of "1" bits in each code
+	//
+	// The SIMD implementation uses NEON/AVX for the dot product computation
+	// and accumulates in float64 for precision. The memory layouts are
+	// directly compatible: vector.Set.Data is contiguous float32s,
+	// RaBitQCodeSet.Data is contiguous uint64s, both in row-wise order.
 	//
 	// Note a difference from the paper: we assume that the caller applies the
 	// random orthogonal transformation, so no need to do it here. This
 	// simplifies any formulas from the paper which include P.
 	dotProducts := qs.QuantizedDotProducts[oldCount:]
 	codeCounts := qs.CodeCounts[oldCount:]
-	alignedDims := q.dims / 8 * 8
-	for i := range count {
-		// Define two functions that will be used to unroll the loop over the
-		// dimensions of the unit vector. Doing this gives ~20% boost on Intel
-		// and ARM.
-
-		// getSignBit returns the floating point value's sign bit, which will be 1
-		// if the value is negative (including -0), or 0 otherwise (including +0).
-		getSignBit := func(value float32) uint64 {
-			return uint64(math.Float32bits(value) >> 31)
-		}
-
-		// computeProduct multiplies a unit vector element by the quantized form
-		// of that element. The quantized form is equal to 1/√D if the element
-		// is positive and -1/√D otherwise. Returns float64 to preserve
-		// precision when accumulating across many dimensions.
-		computeProduct := func(element, sqrtDimsInv float32) float64 {
-			sign := float32(1 - 2*int32(getSignBit(element)))
-			return float64(element) * float64(sign) * float64(sqrtDimsInv)
-		}
-
-		var dotProduct float64
-		var codeBits, codeCount uint64
-		tempUnitVector := tempUnitVectors.At(i)
-		code := qs.Codes.At(oldCount + i)
-		for dim := 0; dim < alignedDims; dim += 8 {
-			// Unroll the loop 8x.
-
-			// Compute the dot product of the unit vector and the quantized vector.
-			// Paper: x¯bits ∈ {0, 1}^D | 0 if o[i] <= 0, 1 if o[i] > 0
-			//        x¯ = (2 * x¯bits − 1_bits)/√D
-			//        o¯ = Px¯
-			//        <o¯,o>
-			elements := tempUnitVector[dim : dim+8]
-			dotProduct += computeProduct(elements[0], q.sqrtDimsInv)
-			dotProduct += computeProduct(elements[1], q.sqrtDimsInv)
-			dotProduct += computeProduct(elements[2], q.sqrtDimsInv)
-			dotProduct += computeProduct(elements[3], q.sqrtDimsInv)
-			dotProduct += computeProduct(elements[4], q.sqrtDimsInv)
-			dotProduct += computeProduct(elements[5], q.sqrtDimsInv)
-			dotProduct += computeProduct(elements[6], q.sqrtDimsInv)
-			dotProduct += computeProduct(elements[7], q.sqrtDimsInv)
-
-			// Compute the quantization code as a packed bit string.
-			// Paper: x¯bits ∈ {0, 1}^D | 0 if o[i] <= 0, 1 if o[i] > 0
-			codeBits <<= 8
-			codeBits |= getSignBit(elements[0]) << 7
-			codeBits |= getSignBit(elements[1]) << 6
-			codeBits |= getSignBit(elements[2]) << 5
-			codeBits |= getSignBit(elements[3]) << 4
-			codeBits |= getSignBit(elements[4]) << 3
-			codeBits |= getSignBit(elements[5]) << 2
-			codeBits |= getSignBit(elements[6]) << 1
-			codeBits |= getSignBit(elements[7])
-
-			if (dim+8)%64 == 0 {
-				// Invert the sign bits, since a "1" sign bit indicates a
-				// negative float.
-				codeBits = ^codeBits
-				code[0] = codeBits
-				code = code[1:]
-
-				// Count the number of "1" bits in the code.
-				codeCount += uint64(bits.OnesCount64(codeBits))
-			}
-		}
-
-		// Handle any remaining unaligned elements in the unit vector.
-		if q.dims%64 != 0 {
-			for dim := alignedDims; dim < q.dims; dim++ {
-				dotProduct += computeProduct(tempUnitVector[dim], q.sqrtDimsInv)
-				codeBits <<= 1
-				if getSignBit(tempUnitVector[dim]) == 1 {
-					codeBits |= 1
-				}
-			}
-
-			// Invert the sign bits and shift remaining code bits to most
-			// significant bit positions.
-			codeBits = ^codeBits << (64 - q.dims%64)
-			code[0] = codeBits
-
-			// Count the number of "1" bits in the code.
-			codeCount += uint64(bits.OnesCount64(codeBits))
-		}
-
-		// Store the total number of "1" bits in the quantization code.
-		codeCounts[i] = uint32(codeCount)
-
-		// Store the inverted dot product, which will be used to make distance
-		// estimates. The dot product is only zero in the case where the data vector
-		// is equal to the centroid vector. That case is handled separately in
-		// EstimateDistances.
-		if dotProduct != 0 {
-			dotProducts[i] = float32(1.0 / dotProduct)
-		} else {
-			dotProducts[i] = 0
-		}
-	}
+	rabitq.QuantizeVectors(
+		tempUnitVectors.Data[:count*q.dims],
+		qs.Codes.Data[oldCount*qs.Codes.Width:],
+		dotProducts,
+		codeCounts,
+		q.sqrtDimsInv,
+		count,
+		q.dims,
+		qs.Codes.Width,
+	)
 }
 
 func allocCodes(w *workspace.T, count, width int) RaBitQCodeSet {
