@@ -265,14 +265,11 @@ func (q *RaBitQuantizer) EstimateDistances(
 	for i := range count {
 		code := raBitSet.Codes.At(i)
 
-		var bitProduct int
-		for j := range len(code) {
-			// Paper: <x¯bits,q¯u> = ∑ j in [0,B_q-1] (2^j * <x¯bits,q¯u¯j>)
-			bitProduct += 1 * bits.OnesCount64(code[j]&tempQueryQuantized1[j])
-			bitProduct += 2 * bits.OnesCount64(code[j]&tempQueryQuantized2[j])
-			bitProduct += 4 * bits.OnesCount64(code[j]&tempQueryQuantized3[j])
-			bitProduct += 8 * bits.OnesCount64(code[j]&tempQueryQuantized4[j])
-		}
+		// Paper: <x¯bits,q¯u> = ∑ j in [0,B_q-1] (2^j * <x¯bits,q¯u¯j>)
+		bp := bitProduct(
+			code, tempQueryQuantized1, tempQueryQuantized2,
+			tempQueryQuantized3, tempQueryQuantized4,
+		)
 
 		// Compute the estimator efficiently.
 		// Paper: term1 = 2Δ / √D * <x¯bits,q¯u>
@@ -286,7 +283,7 @@ func (q *RaBitQuantizer) EstimateDistances(
 		// Note one tweak to the paper, where <o¯,o> (i.e. DotProducts) is
 		// stored as an inverted value so that it can be multiplied rather than
 		// divided, in order to avoid divide-by-zero.
-		term1 := 2 * delta * q.sqrtDimsInv * float32(bitProduct)
+		term1 := 2 * delta * q.sqrtDimsInv * float32(bp)
 		term2 := 2 * minVal * q.sqrtDimsInv * float32(raBitSet.CodeCounts[i])
 		term3 := delta * q.sqrtDimsInv * float32(quantizedSum)
 		term4 := q.sqrtDims * minVal

@@ -30,6 +30,9 @@ go_proto_library(
 go_library(
     name = "quantize",
     srcs = [
+        "bitproduct_arm64.go",
+        "bitproduct_arm64.s",
+        "bitproduct_generic.go",
         "quantizer.go",
         "rabitq.go",
         "rabitqpb.go",
