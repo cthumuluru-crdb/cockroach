@@ -298,7 +298,7 @@ func (m *MemProvider) ensureIndex(ctx context.Context) error {
 // ensureIndexCache ensures that the folder that contains the cached index file
 // has been created. It returns the name of the cached index file.
 func (m *MemProvider) ensureIndexCache() (string, error) {
-	cacheFolder, err := vecann.EnsureCacheFolder("")
+	cacheFolder, err := vecann.EnsureCacheFolder(*flagCacheFolder)
 	if err != nil {
 		return "", err
 	}

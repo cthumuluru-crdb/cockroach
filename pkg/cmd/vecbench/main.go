@@ -82,6 +82,10 @@ var flagDBConnStr = flag.String("db", "postgresql://root@localhost:26257",
 var flagCreateIndexAfterImport = flag.Bool("index-after", false,
 	"Create vector index after data import instead of during table creation (SQL provider only)")
 
+// Cache options.
+var flagCacheFolder = flag.String("cache-folder", "",
+	"Path to cache downloaded datasets (default: ~/.cache/workload-datasets)")
+
 // vecbench benchmarks vector index in-memory build and search performance on a
 // variety of datasets. Datasets are downloaded from the
 // cockroach-fixtures-us-east1 GCP bucket (vecindex directory). Here is a list
@@ -523,6 +527,7 @@ func (vb *vectorBench) BuildIndex() {
 func (vb *vectorBench) ensureDataset(ctx context.Context) {
 	loader := vecann.DatasetLoader{
 		DatasetName: vb.datasetName,
+		CacheFolder: *flagCacheFolder,
 		OnProgress: func(ctx context.Context, format string, args ...any) {
 			fmt.Printf(Cyan+"%s\n"+Reset, fmt.Sprintf(format, args...))
 		},
