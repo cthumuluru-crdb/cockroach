@@ -149,7 +149,7 @@ require (
 	github.com/containerd/containerd v1.6.18
 	github.com/coreos/go-oidc/v3 v3.15.0
 	github.com/dave/dst v0.24.0
-	github.com/davecgh/go-spew v1.1.1
+	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
 	github.com/docker/distribution v2.7.1+incompatible
 	github.com/docker/docker v25.0.14+incompatible
 	github.com/docker/go-connections v0.4.0
@@ -221,7 +221,7 @@ require (
 	github.com/pires/go-proxyproto v0.7.0
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
 	github.com/pkg/errors v0.9.1
-	github.com/pmezard/go-difflib v1.0.0
+	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2
 	github.com/prometheus/client_golang v1.16.0
 	github.com/prometheus/client_model v0.3.0
 	github.com/prometheus/common v0.42.0
@@ -235,8 +235,8 @@ require (
 	github.com/slack-go/slack v0.9.5
 	github.com/snowflakedb/gosnowflake v1.6.25
 	github.com/spf13/afero v1.9.2
-	github.com/spf13/cobra v1.6.1
-	github.com/spf13/pflag v1.0.5
+	github.com/spf13/cobra v1.10.2
+	github.com/spf13/pflag v1.0.10
 	github.com/spf13/viper v1.8.1
 	github.com/stretchr/testify v1.11.1
 	github.com/twmb/franz-go v1.18.0
@@ -293,6 +293,7 @@ require (
 	github.com/RaduBerinde/tdigest v0.0.0-20251022152254-90e030c3a314 // indirect
 	github.com/abbot/go-http-auth v0.4.1-0.20181019201920-860ed7f246ff // indirect
 	github.com/aclements/go-moremath v0.0.0-20210112150236-f10218a38794 // indirect
+	github.com/ajroetker/go-highway v0.0.12 // indirect
 	github.com/ajstarks/svgo v0.0.0-20211024235047-1546f124cd8b // indirect
 	github.com/alexbrainman/sspi v0.0.0-20210105120005-909beea2cc74 // indirect
 	github.com/andybalholm/brotli v1.0.5 // indirect
@@ -389,7 +390,7 @@ require (
 	github.com/huandu/xstrings v1.3.0 // indirect
 	github.com/ianlancetaylor/demangle v0.0.0-20230524184225-eabc099b10ab // indirect
 	github.com/imdario/mergo v0.3.13 // indirect
-	github.com/inconshreveable/mousetrap v1.0.1 // indirect
+	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/influxdata/line-protocol v0.0.0-20200327222509-2487e7298839 // indirect
 	github.com/jackc/puddle/v2 v2.2.2 // indirect
 	github.com/jcmturner/aescts/v2 v2.0.0 // indirect
@@ -507,7 +508,7 @@ require (
 	github.com/DataDog/zstd v1.5.7 // indirect
 	github.com/andybalholm/cascadia v1.2.0 // indirect
 	github.com/containerd/console v1.0.3 // indirect
-	github.com/cpuguy83/go-md2man/v2 v2.0.2 // indirect
+	github.com/cpuguy83/go-md2man/v2 v2.0.6 // indirect
 	github.com/dgryski/go-metro v0.0.0-20250106013310-edb8663e5e33 // indirect
 	github.com/envoyproxy/protoc-gen-validate v0.10.1 // indirect
 	github.com/golang/glog v1.1.0 // indirect
@@ -574,3 +575,5 @@ replace github.com/prometheus/client_golang => github.com/cockroachdb/client_gol
 replace github.com/snowflakedb/gosnowflake => github.com/cockroachdb/gosnowflake v1.6.25
 
 replace github.com/knz/strtime => github.com/cockroachdb/strtime v0.0.0-20260422145425-b760b890ce68
+
+exclude github.com/ajroetker/go-highway/hwy/goat v0.0.0

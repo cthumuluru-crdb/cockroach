@@ -46,6 +46,7 @@ go_library(
         "//pkg/util/buildutil",
         "//pkg/util/num32",
         "//pkg/util/vector",
+        "@com_github_ajroetker_go_highway//hwy/contrib/rabitq",
         "@com_github_cockroachdb_errors//:errors",
     ],
 )

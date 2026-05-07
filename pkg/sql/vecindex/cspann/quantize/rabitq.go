@@ -10,6 +10,7 @@ import (
 	"math/bits"
 	"math/rand"
 
+	"github.com/ajroetker/go-highway/hwy/contrib/rabitq"
 	"github.com/cockroachdb/cockroach/pkg/sql/vecindex/cspann/utils"
 	"github.com/cockroachdb/cockroach/pkg/sql/vecindex/cspann/workspace"
 	"github.com/cockroachdb/cockroach/pkg/sql/vecindex/vecpb"
@@ -265,14 +266,17 @@ func (q *RaBitQuantizer) EstimateDistances(
 	for i := range count {
 		code := raBitSet.Codes.At(i)
 
-		var bitProduct int
-		for j := range len(code) {
-			// Paper: <x¯bits,q¯u> = ∑ j in [0,B_q-1] (2^j * <x¯bits,q¯u¯j>)
-			bitProduct += 1 * bits.OnesCount64(code[j]&tempQueryQuantized1[j])
-			bitProduct += 2 * bits.OnesCount64(code[j]&tempQueryQuantized2[j])
-			bitProduct += 4 * bits.OnesCount64(code[j]&tempQueryQuantized3[j])
-			bitProduct += 8 * bits.OnesCount64(code[j]&tempQueryQuantized4[j])
-		}
+		// Paper: <x¯bits,q¯u> = ∑ j in [0,B_q-1] (2^j * <x¯bits,q¯u¯j>)
+		// Uses go-highway's SIMD-accelerated BitProduct which computes:
+		//   1*popcount(code & q1) + 2*popcount(code & q2) +
+		//   4*popcount(code & q3) + 8*popcount(code & q4)
+		// On ARM64, this uses NEON cnt/uaddlp/uadalp instructions.
+		// On AMD64, this uses AVX-512 VPOPCNTDQ or AVX2 byte-lookup.
+		// Fallback is equivalent scalar code using bits.OnesCount64.
+		bitProduct := int(rabitq.BitProduct(
+			code, tempQueryQuantized1, tempQueryQuantized2,
+			tempQueryQuantized3, tempQueryQuantized4,
+		))
 
 		// Compute the estimator efficiently.
 		// Paper: term1 = 2Δ / √D * <x¯bits,q¯u>

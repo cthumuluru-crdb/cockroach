@@ -130,6 +130,14 @@ def go_deps():
         ],
     )
     go_repository(
+        name = "com_github_ajroetker_go_highway",
+        build_file_proto_mode = "disable_global",
+        importpath = "github.com/ajroetker/go-highway",
+        # TODO: mirror this repo (to fix, run `./dev generate bazel --mirror`)
+        sum = "h1:OcGp/l/W7WQtH5ELLuNnKXCuR7ePpWGh2RWZI/INtck=",
+        version = "v0.0.12",
+    )
+    go_repository(
         name = "com_github_ajstarks_deck",
         build_file_proto_mode = "disable_global",
         importpath = "github.com/ajstarks/deck",
@@ -2254,11 +2262,9 @@ def go_deps():
         name = "com_github_cpuguy83_go_md2man_v2",
         build_file_proto_mode = "disable_global",
         importpath = "github.com/cpuguy83/go-md2man/v2",
-        sha256 = "70a7e609809cf2a92c5535104db5eb82d75c54bfcfed2d224e87dd2fd9729f62",
-        strip_prefix = "github.com/cpuguy83/go-md2man/v2@v2.0.2",
-        urls = [
-            "https://storage.googleapis.com/cockroach-godeps/gomod/github.com/cpuguy83/go-md2man/v2/com_github_cpuguy83_go_md2man_v2-v2.0.2.zip",
-        ],
+        # TODO: mirror this repo (to fix, run `./dev generate bazel --mirror`)
+        sum = "h1:XJtiaUW6dEEqVuZiMTn1ldk455QWwEIsMIJlo5vtkx0=",
+        version = "v2.0.6",
     )
     go_repository(
         name = "com_github_creack_pty",
@@ -2444,11 +2450,9 @@ def go_deps():
         name = "com_github_davecgh_go_spew",
         build_file_proto_mode = "disable_global",
         importpath = "github.com/davecgh/go-spew",
-        sha256 = "6b44a843951f371b7010c754ecc3cabefe815d5ced1c5b9409fb2d697e8a890d",
-        strip_prefix = "github.com/davecgh/go-spew@v1.1.1",
-        urls = [
-            "https://storage.googleapis.com/cockroach-godeps/gomod/github.com/davecgh/go-spew/com_github_davecgh_go_spew-v1.1.1.zip",
-        ],
+        # TODO: mirror this repo (to fix, run `./dev generate bazel --mirror`)
+        sum = "h1:U9qPSI2PIWSS1VwoXQT9A3Wy9MM3WgvqSxFWenqJduM=",
+        version = "v1.1.2-0.20180830191138-d8f796af33cc",
     )
     go_repository(
         name = "com_github_decred_dcrd_crypto_blake256",
@@ -4854,11 +4858,9 @@ def go_deps():
         name = "com_github_inconshreveable_mousetrap",
         build_file_proto_mode = "disable_global",
         importpath = "github.com/inconshreveable/mousetrap",
-        sha256 = "af6f61a00f42d025f195ea272620bbddb045552a9badcf97d8a837980017dbfc",
-        strip_prefix = "github.com/inconshreveable/mousetrap@v1.0.1",
-        urls = [
-            "https://storage.googleapis.com/cockroach-godeps/gomod/github.com/inconshreveable/mousetrap/com_github_inconshreveable_mousetrap-v1.0.1.zip",
-        ],
+        # TODO: mirror this repo (to fix, run `./dev generate bazel --mirror`)
+        sum = "h1:wN+x4NVGpMsO7ErUn/mUI3vEoE6Jt13X2s0bqwp9tc8=",
+        version = "v1.1.0",
     )
     go_repository(
         name = "com_github_influxdata_flux",
@@ -7448,11 +7450,9 @@ def go_deps():
         name = "com_github_pmezard_go_difflib",
         build_file_proto_mode = "disable_global",
         importpath = "github.com/pmezard/go-difflib",
-        sha256 = "de04cecc1a4b8d53e4357051026794bcbc54f2e6a260cfac508ce69d5d6457a0",
-        strip_prefix = "github.com/pmezard/go-difflib@v1.0.0",
-        urls = [
-            "https://storage.googleapis.com/cockroach-godeps/gomod/github.com/pmezard/go-difflib/com_github_pmezard_go_difflib-v1.0.0.zip",
-        ],
+        # TODO: mirror this repo (to fix, run `./dev generate bazel --mirror`)
+        sum = "h1:Jamvg5psRIccs7FGNTlIRMkT8wgtp5eCXdBlqhYGL6U=",
+        version = "v1.0.1-0.20181226105442-5d4384ee4fb2",
     )
     go_repository(
         name = "com_github_posener_complete",
@@ -7864,6 +7864,14 @@ def go_deps():
         ],
     )
     go_repository(
+        name = "com_github_samber_lo",
+        build_file_proto_mode = "disable_global",
+        importpath = "github.com/samber/lo",
+        # TODO: mirror this repo (to fix, run `./dev generate bazel --mirror`)
+        sum = "h1:XrG0xOeHs+4FQ8gJR97zDz5uOFMW7OwFWiFVzqopKgY=",
+        version = "v1.50.0",
+    )
+    go_repository(
         name = "com_github_samuel_go_zookeeper",
         build_file_proto_mode = "disable_global",
         importpath = "github.com/samuel/go-zookeeper",
@@ -8217,11 +8225,9 @@ def go_deps():
         name = "com_github_spf13_cobra",
         build_file_proto_mode = "disable_global",
         importpath = "github.com/spf13/cobra",
-        sha256 = "10945bdd829f0abbedbeaecd722f4077ad3b317dedcbfc6eacde72fc8e5b3879",
-        strip_prefix = "github.com/spf13/cobra@v1.6.1",
-        urls = [
-            "https://storage.googleapis.com/cockroach-godeps/gomod/github.com/spf13/cobra/com_github_spf13_cobra-v1.6.1.zip",
-        ],
+        # TODO: mirror this repo (to fix, run `./dev generate bazel --mirror`)
+        sum = "h1:DMTTonx5m65Ic0GOoRY2c16WCbHxOOw6xxezuLaBpcU=",
+        version = "v1.10.2",
     )
     go_repository(
         name = "com_github_spf13_jwalterweatherman",
@@ -8237,11 +8243,9 @@ def go_deps():
         name = "com_github_spf13_pflag",
         build_file_proto_mode = "disable_global",
         importpath = "github.com/spf13/pflag",
-        sha256 = "fc6e704f2f6a84ddcdce6de0404e5340fa20c8676181bf5d381b17888107ba84",
-        strip_prefix = "github.com/spf13/pflag@v1.0.5",
-        urls = [
-            "https://storage.googleapis.com/cockroach-godeps/gomod/github.com/spf13/pflag/com_github_spf13_pflag-v1.0.5.zip",
-        ],
+        # TODO: mirror this repo (to fix, run `./dev generate bazel --mirror`)
+        sum = "h1:4EBh2KAYBwaONj6b2Ye1GiHfwjqyROoF4RwYO+vPwFk=",
+        version = "v1.0.10",
     )
     go_repository(
         name = "com_github_spf13_viper",
@@ -10624,6 +10628,14 @@ def go_deps():
         ],
     )
     go_repository(
+        name = "in_yaml_go_yaml_v3",
+        build_file_proto_mode = "disable_global",
+        importpath = "go.yaml.in/yaml/v3",
+        # TODO: mirror this repo (to fix, run `./dev generate bazel --mirror`)
+        sum = "h1:tfq32ie2Jv2UxXFdLJdh3jXuOzWiL1fo0bu/FbuKpbc=",
+        version = "v3.0.4",
+    )
+    go_repository(
         name = "in_yaml_go_yaml_v4",
         build_file_proto_mode = "disable_global",
         importpath = "go.yaml.in/yaml/v4",
@@ -11082,8 +11094,8 @@ def go_deps():
         importpath = "storj.io/drpc",
         replace = "github.com/cthumuluru-crdb/drpc",
         # TODO: mirror this repo (to fix, run `./dev generate bazel --mirror`)
-        sum = "h1:fjs828Q5HXRl8UlR3rdQhD+R1S2vciNRwwQed1Qd0lU=",
-        version = "v0.0.0-20260506121721-e3afd627388d",
+        sum = "h1:3FIjzlW0frfJEd+HSLKLyIPYZKti8a+3Fz5Fw0Egl8U=",
+        version = "v0.0.0-20260507064232-7bab1561ac48",
     )
     go_repository(
         name = "org_bazil_fuse",
@@ -11530,6 +11542,14 @@ def go_deps():
         ],
     )
     go_repository(
+        name = "org_modernc_cc_v4",
+        build_file_proto_mode = "disable_global",
+        importpath = "modernc.org/cc/v4",
+        # TODO: mirror this repo (to fix, run `./dev generate bazel --mirror`)
+        sum = "h1:yEN8dzrkRFnn4PUUKXLYIqVf2PJYAEjMTFjO3BDGc3I=",
+        version = "v4.26.3",
+    )
+    go_repository(
         name = "org_modernc_ccgo_v3",
         build_file_proto_mode = "disable_global",
         importpath = "modernc.org/ccgo/v3",
@@ -11573,11 +11593,9 @@ def go_deps():
         name = "org_modernc_mathutil",
         build_file_proto_mode = "disable_global",
         importpath = "modernc.org/mathutil",
-        sha256 = "c17a767eaa5eb62d9bb105b8ece7f249186dd52b9b533301bec140b3d5fd260f",
-        strip_prefix = "modernc.org/mathutil@v1.5.0",
-        urls = [
-            "https://storage.googleapis.com/cockroach-godeps/gomod/modernc.org/mathutil/org_modernc_mathutil-v1.5.0.zip",
-        ],
+        # TODO: mirror this repo (to fix, run `./dev generate bazel --mirror`)
+        sum = "h1:GCZVGXdaN8gTqB1Mf/usp1Y/hSqgI2vAGGP4jZMCxOU=",
+        version = "v1.7.1",
     )
     go_repository(
         name = "org_modernc_memory",
@@ -11593,11 +11611,17 @@ def go_deps():
         name = "org_modernc_opt",
         build_file_proto_mode = "disable_global",
         importpath = "modernc.org/opt",
-        sha256 = "294b1b80137cb86292c8893481d545eee90b17b84b6ad1dcb2e6c9bb523a2d9e",
-        strip_prefix = "modernc.org/opt@v0.1.3",
-        urls = [
-            "https://storage.googleapis.com/cockroach-godeps/gomod/modernc.org/opt/org_modernc_opt-v0.1.3.zip",
-        ],
+        # TODO: mirror this repo (to fix, run `./dev generate bazel --mirror`)
+        sum = "h1:2kNGMRiUjrp4LcaPuLY2PzUfqM/w9N23quVwhKt5Qm8=",
+        version = "v0.1.4",
+    )
+    go_repository(
+        name = "org_modernc_sortutil",
+        build_file_proto_mode = "disable_global",
+        importpath = "modernc.org/sortutil",
+        # TODO: mirror this repo (to fix, run `./dev generate bazel --mirror`)
+        sum = "h1:+xyoGf15mM3NMlPDnFqrteY07klSFxLElE2PVuWIJ7w=",
+        version = "v1.2.1",
     )
     go_repository(
         name = "org_modernc_sqlite",
@@ -11613,11 +11637,9 @@ def go_deps():
         name = "org_modernc_strutil",
         build_file_proto_mode = "disable_global",
         importpath = "modernc.org/strutil",
-        sha256 = "2e59915393fa6a75021a97a41c60fac71c662bb9d1dc2d06e2c4ed77ea5da8cc",
-        strip_prefix = "modernc.org/strutil@v1.1.3",
-        urls = [
-            "https://storage.googleapis.com/cockroach-godeps/gomod/modernc.org/strutil/org_modernc_strutil-v1.1.3.zip",
-        ],
+        # TODO: mirror this repo (to fix, run `./dev generate bazel --mirror`)
+        sum = "h1:UneZBkQA+DX2Rp35KcM69cSsNES9ly8mQWD71HKlOA0=",
+        version = "v1.2.1",
     )
     go_repository(
         name = "org_modernc_tcl",
