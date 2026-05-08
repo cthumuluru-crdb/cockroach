@@ -86,6 +86,10 @@ var flagCreateIndexAfterImport = flag.Bool("index-after", false,
 var flagCacheFolder = flag.String("cache-folder", "",
 	"Path to cache downloaded datasets (default: ~/.cache/workload-datasets)")
 
+// Index build options.
+var flagDeterministic = flag.Bool("deterministic", false,
+	"Use deterministic index building (single worker, seeded RNG) for reproducible indexes.")
+
 // vecbench benchmarks vector index in-memory build and search performance on a
 // variety of datasets. Datasets are downloaded from the
 // cockroach-fixtures-us-east1 GCP bucket (vecindex directory). Here is a list
@@ -564,6 +568,7 @@ func newVectorProvider(
 		BaseBeamSize:          *flagBeamSize,
 		RotAlgorithm:          vecpb.RotGivens,
 		DisableAdaptiveSearch: *flagDisableAdaptiveSearch,
+		IsDeterministic:       *flagDeterministic,
 	}
 
 	if *flagMemStore {
