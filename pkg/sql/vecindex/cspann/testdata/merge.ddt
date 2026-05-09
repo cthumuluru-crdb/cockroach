@@ -73,7 +73,7 @@ search
 [5, 2]
 ----
 vec9: 0
-5 leaf vectors, 7 vectors, 1 full vectors, 3 partitions
+5 leaf vectors, 7 vectors, 3 full vectors, 3 partitions
 
 format-tree
 ----
@@ -159,7 +159,7 @@ search
 [0, -1]
 ----
 vec7: 1
-5 leaf vectors, 8 vectors, 3 full vectors, 3 partitions
+5 leaf vectors, 8 vectors, 2 full vectors, 3 partitions
 
 format-tree
 ----
@@ -217,7 +217,7 @@ search
 [-2, 8]
 ----
 vec3: 0
-6 leaf vectors, 8 vectors, 2 full vectors, 3 partitions
+6 leaf vectors, 8 vectors, 1 full vectors, 3 partitions
 
 format-tree
 ----
@@ -308,9 +308,9 @@ vec18
 ----
 • 1 [0, 0]
 │
-└───• 34 [4.65, 5.6]
+└───• 35 [2.75, 7.25]
     │
-    └───• 28 [2.5, 8]
+    └───• 29 [2.5, 7]
 
 # Search for vector in empty tree with multiple levels.
 search

@@ -177,7 +177,7 @@ func testingAssertPartitionsEqual(t *testing.T, l, r *cspann.Partition) {
 		rightSet, ok := q2.(*quantize.RaBitQuantizedVectorSet)
 		require.True(t, ok, "quantized set types do not match")
 		require.Equal(t, leftSet.Metric, rightSet.Metric)
-		require.Equal(t, leftSet.CodeCounts, rightSet.CodeCounts, "code counts do not match")
+		require.Equal(t, leftSet.CodeNorms, rightSet.CodeNorms, "code norms do not match")
 		require.Equal(t, leftSet.Codes, rightSet.Codes, "codes do not match")
 		require.Equal(t, leftSet.QuantizedDotProducts, rightSet.QuantizedDotProducts,
 			"quantized dot products do not match")

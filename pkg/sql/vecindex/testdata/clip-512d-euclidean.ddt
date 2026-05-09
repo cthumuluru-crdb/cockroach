@@ -13,30 +13,30 @@ recall topk=10 beam-size=1 samples=20
 
 recall topk=10 beam-size=2 samples=20
 ----
-3.50% recall@10
+2.00% recall@10
 
 recall topk=10 beam-size=4 samples=20
 ----
-3.00% recall@10
+10.00% recall@10
 
 recall topk=10 beam-size=8 samples=20
 ----
-9.00% recall@10
+21.00% recall@10
 
 recall topk=10 beam-size=16 samples=20
 ----
-32.00% recall@10
+39.00% recall@10
 
 recall topk=10 beam-size=32 samples=20
 ----
-58.50% recall@10
+63.50% recall@10
 
 recall topk=10 beam-size=64 samples=20
 ----
-84.50% recall@10
+94.00% recall@10
 
 # Accuracy tops out here because of quantization error due to an incomplete
 # RaBitQ error bounds implementation.
 recall topk=10 beam-size=128 samples=20
 ----
-94.50% recall@10
+100.00% recall@10

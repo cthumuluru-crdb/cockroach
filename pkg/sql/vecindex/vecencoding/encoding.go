@@ -206,7 +206,7 @@ func EncodeMetadataValue(metadata cspann.PartitionMetadata) []byte {
 func EncodeRaBitQVectorFromSet(
 	appendTo []byte, vectorSet *quantize.RaBitQuantizedVectorSet, offset int,
 ) []byte {
-	appendTo = encoding.EncodeUint32Ascending(appendTo, vectorSet.CodeCounts[offset])
+	appendTo = encoding.EncodeUntaggedFloat32Value(appendTo, vectorSet.CodeNorms[offset])
 	appendTo = encoding.EncodeUntaggedFloat32Value(appendTo, vectorSet.CentroidDistances[offset])
 	appendTo = encoding.EncodeUntaggedFloat32Value(appendTo, vectorSet.QuantizedDotProducts[offset])
 	if vectorSet.Metric != vecpb.L2SquaredDistance {
@@ -315,7 +315,7 @@ func DecodeMetadataValue(encMetadata []byte) (metadata cspann.PartitionMetadata,
 func DecodeRaBitQVectorToSet(
 	encVector []byte, vectorSet *quantize.RaBitQuantizedVectorSet,
 ) ([]byte, error) {
-	encVector, codeCount, err := encoding.DecodeUint32Ascending(encVector)
+	encVector, codeNorm, err := encoding.DecodeUntaggedFloat32Value(encVector)
 	if err != nil {
 		return nil, err
 	}
@@ -335,7 +335,7 @@ func DecodeRaBitQVectorToSet(
 		}
 		vectorSet.CentroidDotProducts = append(vectorSet.CentroidDotProducts, centroidDotProduct)
 	}
-	vectorSet.CodeCounts = append(vectorSet.CodeCounts, codeCount)
+	vectorSet.CodeNorms = append(vectorSet.CodeNorms, codeNorm)
 	vectorSet.CentroidDistances = append(vectorSet.CentroidDistances, centroidDistance)
 	vectorSet.QuantizedDotProducts = append(vectorSet.QuantizedDotProducts, quantizedDotProduct)
 	vectorSet.Codes.Data = slices.Grow(vectorSet.Codes.Data, vectorSet.Codes.Width)

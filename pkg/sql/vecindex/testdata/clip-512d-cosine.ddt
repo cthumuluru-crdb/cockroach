@@ -8,34 +8,34 @@ Created index with 1000 vectors with 512 dimensions.
 
 recall topk=10 beam-size=1 samples=20
 ----
-5.00% recall@10
+9.00% recall@10
 
 recall topk=10 beam-size=2 samples=20
 ----
-7.50% recall@10
+11.50% recall@10
 
 recall topk=10 beam-size=4 samples=20
 ----
-15.50% recall@10
+23.00% recall@10
 
 recall topk=10 beam-size=8 samples=20
 ----
-28.00% recall@10
+37.50% recall@10
 
 recall topk=10 beam-size=16 samples=20
 ----
-43.00% recall@10
+57.00% recall@10
 
 recall topk=10 beam-size=32 samples=20
 ----
-71.00% recall@10
+75.50% recall@10
 
 recall topk=10 beam-size=64 samples=20
 ----
-87.50% recall@10
+94.00% recall@10
 
 # Accuracy tops out here because of quantization error due to an incomplete
 # RaBitQ error bounds implementation.
 recall topk=10 beam-size=128 samples=20
 ----
-91.50% recall@10
+100.00% recall@10

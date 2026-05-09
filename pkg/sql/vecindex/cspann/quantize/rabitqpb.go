@@ -18,17 +18,17 @@ import (
 )
 
 // RaBitQCode is a quantization code that partially encodes a quantized vector.
-// It has 1 bit per dimension of the quantized vector it represents. For
+// It has 4 bits per dimension of the quantized vector it represents. For
 // example, if the quantized vector has 512 dimensions, then its code will have
-// 512 bits that are packed into uint64 values using big-endian ordering (i.e.
-// a width of 64 bytes). If the dimensions are not evenly divisible by 64, the
-// trailing bits of the code are set to zero.
+// 2048 bits that are packed into uint64 values using big-endian nibble ordering
+// (i.e. a width of 32 uint64s). If the dimensions are not evenly divisible by
+// 16, the trailing nibbles of the last uint64 are set to zero.
 type RaBitQCode []uint64
 
-// RaBitQCodeSetWidth returns the number of uint64values needed to store 1 bit
-// per dimension for a RaBitQ code.
+// RaBitQCodeSetWidth returns the number of uint64 values needed to store 4 bits
+// per dimension for a RaBitQ code (16 dimensions per uint64).
 func RaBitQCodeSetWidth(dims int) int {
-	return (dims + 63) / 64
+	return (dims + 15) / 16
 }
 
 // MakeRaBitQCodeSet returns an empty set of quantization codes, where each code
@@ -118,13 +118,13 @@ func (cs *RaBitQCodeSet) ReplaceWithLast(offset int) {
 
 // GetCount implements the QuantizedVectorSet interface.
 func (vs *RaBitQuantizedVectorSet) GetCount() int {
-	return len(vs.CodeCounts)
+	return len(vs.CodeNorms)
 }
 
 // ReplaceWithLast implements the QuantizedVectorSet interface.
 func (vs *RaBitQuantizedVectorSet) ReplaceWithLast(offset int) {
 	vs.Codes.ReplaceWithLast(offset)
-	vs.CodeCounts = utils.ReplaceWithLast(vs.CodeCounts, offset)
+	vs.CodeNorms = utils.ReplaceWithLast(vs.CodeNorms, offset)
 	vs.CentroidDistances = utils.ReplaceWithLast(vs.CentroidDistances, offset)
 	vs.QuantizedDotProducts = utils.ReplaceWithLast(vs.QuantizedDotProducts, offset)
 	if vs.CentroidDotProducts != nil {
@@ -139,7 +139,7 @@ func (vs *RaBitQuantizedVectorSet) Clone() QuantizedVectorSet {
 		Metric:               vs.Metric,
 		Centroid:             vs.Centroid, // Centroid is immutable
 		Codes:                vs.Codes.Clone(),
-		CodeCounts:           slices.Clone(vs.CodeCounts),
+		CodeNorms:            slices.Clone(vs.CodeNorms),
 		CentroidDistances:    slices.Clone(vs.CentroidDistances),
 		QuantizedDotProducts: slices.Clone(vs.QuantizedDotProducts),
 		CentroidDotProducts:  slices.Clone(vs.CentroidDotProducts),
@@ -153,7 +153,7 @@ func (vs *RaBitQuantizedVectorSet) Clear(centroid vector.T) {
 		if vs.Centroid == nil {
 			panic(errors.New("Clear cannot be called on an uninitialized vector set"))
 		}
-		vs.scribble(0, len(vs.CodeCounts))
+		vs.scribble(0, len(vs.CodeNorms))
 	}
 
 	// Recompute the centroid norm for Cosine and InnerProduct metrics, but only
@@ -167,7 +167,7 @@ func (vs *RaBitQuantizedVectorSet) Clear(centroid vector.T) {
 	// vs.Centroid is immutable, so do not try to reuse its memory.
 	vs.Centroid = centroid
 	vs.Codes.Clear()
-	vs.CodeCounts = vs.CodeCounts[:0]
+	vs.CodeNorms = vs.CodeNorms[:0]
 	vs.CentroidDistances = vs.CentroidDistances[:0]
 	vs.QuantizedDotProducts = vs.QuantizedDotProducts[:0]
 	vs.CentroidDotProducts = vs.CentroidDotProducts[:0]
@@ -176,10 +176,10 @@ func (vs *RaBitQuantizedVectorSet) Clear(centroid vector.T) {
 // AddUndefined adds the given number of quantized vectors to this set. The new
 // quantized vector information should be set to defined values before use.
 func (vs *RaBitQuantizedVectorSet) AddUndefined(count int) {
-	newCount := len(vs.CodeCounts) + count
+	newCount := len(vs.CodeNorms) + count
 	vs.Codes.AddUndefined(count)
-	vs.CodeCounts = slices.Grow(vs.CodeCounts, count)
-	vs.CodeCounts = vs.CodeCounts[:newCount]
+	vs.CodeNorms = slices.Grow(vs.CodeNorms, count)
+	vs.CodeNorms = vs.CodeNorms[:newCount]
 	vs.CentroidDistances = slices.Grow(vs.CentroidDistances, count)
 	vs.CentroidDistances = vs.CentroidDistances[:newCount]
 	vs.QuantizedDotProducts = slices.Grow(vs.QuantizedDotProducts, count)
@@ -198,7 +198,7 @@ func (vs *RaBitQuantizedVectorSet) AddUndefined(count int) {
 // called in test builds to make detecting bugs easier.
 func (vs *RaBitQuantizedVectorSet) scribble(start, end int) {
 	for i := start; i < end; i++ {
-		vs.CodeCounts[i] = 0xBADF00D
+		vs.CodeNorms[i] = math.Pi
 	}
 	for i := start; i < end; i++ {
 		vs.CentroidDistances[i] = math.Pi

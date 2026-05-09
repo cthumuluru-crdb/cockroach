@@ -47,8 +47,9 @@ message RaBitQuantizedVectorSet {
   // Codes is a set of RaBitQ quantization codes, with one code per quantized
   // vector in the set.
   RaBitQCodeSet codes = 3 [(gogoproto.nullable) = false];
-  // CodeCounts records the count of "1" bits in each of the quantization codes.
-  repeated uint32 code_counts = 4;
+  // CodeNorms records the L2 norm of each integer grid vector used for
+  // quantization (||ȳ|| in the RaBitQ v2 paper).
+  repeated float code_norms = 4;
   // CentroidDistances is a slice of the exact Euclidean distances (non-squared)
   // of the original full-size vectors from the centroid.
   repeated float centroid_distances = 5;
