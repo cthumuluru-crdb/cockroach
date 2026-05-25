@@ -976,6 +976,165 @@ The last argument is a JSONB object containing the following optional fields:
 			volatility.Volatile,
 		),
 	),
+
+	"crdb_internal.vector_index_entries": makeBuiltin(
+		tree.FunctionProperties{
+			Category:         builtinconstants.CategorySystemInfo,
+			DistsqlBlocklist: true,
+		},
+		makeGeneratorOverload(
+			tree.ParamTypes{
+				{Name: "table_id", Typ: types.Int},
+				{Name: "index_id", Typ: types.Int},
+			},
+			vectorIndexEntriesGeneratorType,
+			makeVectorIndexEntriesGenerator,
+			"Returns decoded key and value information for all entries in a vector index. "+
+				"Each row includes level, is_metadata convenience columns "+
+				"and full decoded_key/decoded_value JSONB.",
+			volatility.Volatile,
+		),
+	),
+}
+
+var vectorIndexEntriesGeneratorType = types.MakeLabeledTuple(
+	[]*types.T{types.Int, types.Bool, types.Jsonb, types.Jsonb},
+	[]string{"level", "is_metadata", "decoded_key", "decoded_value"},
+)
+
+var _ eval.ValueGenerator = &vectorIndexEntriesGenerator{}
+
+type vectorIndexEntriesGenerator struct {
+	tableID uint32
+	indexID uint32
+	evalCtx *eval.Context
+	ctx     context.Context
+	txn     *kv.Txn
+	acc     mon.BoundAccount
+
+	kvs        []roachpb.KeyValue
+	resumeSpan *roachpb.Span
+	index      int
+	buf        [4]tree.Datum
+}
+
+func makeVectorIndexEntriesGenerator(
+	ctx context.Context, evalCtx *eval.Context, args tree.Datums,
+) (eval.ValueGenerator, error) {
+	tableID := uint32(tree.MustBeDInt(args[0]))
+	indexID := uint32(tree.MustBeDInt(args[1]))
+	return &vectorIndexEntriesGenerator{
+		tableID: tableID,
+		indexID: indexID,
+		evalCtx: evalCtx,
+		acc:     evalCtx.Planner.ExecMon().MakeBoundAccount(),
+	}, nil
+}
+
+func (v *vectorIndexEntriesGenerator) ResolvedType() *types.T {
+	return vectorIndexEntriesGeneratorType
+}
+
+func (v *vectorIndexEntriesGenerator) Start(ctx context.Context, txn *kv.Txn) error {
+	if err := v.acc.Grow(ctx, spanKeyIteratorChunkBytes); err != nil {
+		return err
+	}
+	v.ctx = ctx
+	v.txn = txn
+
+	startKey := v.evalCtx.Codec.IndexPrefix(v.tableID, v.indexID)
+	endKey := startKey.PrefixEnd()
+	return v.scan(ctx, startKey, endKey)
+}
+
+func (v *vectorIndexEntriesGenerator) Next(ctx context.Context) (bool, error) {
+	v.index++
+	if v.index < len(v.kvs) {
+		return true, nil
+	}
+	if v.resumeSpan == nil {
+		return false, nil
+	}
+	if err := v.scan(ctx, v.resumeSpan.Key, v.resumeSpan.EndKey); err != nil {
+		return false, err
+	}
+	return v.Next(ctx)
+}
+
+func (v *vectorIndexEntriesGenerator) scan(
+	ctx context.Context, startKey roachpb.Key, endKey roachpb.Key,
+) error {
+	ba := &kvpb.BatchRequest{}
+	ba.TargetBytes = spanKeyIteratorChunkBytes
+	ba.MaxSpanRequestKeys = spanKeyIteratorChunkKeys
+	ba.Add(&kvpb.ScanRequest{
+		RequestHeader: kvpb.RequestHeader{
+			Key:    startKey,
+			EndKey: endKey,
+		},
+		ScanFormat: kvpb.KEY_VALUES,
+	})
+	br, pErr := v.txn.Send(ctx, ba)
+	if pErr != nil {
+		return pErr.GoError()
+	}
+	resp := br.Responses[0].GetScan()
+	v.kvs = resp.Rows
+	v.resumeSpan = resp.ResumeSpan
+	v.index = -1
+	return nil
+}
+
+func (v *vectorIndexEntriesGenerator) Values() (tree.Datums, error) {
+	kv := v.kvs[v.index]
+
+	decodedKey, err := v.evalCtx.CatalogBuiltins.DecodeVectorIndexKey(v.ctx, kv.Key)
+	if err != nil {
+		return nil, err
+	}
+
+	valueBytes, err := kv.Value.GetBytes()
+	if err != nil {
+		return nil, err
+	}
+	decodedValue, err := v.evalCtx.CatalogBuiltins.DecodeVectorIndexValue(
+		v.ctx, kv.Key, valueBytes,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	levelJSON, err := decodedKey.FetchValKey("level")
+	if err != nil {
+		return nil, err
+	}
+	levelDec, ok := levelJSON.AsDecimal()
+	if !ok {
+		return nil, errors.New("unexpected level type in decoded key")
+	}
+	level, err := levelDec.Int64()
+	if err != nil {
+		return nil, err
+	}
+
+	isMetaJSON, err := decodedKey.FetchValKey("is_metadata")
+	if err != nil {
+		return nil, err
+	}
+	isMeta, ok := isMetaJSON.AsBool()
+	if !ok {
+		return nil, errors.New("unexpected is_metadata type in decoded key")
+	}
+
+	v.buf[0] = tree.NewDInt(tree.DInt(level))
+	v.buf[1] = tree.MakeDBool(tree.DBool(isMeta))
+	v.buf[2] = tree.NewDJSON(decodedKey)
+	v.buf[3] = tree.NewDJSON(decodedValue)
+	return v.buf[:], nil
+}
+
+func (v *vectorIndexEntriesGenerator) Close(ctx context.Context) {
+	v.acc.Close(ctx)
 }
 
 var decodePlanGistGeneratorType = types.String

@@ -2950,6 +2950,10 @@ var builtinOidsArray = []string{
 	2995: `st_3dshortestline(geometry_a: geometry, geometry_b: geometry) -> geometry`,
 	2996: `st_3dperimeter(geometry: geometry) -> float`,
 	2997: `pg_get_function_sqlbody(func_oid: oid) -> string`,
+	2998: ``, // removed: superseded by crdb_internal.vector_index_entries
+	2999: ``, // removed: superseded by crdb_internal.vector_index_entries
+	3000: ``, // removed: superseded by crdb_internal.vector_index_entries
+	3001: `crdb_internal.vector_index_entries(table_id: int, index_id: int) -> tuple{int AS level, bool AS is_metadata, jsonb AS decoded_key, jsonb AS decoded_value}`,
 }
 
 var builtinOidsBySignature map[string]oid.Oid

@@ -105,6 +105,15 @@ type CatalogBuiltins interface {
 	// Returns a partial result if descriptors cannot be found.
 	DecodeTableIndexKey(ctx context.Context, key []byte) (json.JSON, error)
 
+	// DecodeVectorIndexKey decodes a full raw key for a vector index and
+	// returns structured partition info (partition_key, level, is_metadata,
+	// child_partition_key or primary_key_bytes) as JSON.
+	DecodeVectorIndexKey(ctx context.Context, key []byte) (json.JSON, error)
+
+	// DecodeVectorIndexValue decodes a raw vector index value using the key
+	// to determine the value type (metadata, unquantized, or RaBitQ).
+	DecodeVectorIndexValue(ctx context.Context, key, value []byte) (json.JSON, error)
+
 	// NumGeometryInvertedIndexEntries computes the number of inverted index
 	// entries we'd expect to generate from a given geometry value given the
 	// index's configuration.
